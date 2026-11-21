@@ -101,36 +101,63 @@ export class CircuitMission extends SceneMission {
     this.updatePower();
   }
 
-  /** @private Places the board, the tree and the church on the free part of the screen. */
+  /**
+   * Decides the shape of the board (wide screens: board on the left, tree on
+   * the right; tall screens: tree and church above the board) and places
+   * everything at once.
+   * @private
+   */
   layout() {
+    const a = this.area();
+    this.vertical = a.w < a.h * 1.25;
+    this.cols = this.vertical ? 4 : 5;
+    this.rows = this.vertical ? 4 : 3;
+    Object.assign(this, this.place());
+  }
+
+  /**
+   * The free part of the screen: below the instructions card while it is
+   * shown, below the heads-up display once it is gone.
+   * @private
+   */
+  area() {
     const stage = this.ctx.stage;
     const cardBottom = this.ctx.hud.cardBottom;
-    const top = Math.max(stage.viewTop + 110, cardBottom ? stage.toStage(0, cardBottom + 30).y : 0) + 10;
+    const top = Math.max(stage.viewTop + 120, cardBottom ? stage.toStage(0, cardBottom + 30).y : 0) + 10;
     const bottom = stage.viewBottom - 40;
     const left = stage.viewLeft + 60;
     const right = stage.viewRight - 60;
-    const w = right - left;
-    const h = bottom - top;
-    const size = Math.max(84, 50 / stage.scale);
-    this.vertical = w < h * 1.25;
+    return { top, bottom, left, right, w: right - left, h: bottom - top };
+  }
+
+  /**
+   * Where the board, the tree and the church go in the free part of the screen.
+   * @private
+   */
+  place() {
+    const { top, bottom, left, right, w, h } = this.area();
+    const size = Math.max(84, 50 / this.ctx.stage.scale);
     if (this.vertical) {
-      this.cols = 4;
-      this.rows = 4;
-      this.cell = Math.min(w / (this.cols + 1.6), (h * 0.5) / this.rows, size * 1.5);
-      this.x0 = left + (w - this.cell * this.cols) / 2;
-      this.y0 = bottom - this.cell * this.rows;
-      this.tree = { x: left + w * 0.72, y: this.y0 - 40, h: Math.min(h * 0.4, 420) };
-      this.church = { x: left + w * 0.25, y: this.y0 - 40, h: Math.min(h * 0.42, 440) };
-    } else {
-      this.cols = 5;
-      this.rows = 3;
-      this.cell = Math.min((w * 0.5) / this.cols, (h * 0.85) / this.rows, size * 1.6);
-      this.x0 = left + this.cell * 1.1;
-      this.y0 = top + (h - this.cell * this.rows) / 2;
-      const gridRight = this.x0 + this.cell * this.cols;
-      this.tree = { x: gridRight + (right - gridRight) * 0.68, y: bottom - 10, h: Math.min(h * 0.95, 520) };
-      this.church = { x: gridRight + (right - gridRight) * 0.16, y: bottom - 10, h: Math.min(h * 1.05, 560) };
+      const cell = Math.min(w / (this.cols + 1.6), (h * 0.5) / this.rows, size * 1.8);
+      const y0 = bottom - cell * this.rows;
+      return {
+        cell,
+        x0: left + (w - cell * this.cols) / 2,
+        y0,
+        tree: { x: left + w * 0.72, y: y0 - 40, h: Math.min((y0 - top) * 0.85, 760) },
+        church: { x: left + w * 0.25, y: y0 - 40, h: Math.min((y0 - top) * 0.9, 800) },
+      };
     }
+    const cell = Math.min((w * 0.5) / this.cols, (h * 0.8) / this.rows, size * 2);
+    const x0 = left + cell * 1.1;
+    const gridRight = x0 + cell * this.cols;
+    return {
+      cell,
+      x0,
+      y0: top + (h - cell * this.rows) / 2,
+      tree: { x: gridRight + (right - gridRight) * 0.68, y: bottom - 10, h: Math.min(h * 0.95, 600) },
+      church: { x: gridRight + (right - gridRight) * 0.16, y: bottom - 10, h: Math.min(h * 1.05, 640) },
+    };
   }
 
   /** @private Builds a board with at least one solution. */
@@ -280,6 +307,15 @@ export class CircuitMission extends SceneMission {
     this.particles.update(dt);
     this.updateFade(dt);
     for (const t of this.tiles) if (t) t.shown = approach(t.shown, t.turns, 18, dt);
+    // grow smoothly into the space freed when the instructions card goes away
+    const to = this.place();
+    const k = (/** @type {number} */ a, /** @type {number} */ b) => approach(a, b, 5, dt);
+    this.cell = k(this.cell, to.cell);
+    this.x0 = k(this.x0, to.x0);
+    this.y0 = k(this.y0, to.y0);
+    for (const key of /** @type {const} */ (['tree', 'church'])) {
+      this[key] = { x: k(this[key].x, to[key].x), y: k(this[key].y, to[key].y), h: k(this[key].h, to[key].h) };
+    }
     if (this.solved) {
       this.lit = Math.min(1, this.lit + dt / 1.2);
       if (Math.random() < dt * 2.5) {
