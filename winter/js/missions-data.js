@@ -14,15 +14,15 @@ export const WINTER_MISSIONS = {
   travel: [
     {
       segment: 0,
-      from: 0.1,
-      to: 0.86,
+      from: 0.06,
+      to: 0.9,
       type: 'catch',
       config: {
         id: 'baubles-timisoara-arad',
         title: 'Globurile fugite',
-        text: 'Vântul a luat globurile din târgul de Crăciun din Timișoara! Atinge-le, ca Bubu să le prindă cu plasa ei fermecată.',
-        count: 12,
-        goal: 10,
+        text: 'Vântul a luat globurile din târgul de Crăciun din Timișoara! Atinge-le, ca Bubu să le prindă cu plasa ei fermecată și să împodobească tot trenul.',
+        count: 'fill',
+        goal: 0.8,
       },
     },
   ],

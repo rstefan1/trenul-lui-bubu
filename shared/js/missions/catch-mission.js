@@ -9,8 +9,9 @@
  * stays interesting until the end.
  *
  * Configuration (besides id/title/text):
- *   count   how many ornaments appear
- *   goal    how many are needed for three stars
+ *   count   how many ornaments appear, or "fill" for exactly as many as there
+ *           are free places on the train (so the whole train can be decorated)
+ *   goal    how many are needed for three stars, or a fraction (< 1) of count
  */
 
 import { clamp, easeInOut, lerp } from '../core/math.js';
@@ -54,7 +55,7 @@ const SKY_BOTTOM = 520;
  */
 
 /**
- * @typedef {import('./mission.js').MissionConfig & {count: number, goal: number}} CatchConfig
+ * @typedef {import('./mission.js').MissionConfig & {count: number | 'fill', goal: number}} CatchConfig
  */
 
 export class CatchMission extends Mission {
@@ -69,6 +70,8 @@ export class CatchMission extends Mission {
     this.ornaments = [];
     this.spawned = 0;
     this.caught = 0;
+    this.count = 0;
+    this.goal = 0;
     this.spawnEvery = 3;
     this.spawnTimer = 0.8;
     this.time = 0;
@@ -82,15 +85,21 @@ export class CatchMission extends Mission {
     super.start(hints);
     const duration = hints.duration ?? 36;
     // leave the last seconds free, so the last ornament can still be caught
-    this.spawnEvery = Math.max(1.5, (duration - 10) / this.config.count);
-    this.ctx.hud.setCounter('🎄', 0, this.config.goal);
+    const { count, goal } = this.config;
+    const free = this.ctx.world.train.baubleSlots.length - this.ctx.state.baubles.length;
+    /** Number of ornaments that will appear. */
+    this.count = count === 'fill' ? Math.max(1, free) : count;
+    /** Ornaments needed for three stars. */
+    this.goal = goal < 1 ? Math.ceil(this.count * goal) : Math.min(goal, this.count);
+    this.spawnEvery = Math.max(1.4, (duration - 10) / this.count);
+    this.ctx.hud.setCounter('🎄', 0, this.goal);
   }
 
   /** @param {number} dt */
   update(dt) {
     this.time += dt;
     this.particles.update(dt);
-    if (this.phase === 'running' && this.spawned < this.config.count) {
+    if (this.phase === 'running' && this.spawned < this.count) {
       this.spawnTimer -= dt;
       if (this.spawnTimer <= 0) {
         this.spawn();
@@ -119,7 +128,7 @@ export class CatchMission extends Mission {
       if ((this.misses[i].t += dt) > 0.4) this.misses.splice(i, 1);
     }
 
-    const allOut = this.spawned >= this.config.count && this.ornaments.length === 0;
+    const allOut = this.spawned >= this.count && this.ornaments.length === 0;
     if ((this.phase === 'wrapping' && this.ornaments.length === 0) || (this.phase === 'running' && allOut)) {
       this.ctx.hud.hideCounter();
       this.complete(this.starsFor(this.caught), this.textFor(this.caught));
@@ -128,7 +137,7 @@ export class CatchMission extends Mission {
 
   /** @private Creates one ornament just beyond the right edge. */
   spawn() {
-    const k = this.spawned / Math.max(1, this.config.count - 1);   // 0 → 1 along the mission
+    const k = this.spawned / Math.max(1, this.count - 1);   // 0 → 1 along the mission
     const stage = this.ctx.stage;
     this.ornaments.push({
       x: stage.viewRight + 60,
@@ -170,7 +179,7 @@ export class CatchMission extends Mission {
     best.cy = best.y;
     best.slot = this.ctx.state.baubles.length + inFlight;
     this.caught += 1;
-    this.ctx.hud.setCounter('🎄', this.caught, this.config.goal);
+    this.ctx.hud.setCounter('🎄', this.caught, this.goal);
     this.particles.burst(best.x, best.y, [best.color, '#ffffff', '#ffd54f'], 10, 180);
   }
 
@@ -233,13 +242,13 @@ export class CatchMission extends Mission {
 
   /** @private @param {number} n */
   starsFor(n) {
-    const goal = this.config.goal;
+    const goal = this.goal;
     return n >= goal ? 3 : n >= Math.ceil(goal * 0.6) ? 2 : 1;
   }
 
   /** @private @param {number} n */
   textFor(n) {
-    if (n >= this.config.goal) return `Super! Ai prins ${n} globuri și trenul s-a împodobit!`;
+    if (n >= this.goal) return `Super! Ai prins ${n} globuri și trenul s-a împodobit!`;
     if (n > 0) return `Ai prins ${n} ${n === 1 ? 'glob' : 'globuri'}. Trenul arată deja mai vesel!`;
     return 'Globurile au zburat… dar mai sunt multe de prins pe drum!';
   }
