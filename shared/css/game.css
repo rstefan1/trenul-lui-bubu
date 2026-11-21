@@ -672,7 +672,8 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 
 @media (max-width: 640px) {
   .stars-card { padding: 2px 10px; }
-  .mission-card, .mission-counter { top: calc(max(var(--gap), env(safe-area-inset-top)) + 150px); }
+  .mission-counter { top: calc(max(var(--gap), env(safe-area-inset-top)) + 146px); padding: 2px 14px; }
+  .mission-card { top: calc(max(var(--gap), env(safe-area-inset-top)) + 196px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .panel, .ticket-chip, .packed-item, .star.is-won, .mission-counter.is-bumped, .luggage-item.is-wrong { animation: none; }

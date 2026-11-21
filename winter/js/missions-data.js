@@ -133,5 +133,17 @@ export const WINTER_MISSIONS = {
         flag: 'deva-fortress-lit',
       },
     },
+
+    'alba-iulia': {
+      type: 'maze',
+      config: {
+        id: 'maze-alba-iulia',
+        title: 'Labirintul cetății',
+        text: 'Văzute de sus, aleile Cetății Alba Carolina sunt un labirint! Du-o pe Bubu la bradul de Crăciun și adună pe drum stelele ascunse. Atinge o căsuță în linie dreaptă cu Bubu sau trage cu degetul pe alei.',
+        hidden: 3,
+        doneText: 'Bubu a ajuns la bradul cel mare din mijlocul cetății!',
+        fact: 'Cetatea Alba Carolina are forma unei stele cu șapte colțuri. Aici, la 1 Decembrie 1918, s-a hotărât Marea Unire – de aceea 1 Decembrie este Ziua Națională a României.',
+      },
+    },
   },
 };

@@ -32,6 +32,7 @@ import { CatchMission } from '../../shared/js/missions/catch-mission.js';
 import { DeliveryMission } from '../../shared/js/missions/delivery-mission.js';
 import { DepartureMission } from '../../shared/js/missions/departure-mission.js';
 import { LanternMission } from '../../shared/js/missions/lantern-mission.js';
+import { MazeMission } from '../../shared/js/missions/maze-mission.js';
 import { MissionDirector } from '../../shared/js/missions/director.js';
 import { RotatePuzzleMission } from '../../shared/js/missions/rotate-puzzle-mission.js';
 import { loadBubu } from '../../shared/js/train/bubu.js';
@@ -51,6 +52,7 @@ const MISSION_TYPES = {
   delivery: DeliveryMission,
   departure: DepartureMission,
   lantern: LanternMission,
+  maze: MazeMission,
   'rotate-puzzle': RotatePuzzleMission,
 };
 
@@ -94,6 +96,7 @@ journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Stat
 const input = new PointerInput(stage);
 input.on('down', (/** @type {import('../../shared/js/core/input.js').PointerInfo} */ p) => director.pointerDown(p));
 input.on('move', (/** @type {import('../../shared/js/core/input.js').PointerInfo} */ p) => director.pointerMove(p));
+input.on('up', (/** @type {import('../../shared/js/core/input.js').PointerInfo} */ p) => director.pointerUp(p));
 
 setupFullscreen(/** @type {HTMLButtonElement} */ (byId('btnFullscreen')));
 loadBubu('../shared/assets/bubu.webp');
