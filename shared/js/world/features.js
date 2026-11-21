@@ -19,7 +19,7 @@
  * valley below can be seen.
  */
 
-import { clamp, smoothstep } from '../core/math.js';
+import { TAU, clamp, lerp, smoothstep } from '../core/math.js';
 import { createRng, between } from '../core/random.js';
 import { hexToRgb, css, mixRgb } from '../gfx/color.js';
 import { drawFir, fillRoundRect, glow, lightWindows } from '../gfx/shapes.js';
@@ -61,8 +61,6 @@ import { devaLayout, drawDevaFortress, drawDevaTorches } from '../gfx/scenes/dev
 
 /** How far a station reaches on both sides of its centre. */
 const STATION_HALF = 460;
-/** Colour of the inside of a tunnel (opaque: the train disappears in it). */
-const TUNNEL_DARK = '#16121e';
 /** Top of a tunnel tube (just above the pantograph). */
 const TUBE_TOP = TRACK_Y - 268;
 
@@ -384,70 +382,232 @@ function drawGirder(c, x0, x1) {
 
 // ------------------------------------------------------------------ tunnels
 
-/**
- * Height of the hill a tunnel goes through, above the ground line.
- * @param {number} u  0..1 along the extended hill
- * @param {number} span length of the tunnel
- */
-const hillTop = (u, span) => NEAR_GROUND_Y - (230 + Math.min(260, span * 0.22)) * Math.sin(Math.PI * clamp(u, 0, 1)) ** 0.7;
+/** How far a tunnel's mountain reaches beyond the portals. */
+const MOUNTAIN_SKIRT = 420;
+/** Half the width of a portal's arched opening, and its stone frame. */
+const ARCH_HALF = 118;
+const ARCH_STONE = 26;
+/** Top of the arch (its crown) and where the arch starts curving. */
+const ARCH_TOP = TUBE_TOP - 30;
+const ARCH_SPRING = TUBE_TOP + 90;
 
 /**
- * The hill behind the track (its flanks reach the ground on both sides).
+ * Height of the mountain a tunnel goes through: a big rounded massif with a
+ * few peaks of its own, so a long tunnel does not look like a flat wall.
+ * @param {number} u     0..1 along the whole mountain (skirts included)
+ * @param {number} span  length of the tunnel
+ * @param {number} seed
+ */
+function mountainTop(u, span, seed) {
+  const k = clamp(u, 0, 1);
+  const total = span + 2 * MOUNTAIN_SKIRT;
+  const fromEnd = Math.min(k, 1 - k) * total;          // distance to the nearest foot
+  const rise = Math.sin((Math.PI / 2) * Math.min(1, fromEnd / 520));
+  const height = 330 + Math.min(260, span * 0.08);
+  const peaks = Math.max(1, Math.round(span / 1400));
+  const ridge = 0.86 + 0.14 * Math.cos(TAU * peaks * k + (seed % 6)) + 0.05 * Math.sin(37 * k + (seed % 5));
+  return NEAR_GROUND_Y - height * rise * ridge;
+}
+
+/**
+ * Path of the mountain's outline between two screen x values (inclusive),
+ * closed down to a given bottom.
+ * @param {CanvasRenderingContext2D} c
+ * @param {number} x0  left end of the mountain
+ * @param {number} x1  right end of the mountain
+ * @param {number} from
+ * @param {number} to
+ * @param {number} bottom
+ * @param {SpanFeature} f
+ * @param {number} [dy=0]  offset of the outline (for the snow cap)
+ */
+function mountainPath(c, x0, x1, from, to, bottom, f, dy = 0) {
+  const span = f.x1 - f.x0;
+  const step = 24;
+  c.moveTo(from, bottom);
+  for (let x = from; x < to + step; x += step) {
+    const xx = Math.min(x, to);
+    c.lineTo(xx, mountainTop((xx - x0) / (x1 - x0), span, f.seed) + dy);
+  }
+  c.lineTo(to, bottom);
+  c.closePath();
+}
+
+/**
+ * The mountain behind the track, with the arched mouths of the tunnel at
+ * both ends: the train passes in front of the mouth and then disappears
+ * behind the front part of the mountain.
  * @param {CanvasRenderingContext2D} c
  * @param {FeatureView} v
  * @param {SpanFeature} f
  */
 function drawTunnelHill(c, v, f) {
-  const x0 = screenX(v, f.x0) - 260;
-  const x1 = screenX(v, f.x1) + 260;
-  const span = f.x1 - f.x0;
-  const rock = css(mixRgb(ROCK_BARE, ROCK_SNOWY, v.cover * 0.5));
-  c.fillStyle = rock;
+  const p0 = screenX(v, f.x0);
+  const p1 = screenX(v, f.x1);
+  const x0 = p0 - MOUNTAIN_SKIRT;
+  const x1 = p1 + MOUNTAIN_SKIRT;
+  const from = Math.max(x0, v.left - 30);
+  const to = Math.min(x1, v.right + 30);
+  if (to <= from) return;
+  c.fillStyle = rockColor(v, 1);
   c.beginPath();
-  c.moveTo(x0, NEAR_GROUND_Y + 30);
-  for (let i = 0; i <= 40; i++) {
-    const u = i / 40;
-    c.lineTo(x0 + u * (x1 - x0), hillTop(u, span));
-  }
-  c.lineTo(x1, NEAR_GROUND_Y + 30);
-  c.closePath();
+  mountainPath(c, x0, x1, from, to, NEAR_GROUND_Y + 30, f);
   c.fill();
-  drawHillDressing(c, v, f, x0, x1, span);
+  drawMountainDressing(c, v, f, x0, x1, from, to, 1);
+  // the mouths, each on the outer side of its portal
+  drawTunnelMouth(c, v, p0 - ARCH_HALF + 40);
+  drawTunnelMouth(c, v, p1 + ARCH_HALF - 40);
 }
 
 /**
- * Snow and firs on top of a tunnel hill.
+ * Colour of the mountain's rock (lighter with snow), slightly darker behind.
+ * @param {FeatureView} v
+ * @param {number} shade  1 = full brightness
+ */
+function rockColor(v, shade) {
+  const rgb = mixRgb(ROCK_BARE, ROCK_SNOWY, v.cover * 0.5);
+  return css(/** @type {[number, number, number]} */ (rgb.map(ch => ch * shade)));
+}
+
+/**
+ * Rocky crags, the snow cap and firs on a tunnel's mountain.
  * @param {CanvasRenderingContext2D} c
  * @param {FeatureView} v
  * @param {SpanFeature} f
  * @param {number} x0
  * @param {number} x1
- * @param {number} span
+ * @param {number} from  visible part
+ * @param {number} to
+ * @param {number} shade
  */
-function drawHillDressing(c, v, f, x0, x1, span) {
+function drawMountainDressing(c, v, f, x0, x1, from, to, shade) {
+  const span = f.x1 - f.x0;
+  const top = (/** @type {number} */ x) => mountainTop((x - x0) / (x1 - x0), span, f.seed);
   const rng = createRng(f.seed);
+  // darker crags: triangles of rock along the slopes
+  c.fillStyle = rockColor(v, shade * 0.82);
+  const crags = Math.floor((x1 - x0) / 120);
+  for (let i = 0; i < crags; i++) {
+    const x = x0 + between(rng, 0.06, 0.94) * (x1 - x0);
+    const w = between(rng, 50, 120);
+    const depth = between(rng, 40, 170);
+    if (x + w < from || x - w > to) continue;
+    const y = top(x) + depth;
+    if (y > NEAR_GROUND_Y - 40) continue;
+    c.beginPath();
+    c.moveTo(x - w / 2, y + w * 0.5);
+    c.lineTo(x - w * 0.1, y);
+    c.lineTo(x + w * 0.15, y + 8);
+    c.lineTo(x + w / 2, y + w * 0.5);
+    c.closePath();
+    c.fill();
+  }
+  // the snow cap along the ridge
   if (v.cover > 0.05) {
     c.fillStyle = `rgba(244,248,255,${v.cover})`;
     c.beginPath();
-    for (let i = 0; i <= 40; i++) {
-      const u = i / 40;
-      c.lineTo(x0 + u * (x1 - x0), hillTop(u, span) - 2);
-    }
-    for (let i = 40; i >= 0; i--) {
-      const u = i / 40;
-      c.lineTo(x0 + u * (x1 - x0), hillTop(u, span) + 16 + 8 * Math.sin(i * 1.7));
+    const step = 24;
+    for (let x = from; x < to + step; x += step) c.lineTo(Math.min(x, to), top(Math.min(x, to)) - 2);
+    for (let x = to; x > from - step; x -= step) {
+      const xx = Math.max(x, from);
+      c.lineTo(xx, top(xx) + 22 + 10 * Math.sin(xx * 0.05 + f.seed));
     }
     c.closePath();
     c.fill();
   }
-  for (let i = 0; i < (x1 - x0) / 55; i++) {
-    const u = between(rng, 0.08, 0.92);
-    drawFir(c, x0 + u * (x1 - x0), hillTop(u, span) + 10, between(rng, 60, 110), { snowy: v.cover > 0.5 });
+  // firs on the lower slopes
+  const firs = Math.floor((x1 - x0) / 70);
+  for (let i = 0; i < firs; i++) {
+    const x = x0 + between(rng, 0.04, 0.96) * (x1 - x0);
+    const along = between(rng, 0.25, 0.85);
+    const size = between(rng, 60, 105);
+    if (x < from - 60 || x > to + 60) continue;
+    const y = lerp(top(x) + 40, NEAR_GROUND_Y + 10, along);
+    drawFir(c, x, y, size * (0.7 + 0.3 * along), { snowy: v.cover > 0.5 });
   }
 }
 
 /**
- * The part of the hill in front of the train, the portals and the dark tube.
+ * The outline of a portal's arched opening.
+ * @param {CanvasRenderingContext2D} c
+ * @param {number} cx
+ * @param {number} half
+ * @param {number} crown
+ */
+function archPath(c, cx, half, crown) {
+  const bottom = TRACK_Y + 28;
+  c.moveTo(cx - half, bottom);
+  c.lineTo(cx - half, ARCH_SPRING);
+  c.bezierCurveTo(cx - half, crown + 10, cx - half * 0.55, crown, cx, crown);
+  c.bezierCurveTo(cx + half * 0.55, crown, cx + half, crown + 10, cx + half, ARCH_SPRING);
+  c.lineTo(cx + half, bottom);
+  c.closePath();
+}
+
+/**
+ * A tunnel mouth in the mountain: a stone arch with a keystone around a
+ * dark opening that fades into the depth.
+ * @param {CanvasRenderingContext2D} c
+ * @param {FeatureView} v
+ * @param {number} cx  centre of the arch
+ */
+function drawTunnelMouth(c, v, cx) {
+  if (cx < v.left - 300 || cx > v.right + 300) return;
+  // the facade: a stone wall a little wider than the arch, with a cornice
+  const wallHalf = ARCH_HALF + ARCH_STONE + 40;
+  const wallTop = ARCH_TOP - ARCH_STONE - 30;
+  fillRoundRect(c, cx - wallHalf, wallTop, wallHalf * 2, TRACK_Y + 28 - wallTop, 6, '#a39380');
+  c.fillStyle = '#8f7f6c';
+  c.fillRect(cx - wallHalf - 10, wallTop - 14, wallHalf * 2 + 20, 18);
+  if (v.cover > 0.3) {
+    c.fillStyle = `rgba(244,248,255,${v.cover})`;
+    fillRoundRect(c, cx - wallHalf - 14, wallTop - 22, wallHalf * 2 + 28, 12, 6, c.fillStyle);
+  }
+  // masonry lines on the wall
+  c.strokeStyle = 'rgba(70,55,40,0.25)';
+  c.lineWidth = 2;
+  c.beginPath();
+  for (let y = wallTop + 26, row = 0; y < TRACK_Y + 20; y += 26, row++) {
+    c.moveTo(cx - wallHalf, y);
+    c.lineTo(cx + wallHalf, y);
+    for (let x = cx - wallHalf + (row % 2 ? 24 : 0); x < cx + wallHalf; x += 48) {
+      c.moveTo(x, y);
+      c.lineTo(x, y - 26);
+    }
+  }
+  c.stroke();
+  // the arch of big stones (voussoirs)
+  c.fillStyle = '#c2b29c';
+  c.beginPath();
+  archPath(c, cx, ARCH_HALF + ARCH_STONE, ARCH_TOP - ARCH_STONE);
+  c.fill();
+  // the dark opening, deeper towards the middle
+  const g = c.createRadialGradient(cx, TRACK_Y - 60, 10, cx, TRACK_Y - 60, ARCH_HALF * 1.6);
+  g.addColorStop(0, '#05040a');
+  g.addColorStop(1, '#2a2433');
+  c.fillStyle = g;
+  c.beginPath();
+  archPath(c, cx, ARCH_HALF, ARCH_TOP);
+  c.fill();
+  // joints between the arch stones
+  c.strokeStyle = 'rgba(70,55,40,0.4)';
+  c.lineWidth = 2;
+  c.beginPath();
+  for (let i = 1; i < 9; i++) {
+    const a = Math.PI + (i * Math.PI) / 9;
+    const rx = ARCH_HALF + ARCH_STONE / 2;
+    const ry = ARCH_SPRING - ARCH_TOP;
+    c.moveTo(cx + Math.cos(a) * (rx - ARCH_STONE / 2), ARCH_SPRING + Math.sin(a) * (ry - ARCH_STONE / 2));
+    c.lineTo(cx + Math.cos(a) * (rx + ARCH_STONE / 2), ARCH_SPRING + Math.sin(a) * (ry + ARCH_STONE / 2));
+  }
+  c.stroke();
+  // the keystone
+  fillRoundRect(c, cx - 18, ARCH_TOP - ARCH_STONE - 8, 36, ARCH_STONE + 22, 4, '#d8c9b2');
+}
+
+/**
+ * The part of the mountain in front of the train: between the portals it
+ * hides the train completely; at each end a stone pillar closes the arch.
  * @param {CanvasRenderingContext2D} c
  * @param {FeatureView} v
  * @param {SpanFeature} f
@@ -455,47 +615,45 @@ function drawHillDressing(c, v, f, x0, x1, span) {
 function drawTunnelFront(c, v, f) {
   const p0 = screenX(v, f.x0);
   const p1 = screenX(v, f.x1);
-  const x0 = p0 - 260;
-  const x1 = p1 + 260;
-  const span = f.x1 - f.x0;
-  const rock = css(mixRgb(ROCK_BARE, ROCK_SNOWY, v.cover * 0.5));
-
-  // the dark tube: inside the mountain the train cannot be seen at all
-  c.fillStyle = TUNNEL_DARK;
-  c.fillRect(p0, TUBE_TOP + 20, p1 - p0, TRACK_Y + 28 - TUBE_TOP - 20);
-
-  // rock above the tube
-  c.fillStyle = rock;
-  c.beginPath();
-  c.moveTo(p0 - 30, TUBE_TOP + 40);
-  for (let i = 0; i <= 40; i++) {
-    const u = i / 40;
-    const x = x0 + u * (x1 - x0);
-    if (x < p0 - 30 || x > p1 + 30) continue;
-    c.lineTo(x, hillTop(u, span));
-  }
-  c.lineTo(p1 + 30, TUBE_TOP + 40);
-  c.closePath();
-  c.fill();
-  c.save();
-  c.beginPath();
-  c.rect(p0 - 30, 0, p1 - p0 + 60, TUBE_TOP + 40);
-  c.clip();
-  drawHillDressing(c, v, f, x0, x1, span);
-  c.restore();
-
-  // stone portals at both ends
-  for (const px of [p0, p1]) {
-    fillRoundRect(c, px - 30, TUBE_TOP - 10, 60, TRACK_Y + 30 - TUBE_TOP + 10, 10, '#b7a58e');
-    c.fillStyle = '#a08d77';
-    c.fillRect(px - 30, TUBE_TOP - 10, 60, 14);
+  const x0 = p0 - MOUNTAIN_SKIRT;
+  const x1 = p1 + MOUNTAIN_SKIRT;
+  const from = Math.max(p0, v.left - 30);
+  const to = Math.min(p1, v.right + 30);
+  if (to > from) {
+    c.fillStyle = rockColor(v, 1);
+    c.beginPath();
+    mountainPath(c, x0, x1, from, to, TRACK_Y + 30, f);
+    c.fill();
+    c.save();
+    c.beginPath();
+    c.rect(from, 0, to - from, TRACK_Y + 40);
+    c.clip();
+    drawMountainDressing(c, v, f, x0, x1, from, to, 1);
+    // the foot of the mountain over the rails
+    c.fillStyle = rockColor(v, 0.9);
+    c.fillRect(from, TRACK_Y - 6, to - from, 36);
     if (v.cover > 0.3) {
-      c.fillStyle = `rgba(244,248,255,${v.cover})`;
-      c.fillRect(px - 32, TUBE_TOP - 14, 64, 6);
+      c.fillStyle = `rgba(244,248,255,${v.cover * 0.8})`;
+      c.fillRect(from, TRACK_Y - 10, to - from, 6);
     }
+    c.restore();
   }
-  c.fillStyle = TUNNEL_DARK;
-  c.fillRect(p0 + 8, TUBE_TOP + 12, p1 - p0 - 16, 10);
+  // the arch's inner pillars, in front of the train, at both portals
+  for (const [px, side] of [[p0, 1], [p1, -1]]) {
+    if (px < v.left - 200 || px > v.right + 200) continue;
+    const cx = px + side * 4;
+    fillRoundRect(c, cx - 22, ARCH_SPRING - 30, 44, TRACK_Y + 30 - ARCH_SPRING + 30, 6, '#b7a58e');
+    c.fillStyle = '#9c8b75';
+    c.fillRect(cx - 26, ARCH_SPRING - 34, 52, 12);
+    c.strokeStyle = 'rgba(70,55,40,0.3)';
+    c.lineWidth = 2;
+    c.beginPath();
+    for (let y = ARCH_SPRING; y < TRACK_Y + 20; y += 30) {
+      c.moveTo(cx - 22, y);
+      c.lineTo(cx + 22, y);
+    }
+    c.stroke();
+  }
 }
 
 // ------------------------------------------------------------------ stations
