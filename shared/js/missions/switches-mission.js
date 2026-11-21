@@ -4,14 +4,15 @@
  * A shunting locomotive must push the wagon with the presents onto a given
  * track. Seen as a map, the station is a tree: at every switch the line
  * splits in two (up or down), and the ends are the numbered tracks. The
- * child writes a small program — one choice, UP or DOWN, for each switch,
- * in order — and runs it. The locomotive executes it step by step; if it
- * ends on another track, the program can be corrected and run again.
+ * child touches the switches to throw them up or down — the branch a switch
+ * is set to is drawn bright, the other one faded — and then starts the
+ * locomotive. It follows the switches; if it ends on another track, the
+ * switches can be corrected and the train started again.
  *
- * This is the informatics mission of the journey: planning a sequence of
- * instructions before running it, and debugging it when it is wrong. (The
- * path to track k is also k written in binary — a fact the teacher may
- * enjoy pointing out.)
+ * This is the informatics mission of the journey: setting up the conditions
+ * before running, and correcting them when the result is wrong. (The path
+ * to track k is also k written in binary — a fact the teacher may enjoy
+ * pointing out.)
  *
  * Configuration (besides id/title/text):
  *   levels    depth of the switch tree for every level, e.g. [2, 3, 3]
@@ -45,8 +46,8 @@ export class SwitchesMission extends SceneMission {
     this.depth = 2;
     /** Target track (0-based, from the top). */
     this.target = 0;
-    /** @type {Array<0 | 1>} the program: 0 = up, 1 = down */
-    this.program = [];
+    /** @type {Map<string, 0 | 1>} position of every switch ("level-index" → 0 up / 1 down) */
+    this.switches = new Map();
     /** @type {'edit' | 'run' | 'result' | 'done'} */
     this.step = 'edit';
     this.stepT = 0;
@@ -61,11 +62,11 @@ export class SwitchesMission extends SceneMission {
     /** Layout (animated when the instructions card goes away). */
     this.box = { left: 0, top: 0, right: 0, bottom: 0 };
     /** @type {HTMLElement | null} */
-    this.slots = null;
-    /** @type {HTMLElement | null} */
     this.runButton = null;
     /** Whether the last run reached the target. */
     this.success = false;
+    /** @type {{key: string, t: number} | null} the switch that was just thrown (a small bounce) */
+    this.flip = null;
   }
 
   start() {
@@ -88,7 +89,13 @@ export class SwitchesMission extends SceneMission {
     do t = Math.floor(Math.random() * n);
     while (this.depth > 1 && (t === 0 || t === n - 1));
     this.target = t;
-    this.program = [];
+    // switches start in random positions, but never already leading to the target
+    do {
+      this.switches.clear();
+      for (let i = 0; i < this.depth; i++) {
+        for (let j = 0; j < 2 ** i; j++) this.switches.set(`${i}-${j}`, Math.random() < 0.5 ? 0 : 1);
+      }
+    } while (this.trackOf(this.program) === t);
     this.step = 'edit';
     this.runDist = 0;
     this.message = `Du vagonul cu daruri pe linia ${t + 1}!`;
@@ -96,63 +103,68 @@ export class SwitchesMission extends SceneMission {
     this.buildPanel();
   }
 
-  // ------------------------------------------------------------ the program panel
+  // ------------------------------------------------------------ switches and the start button
+
+  /**
+   * The way the locomotive will go: the position of each switch it meets.
+   * @returns {Array<0 | 1>}
+   */
+  get program() {
+    /** @type {Array<0 | 1>} */
+    const out = [];
+    let j = 0;
+    for (let i = 0; i < this.depth; i++) {
+      const d = this.switches.get(`${i}-${j}`) ?? 0;
+      out.push(d);
+      j = j * 2 + d;
+    }
+    return out;
+  }
 
   /** @private */
   buildPanel() {
-    this.slots = el('ol', { class: 'program' });
-    const up = el('button', { class: 'program-btn', type: 'button' }, ['⬆ SUS']);
-    const down = el('button', { class: 'program-btn', type: 'button' }, ['⬇ JOS']);
-    const erase = el('button', { class: 'program-btn program-btn--erase', type: 'button', 'aria-label': 'Șterge ultima comandă' }, ['⌫']);
-    const run = el('button', { class: 'big-btn program-run', type: 'button' }, ['▶ Pornește']);
-    up.addEventListener('click', () => this.add(0));
-    down.addEventListener('click', () => this.add(1));
-    erase.addEventListener('click', () => {
-      if (this.step !== 'edit') return;
-      this.program.pop();
-      this.refreshPanel();
-    });
+    const run = el('button', { class: 'big-btn program-run', type: 'button' }, ['▶ Pornește trenul']);
     run.addEventListener('click', () => this.run());
     this.runButton = run;
     this.setPanel(el('div', { class: 'panel panel--bottom program-panel' }, [
-      el('p', { class: 'program-title' }, ['Programul: pentru fiecare macaz, în ordine, alege SUS sau JOS']),
-      this.slots,
-      el('div', { class: 'program-buttons' }, [up, down, erase, run]),
+      el('p', { class: 'program-title' }, ['Atinge macazurile ca să le muți SUS sau JOS, apoi pornește trenul.']),
+      run,
     ]));
     this.refreshPanel();
   }
 
   /** @private */
   refreshPanel() {
-    if (!this.slots) return;
-    const active = this.step === 'run' ? this.switchIndexAt(this.runDist) : -1;
-    this.slots.replaceChildren(...Array.from({ length: this.depth }, (_, i) => {
-      const v = this.program[i];
-      const label = v === undefined ? '?' : v === 0 ? '⬆ SUS' : '⬇ JOS';
-      return el('li', { class: `program-slot${v === undefined ? ' is-empty' : ''}${i === active ? ' is-running' : ''}` }, [
-        el('span', { class: 'program-slot__n' }, [`Macazul ${i + 1}`]), el('span', {}, [label]),
-      ]);
-    }));
-    if (this.runButton) /** @type {HTMLButtonElement} */ (this.runButton).disabled = this.program.length < this.depth || this.step !== 'edit';
+    if (this.runButton) /** @type {HTMLButtonElement} */ (this.runButton).disabled = this.step !== 'edit';
   }
 
-  /**
-   * @private
-   * @param {0 | 1} dir
-   */
-  add(dir) {
-    if (this.step !== 'edit' || this.program.length >= this.depth) return;
-    this.program.push(dir);
-    this.refreshPanel();
+  /** @param {import('../core/input.js').PointerInfo} p */
+  pointerDown(p) {
+    if (this.step !== 'edit') return;
+    let best = null;
+    let bestDist = Math.max(46, 34 / this.ctx.stage.scale);   // generous for fingers
+    for (let i = 0; i < this.depth; i++) {
+      for (let j = 0; j < 2 ** i; j++) {
+        const n = this.node(i, j);
+        const d = Math.hypot(n.x - p.x, n.y - p.y);
+        if (d < bestDist) {
+          best = `${i}-${j}`;
+          bestDist = d;
+        }
+      }
+    }
+    if (!best) return;
+    this.switches.set(best, this.switches.get(best) ? 0 : 1);
+    this.flip = { key: best, t: 0 };
   }
 
-  /** @private Runs the program. */
+  /** @private Starts the locomotive. */
   run() {
-    if (this.step !== 'edit' || this.program.length < this.depth) return;
+    if (this.step !== 'edit') return;
     this.step = 'run';
     this.runDist = 0;
     this.route = this.routeFor(this.program);
-    this.message = 'Programul rulează…';
+    this.message = 'Trenul pornește…';
     this.refreshPanel();
   }
 
@@ -263,10 +275,9 @@ export class SwitchesMission extends SceneMission {
     // the map may move (the instructions card goes away, the panel changes):
     // the route always follows the current layout
     if (this.step !== 'edit') this.route = this.routeFor(this.program);
+    if (this.flip && (this.flip.t += dt) > 0.3) this.flip = null;
     if (this.step === 'run') {
-      const before = this.switchIndexAt(this.runDist);
       this.runDist += SPEED * dt;
-      if (this.switchIndexAt(this.runDist) !== before) this.refreshPanel();
       // stop when the wagon (pushed in front of the locomotive) reaches the buffer stop
       if (this.along(this.route, this.runDist + 70).done) this.arrive();
     } else if (this.step === 'result') {
@@ -352,6 +363,8 @@ export class SwitchesMission extends SceneMission {
     const b = this.box;
     /** @type {Point[][]} */
     const lines = [];
+    /** @type {Point[][]} */
+    const faded = [];
     const first = this.node(0, 0);
     lines.push([{ x: b.left + 20, y: first.y }, first]);
     for (let i = 0; i < this.depth; i++) {
@@ -360,24 +373,32 @@ export class SwitchesMission extends SceneMission {
         for (const d of [0, 1]) {
           const cj = j * 2 + d;
           const z = i + 1 < this.depth ? this.node(i + 1, cj) : { x: this.levelX(this.depth), y: this.trackY(cj) };
-          lines.push([a, { x: a.x + 40, y: a.y }, { x: z.x - 40, y: z.y }, z]);
+          const line = [a, { x: a.x + 40, y: a.y }, { x: z.x - 40, y: z.y }, z];
+          // the branch the switch is set to is bright, the other one faded
+          if (this.switches.get(`${i}-${j}`) === d) lines.push(line);
+          else faded.push(line);
         }
       }
     }
     for (let k = 0; k < n; k++) lines.push([{ x: this.levelX(this.depth), y: this.trackY(k) }, { x: b.right - 70, y: this.trackY(k) }]);
 
-    // rails: a dark bed with a light line in the middle (like a station map)
-    for (const [width, color] of [[14, '#5f6b7e'], [4, '#c9d3df']]) {
-      c.strokeStyle = /** @type {string} */ (color);
-      c.lineWidth = /** @type {number} */ (width);
-      c.lineJoin = 'round';
-      c.lineCap = 'round';
-      for (const line of lines) {
-        c.beginPath();
-        line.forEach((p, i) => (i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)));
-        c.stroke();
+    // rails: a dark bed with a light line in the middle (like a station map);
+    // the branches a switch does not lead to are faded
+    for (const [group, alpha] of [[faded, 0.25], [lines, 1]]) {
+      c.globalAlpha = /** @type {number} */ (alpha);
+      for (const [width, color] of [[14, '#4f5b6e'], [4, '#c9d3df']]) {
+        c.strokeStyle = /** @type {string} */ (color);
+        c.lineWidth = /** @type {number} */ (width);
+        c.lineJoin = 'round';
+        c.lineCap = 'round';
+        for (const line of /** @type {Point[][]} */ (group)) {
+          c.beginPath();
+          line.forEach((p, i) => (i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)));
+          c.stroke();
+        }
       }
     }
+    c.globalAlpha = 1;
 
     // platforms with their numbers; the target shines
     for (let k = 0; k < n; k++) {
@@ -396,22 +417,23 @@ export class SwitchesMission extends SceneMission {
       }
     }
 
-    // the switches: numbered; while running, they show the programmed way
-    const running = this.step === 'run' || this.step === 'result';
-    let j = 0;
+    // the switches: big round buttons with an arrow showing where they lead
     for (let i = 0; i < this.depth; i++) {
-      for (let jj = 0; jj < 2 ** i; jj++) {
-        const p = this.node(i, jj);
-        const onPath = running && jj === j;
-        c.fillStyle = onPath ? '#ffd23f' : '#1f4f9c';
-        c.beginPath();
-        c.arc(p.x, p.y, 15, 0, Math.PI * 2);
-        c.fill();
-        c.fillStyle = onPath ? '#1b2440' : '#ffffff';
-        c.font = '800 16px "Baloo 2", system-ui, sans-serif';
-        c.fillText(onPath ? (this.program[i] === 0 ? '⬆' : '⬇') : String(i + 1), p.x, p.y + 1);
+      for (let j = 0; j < 2 ** i; j++) {
+        const key = `${i}-${j}`;
+        const p = this.node(i, j);
+        const bounce = this.flip?.key === key ? 1 + 0.25 * Math.sin((this.flip.t / 0.3) * Math.PI) : 1;
+        // at least about 22 screen pixels in radius, so a finger can hit it
+        const r = Math.max(24, 22 / this.ctx.stage.scale) * bounce;
+        if (this.step === 'edit') glow(c, p.x, p.y, r * 2, 'rgba(255,215,90,0.35)', 'rgba(255,215,90,0)');
+        c.fillStyle = '#ffffff';
+        fillCircle(c, p.x, p.y, r + 4);
+        c.fillStyle = '#1f4f9c';
+        fillCircle(c, p.x, p.y, r);
+        c.fillStyle = '#ffffff';
+        c.font = `800 ${Math.round(r * 1.1)}px "Baloo 2", system-ui, sans-serif`;
+        c.fillText(this.switches.get(key) ? '⬇' : '⬆', p.x, p.y + 2);
       }
-      if (running) j = j * 2 + this.program[i];
     }
   }
 

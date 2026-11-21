@@ -190,7 +190,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'switches-dej',
         title: 'Macazurile din Dej',
-        text: 'Dej este un nod de cale ferată, cu multe linii. O locomotivă mică trebuie să ducă vagonul cu daruri pe linia cerută. Scrie programul: pentru fiecare macaz, în ordine, alege SUS sau JOS, apoi apasă Pornește.',
+        text: 'Dej este un nod de cale ferată, cu multe linii. O locomotivă mică trebuie să ducă vagonul cu daruri pe linia cerută. Atinge macazurile (cercurile albastre) ca să le muți SUS sau JOS, apoi pornește trenul.',
         levels: [2, 3, 3],
         doneText: 'Toate vagoanele cu daruri au ajuns pe liniile bune!',
         fact: 'La Dej se întâlnesc linii de cale ferată care vin din mai multe direcții. Macazul este o bucată de șină care se mută și alege pe unde merge trenul – exact ca o instrucțiune „dacă… atunci…” dintr-un program.',
