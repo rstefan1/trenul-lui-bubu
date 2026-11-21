@@ -11,15 +11,10 @@
  * Bubu's sack holds only a few gifts more than there are children, so
  * throwing at random does not work.
  *
- * Night variant ("windows"): the children wait inside, at a window where a
- * candle is lit, then blown out, then lit again. A gift only arrives when
- * it lands while the candle burns — the timing becomes a little harder.
- *
  * Configuration (besides id/title/text):
  *   houses   how many houses pass by
  *   empty    how many of them are dark and empty (decoys)
  *   spare    gifts in the sack beyond one per child
- *   mode     "yard" (children in the yards, default) or "windows" (candles)
  */
 
 import { TAU, clamp } from '../core/math.js';
@@ -41,9 +36,6 @@ const TOSS_FORWARD = 50;
 const CATCH_RADIUS = 72;
 /** Minimum time between two throws. */
 const THROW_COOLDOWN = 0.4;
-/** Candles (night variant): seconds of a full cycle and how long the candle burns in it. */
-const CANDLE_CYCLE = 3.4;
-const CANDLE_LIT = 2.1;
 
 /**
  * @typedef {object} House
@@ -66,7 +58,7 @@ const CANDLE_LIT = 2.1;
  */
 
 /**
- * @typedef {import('./mission.js').MissionConfig & {houses: number, empty: number, spare: number, mode?: 'yard' | 'windows'}} DeliveryConfig
+ * @typedef {import('./mission.js').MissionConfig & {houses: number, empty: number, spare: number}} DeliveryConfig
  */
 
 export class DeliveryMission extends Mission {
@@ -155,23 +147,9 @@ export class DeliveryMission extends Mission {
     return this.toScreen(h.worldX);
   }
 
-  /** True in the night variant, where children wait at candle-lit windows. */
-  get windows() {
-    return this.config.mode === 'windows';
-  }
-
-  /** Screen x of the spot where the gift must land: the yard, or the door under the window. */
+  /** Screen x of the spot where the child stands. */
   childX(/** @type {House} */ h) {
-    return this.houseX(h) + (this.windows ? 65 : 190);
-  }
-
-  /**
-   * Is the candle burning in a house's window? (Always, once served.)
-   * @param {House} h
-   */
-  candleLit(h) {
-    if (!this.windows || h.served) return true;
-    return (this.time + h.phase) % CANDLE_CYCLE < CANDLE_LIT;
+    return this.houseX(h) + 190;
   }
 
   /** @param {number} dt */
@@ -236,7 +214,7 @@ export class DeliveryMission extends Mission {
     let best = null;
     let bestDist = CATCH_RADIUS;
     for (const h of this.houses) {
-      if (!h.child || h.served || !this.candleLit(h)) continue;
+      if (!h.child || h.served) continue;
       const d = Math.abs(this.childX(h) - g.x);
       if (d < bestDist) {
         best = h;
@@ -287,15 +265,6 @@ export class DeliveryMission extends Mission {
       // lit windows; the house of a happy child shines brighter
       const x = this.houseX(h);
       const rects = houseWindows(x);
-      if (this.windows) {
-        if (h.child && this.candleLit(h)) {
-          c.globalAlpha = h.served ? 1 : 0.9;
-          lightWindows(c, rects, 1.4);
-          c.globalAlpha = 1;
-          for (const [wx, wy, ww, wh] of rects) drawCandle(c, wx + ww / 2, wy + wh - 2, this.time + h.phase);
-        }
-        continue;
-      }
       const strength = h.child ? Math.max(glowK, h.served ? 0.9 : 0.35) : 0;
       if (strength > 0.02) {
         c.globalAlpha = strength;
@@ -342,11 +311,7 @@ export class DeliveryMission extends Mission {
     c.fillStyle = '#8a6a50';
     c.fillRect(x - 20, YARD_Y - 26, 260, 4);
     for (let fx = x - 18; fx < x + 240; fx += 18) c.fillRect(fx, YARD_Y - 34, 5, 34);
-    if (h.child && !this.windows) this.drawChild(c, h);
-    if (h.child && this.windows && h.served) {
-      // the gift waits on the doorstep
-      drawGift(c, this.childX(h), YARD_Y - 14, 24, GIFT_COLORS[(h.phase * 10 | 0) % GIFT_COLORS.length]);
-    }
+    if (h.child) this.drawChild(c, h);
   }
 
   /**
@@ -418,7 +383,7 @@ export class DeliveryMission extends Mission {
  * @param {number} sill
  * @param {number} t  seconds (for the flicker)
  */
-function drawCandle(c, x, sill, t) {
+export function drawCandle(c, x, sill, t) {
   c.fillStyle = '#fff3e0';
   c.fillRect(x - 2.5, sill - 9, 5, 9);
   const f = 1 + Math.sin(t * 19) * 0.15;
@@ -434,7 +399,7 @@ function drawCandle(c, x, sill, t) {
  * @param {number} x
  * @returns {Array<[number, number, number, number]>}
  */
-function houseWindows(x) {
+export function houseWindows(x) {
   const w = 130;
   const h = 70;
   const ww = w * 0.2;
