@@ -58,8 +58,9 @@ export class MotionPlan {
    * @param {number} cruise    cruising speed
    * @param {number} accel     acceleration, also used for braking
    * @param {SpeedLimit[]} [limits]
+   * @param {number} [startSpeed=0]  speed at the start (when re-planning a moving train)
    */
-  constructor(length, cruise, accel, limits = []) {
+  constructor(length, cruise, accel, limits = [], startSpeed = 0) {
     this.length = length;
     const n = Math.max(2, Math.ceil(length / STEP) + 1);
     const dx = length / (n - 1);
@@ -73,7 +74,7 @@ export class MotionPlan {
       v[i] = cap;
     }
     // 2. forward (acceleration) and 3. backward (braking) passes
-    v[0] = 0;
+    v[0] = Math.min(v[0], startSpeed);
     for (let i = 1; i < n; i++) v[i] = Math.min(v[i], Math.sqrt(v[i - 1] ** 2 + 2 * accel * dx));
     v[n - 1] = 0;
     for (let i = n - 2; i >= 0; i--) v[i] = Math.min(v[i], Math.sqrt(v[i + 1] ** 2 + 2 * accel * dx));

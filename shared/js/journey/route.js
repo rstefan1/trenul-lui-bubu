@@ -66,6 +66,7 @@ import { MotionPlan, tripLength } from './motion.js';
  * @property {Station} from
  * @property {Station} to
  * @property {MotionPlan} profile
+ * @property {import('./motion.js').SpeedLimit[]} limits   speed limits, from the start of the segment
  * @property {number} start   world position of the start
  * @property {number} length
  * @property {Array<[number, string]>} biomes
@@ -129,6 +130,7 @@ export class Route {
         from,
         to,
         profile,
+        limits,
         start: distance,
         length: profile.length,
         biomes: seg.biomes,
