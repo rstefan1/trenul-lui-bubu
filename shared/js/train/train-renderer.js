@@ -28,8 +28,8 @@ import { CAR_PAINTERS, WHEEL_R } from './cars.js';
 /** Vertical extent of the painted train, relative to the rail. */
 const TOP = -262;
 const BOTTOM = 6;
-/** Bubu's size on screen. */
-const BUBU_SIZE = 88;
+/** Bubu's size on screen (her window is a normal one; she leans out of it). */
+const BUBU_SIZE = 80;
 /** Distance between two garland hooks. */
 const HOOK_SPACING = 58;
 /** How far the garland hangs between hooks. */
@@ -330,10 +330,10 @@ export class TrainRenderer {
         }
         const b = car.geo.bubuWindow;
         if (b) {
-          // the warm lamp inside, then Bubu again, lit by it
+          // the warm lamp inside, then Bubu in front of it, fully opaque
           c.fillStyle = '#ffd98a';
           c.fillRect(ox + b[0], f.railY + b[1], b[2], b[3]);
-          c.globalAlpha = f.lights * 0.75;
+          c.globalAlpha = 1;
           this.drawBubu(c, f);
           c.globalAlpha = f.lights;
         }
@@ -421,7 +421,7 @@ export class TrainRenderer {
       c.beginPath();
       c.rect(cx - BUBU_SIZE, sill - BUBU_SIZE * 1.5, BUBU_SIZE * 2, BUBU_SIZE * 1.5);
       c.clip();
-      drawBubu(c, cx, sill - BUBU_SIZE * 0.4 + bob + hidden, BUBU_SIZE, tilt);
+      drawBubu(c, cx, sill - BUBU_SIZE * 0.38 + bob + hidden, BUBU_SIZE, tilt);
       c.restore();
     }
   }

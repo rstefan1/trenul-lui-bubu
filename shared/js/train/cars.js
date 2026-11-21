@@ -71,15 +71,6 @@ function drawBuffers(c, x, dir) {
 }
 
 /**
- * Bubu's window is larger than the others (and open), so that she can lean
- * out and be seen well.
- * @param {number} x   left edge of a normal window at this place
- * @param {number} w   width of a normal window
- * @returns {Rect}
- */
-const bubuWindowRect = (x, w) => [x - 6, -166, w + 12, 74];
-
-/**
  * A window with a frame and a reflection.
  * @param {CanvasRenderingContext2D} c
  * @param {Rect} r
@@ -278,7 +269,7 @@ function coach(c, car, pos) {
     const x = right - gap - ww - i * (ww + gap);
     const isBubu = car.bubuWindow === i;
     /** @type {Rect} */
-    const r = isBubu ? bubuWindowRect(x, ww) : [x, -154, ww, wh];
+    const r = [x, -154, ww, wh];
     drawWindow(c, r, isBubu);
     if (isBubu) bubuWindow = r;
     else windows.push(r);
@@ -368,7 +359,7 @@ function railcar(c, car, pos, noseRight) {
     const x = noseRight ? L - 130 - i * 62 : 80 + (n - 1 - i) * 62;
     const isBubu = car.bubuWindow === i;
     /** @type {Rect} */
-    const r = isBubu ? bubuWindowRect(x, ww) : [x, -150, ww, wh];
+    const r = [x, -150, ww, wh];
     drawWindow(c, r, isBubu);
     if (isBubu) bubuWindow = r;
     else windows.push(r);
