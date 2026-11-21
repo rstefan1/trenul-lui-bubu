@@ -26,8 +26,8 @@ const FADE_OUT = 1900;
 const SQUEAL_AT = 950;
 /** Seconds over which the sound settles to a new level (a gentle, never abrupt change). */
 const SMOOTH = 0.4;
-/** Volume of the squeal (as loud as the whistle). */
-const SQUEAL_VOLUME = 1;
+/** Volume of the squeal (heard over the train, softer than the whistle). */
+const SQUEAL_VOLUME = 0.35;
 
 export class RailSound {
   /**
@@ -95,8 +95,8 @@ export class RailSound {
   }
 
   /**
-   * Starts the squeal: the recording if there is one, otherwise a soft
-   * metallic squeal made of a few wobbling high tones.
+   * Starts the squeal: the recording if there is one, otherwise a squeal
+   * synthesised from noise (see synthSqueal).
    * @private
    * @returns {{stop: () => void}}
    */
@@ -119,24 +119,7 @@ export class RailSound {
       src.start(now);
       sources.push(src);
     } else {
-      for (const [freq, level] of [[2150, 1], [2740, 0.7], [3900, 0.3]]) {
-        const osc = ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now);
-        osc.frequency.linearRampToValueAtTime(freq * 0.92, now + 3.5);
-        // the wobble of the wheel on the rail
-        const lfo = ctx.createOscillator();
-        lfo.frequency.value = 5 + Math.random() * 3;
-        const depth = ctx.createGain();
-        depth.gain.value = freq * 0.006;
-        lfo.connect(depth).connect(osc.frequency);
-        const g = ctx.createGain();
-        g.gain.value = 0.475 * level;   // together they peak as high as the whistle
-        osc.connect(g).connect(out);
-        osc.start(now);
-        lfo.start(now);
-        sources.push(osc, lfo);
-      }
+      sources.push(...synthSqueal(ctx, out, now));
     }
     return {
       stop() {
@@ -148,6 +131,91 @@ export class RailSound {
       },
     };
   }
+}
+
+/** Seconds the synthesised squeal can last (it is stopped when the train stands still). */
+const SQUEAL_LENGTH = 6;
+
+/**
+ * A squeal of steel brakes on steel wheels, made the way the real one
+ * sounds: noise "singing" through a few narrow resonances (the wheel rings
+ * like a bell), whose pitch slides and wavers irregularly, whose loudness
+ * flutters (the brake shoe sticks and slips), over a duller grinding.
+ * Every squeal is a little different.
+ * @param {AudioContext} ctx
+ * @param {AudioNode} out
+ * @param {number} t  start time
+ * @returns {AudioScheduledSourceNode[]}
+ */
+function synthSqueal(ctx, out, t) {
+  const noise = whiteNoise(ctx);
+  /** @type {AudioScheduledSourceNode[]} */
+  const sources = [];
+  /** A slowly wandering value around 1 (for pitch and loudness), as a curve. */
+  const wander = (/** @type {number} */ depth, /** @type {number} */ speed) => {
+    const n = 64;
+    const curve = new Float32Array(n);
+    let v = 0;
+    let drift = 0;
+    for (let i = 0; i < n; i++) {
+      drift = drift * 0.8 + (Math.random() - 0.5) * speed;
+      v = Math.max(-1, Math.min(1, v * 0.92 + drift));
+      curve[i] = 1 + v * depth;
+    }
+    return curve;
+  };
+  const base = 2350 + Math.random() * 500;
+  const pitch = wander(0.035, 0.5);
+  // the singing resonances of the wheel (a main one and two overtones)
+  for (const [ratio, q, level] of [[1, 42, 1], [1.61, 55, 0.45], [2.43, 60, 0.22]]) {
+    const src = ctx.createBufferSource();
+    src.buffer = noise;
+    src.loop = true;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.Q.value = q;
+    const curve = pitch.map(k => base * ratio * k);
+    // the squeal rises a little as the train slows down
+    for (let i = 0; i < curve.length; i++) curve[i] *= 1 + 0.05 * (i / curve.length);
+    f.frequency.setValueCurveAtTime(curve, t, SQUEAL_LENGTH);
+    const g = ctx.createGain();
+    g.gain.setValueCurveAtTime(wander(0.45, 0.9).map(k => Math.max(0.05, k) * level * 6), t, SQUEAL_LENGTH);
+    src.connect(f).connect(g).connect(out);
+    src.start(t, Math.random());
+    sources.push(src);
+  }
+  // the duller grinding of the brake shoes underneath
+  const grind = ctx.createBufferSource();
+  grind.buffer = noise;
+  grind.loop = true;
+  const gf = ctx.createBiquadFilter();
+  gf.type = 'bandpass';
+  gf.frequency.value = 1100;
+  gf.Q.value = 0.8;
+  const gg = ctx.createGain();
+  gg.gain.value = 0.12;
+  grind.connect(gf).connect(gg).connect(out);
+  grind.start(t, Math.random());
+  sources.push(grind);
+  return sources;
+}
+
+/** @type {WeakMap<BaseAudioContext, AudioBuffer>} */
+const noiseCache = new WeakMap();
+
+/**
+ * Two seconds of white noise (made once per audio context).
+ * @param {AudioContext} ctx
+ */
+function whiteNoise(ctx) {
+  let buffer = noiseCache.get(ctx);
+  if (!buffer) {
+    buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const d = buffer.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    noiseCache.set(ctx, buffer);
+  }
+  return buffer;
 }
 
 /** Seconds of the recording's end blended into its beginning (just enough to hide the joint). */
