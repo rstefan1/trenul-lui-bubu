@@ -59,6 +59,8 @@ import { loadBubu } from '../../shared/js/train/bubu.js';
 import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
 import { Hud } from '../../shared/js/ui/hud.js';
 import { MissionHud } from '../../shared/js/ui/mission-hud.js';
+import { AudioEngine, setupSoundButton } from '../../shared/js/audio/audio.js';
+import { RailSound } from '../../shared/js/audio/rail-sound.js';
 import { setupFullscreen, showOverlay } from '../../shared/js/ui/screens.js';
 import { WorldView } from '../../shared/js/world/world-view.js';
 import { WINTER_CHAPTERS } from './chapters-data.js';
@@ -146,6 +148,11 @@ input.on('move', (/** @type {import('../../shared/js/core/input.js').PointerInfo
 input.on('up', (/** @type {import('../../shared/js/core/input.js').PointerInfo} */ p) => director.pointerUp(p));
 
 setupFullscreen(/** @type {HTMLButtonElement} */ (byId('btnFullscreen')));
+
+// ------------------------------------------------------------ sound
+const audio = new AudioEngine();
+setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
+const railSound = new RailSound(audio);
 loadBubu('../shared/assets/bubu.webp');
 // texts painted on the train (car numbers) need the game font
 document.fonts?.ready.then(() => world.train.setLocoColor(state.locoColor));
@@ -158,6 +165,12 @@ const loop = new GameLoop(dt => {
   world.update(step);
   render();
   hud.update(journey);
+  railSound.update(journey.distance, journey.speed, world.train.axles, {
+    anchorX: world.anchorX,
+    width: stage.width,
+    tunnel: world.features.tunnelState(journey.distance, world.train.length).any,
+    paused: missionHud.paused,
+  });
   canvas.style.cursor = director.wantsPointer ? 'pointer' : 'default';
 });
 
