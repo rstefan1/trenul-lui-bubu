@@ -29,9 +29,17 @@
  * @property {string} type
  * @property {import('./mission.js').MissionConfig & Record<string, unknown>} config
  *
+ * @typedef {object} Moment
+ * @property {number} segment
+ * @property {number} at       fraction of the segment
+ * @property {string} kicker
+ * @property {string} title
+ * @property {string} text
+ *
  * @typedef {object} MissionPlan
  * @property {TravelMissionPlan[]} travel
  * @property {Record<string, StationMissionPlan>} stations   by station id
+ * @property {Moment[]} [moments]   short announcements during the journey (surprises)
  *
  * @typedef {new (ctx: import('./mission.js').MissionContext, config: any) => import('./mission.js').Mission} MissionClass
  */
@@ -57,6 +65,8 @@ export class MissionDirector {
     this.active = [];
     /** Travel missions already started (by index in the plan). */
     this.started = new Set();
+    /** Moments already announced (by index in the plan). */
+    this.announced = new Set();
     /** Pending departure, in seconds of game time. */
     this.departIn = Infinity;
     /** True while a station mission holds the train. */
@@ -107,8 +117,12 @@ export class MissionDirector {
       this.plan.travel.forEach((t, i) => {
         if (t.segment !== j.segment.index || this.started.has(i) || u < t.from || u >= t.to) return;
         this.started.add(i);
-        const m = this.launch(t.type, t.config, { duration: (t.to - t.from) * j.segment.profile.duration });
-        m.window = t;
+        this.launch(t.type, t.config, { duration: (t.to - t.from) * j.segment.profile.duration, window: t });
+      });
+      (this.plan.moments || []).forEach((m, i) => {
+        if (m.segment !== j.segment.index || this.announced.has(i) || u < m.at) return;
+        this.announced.add(i);
+        this.ctx.hud.announce(m.title, m.text, m.kicker);
       });
       for (const m of this.active) {
         const w = /** @type {TravelMissionPlan | undefined} */ (m.window);
@@ -141,13 +155,15 @@ export class MissionDirector {
    * @private
    * @param {string} type
    * @param {any} config
-   * @param {{duration?: number}} hints
+   * @param {{duration?: number, window?: TravelMissionPlan}} hints
    * @returns {import('./mission.js').Mission & {window?: TravelMissionPlan}}
    */
   launch(type, config, hints) {
     const Class = this.registry[type];
     if (!Class) throw new Error(`Unknown mission type "${type}"`);
+    /** @type {import('./mission.js').Mission & {window?: TravelMissionPlan}} */
     const m = new Class(this.ctx, config);
+    m.window = hints.window;
     this.active.push(m);
     m.start(hints);
     return m;
