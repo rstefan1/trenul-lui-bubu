@@ -3,9 +3,11 @@
  *
  * Wires the shared engine to the winter content: builds the route, the
  * journey, the world view and the mission director, starts the render loop
- * and shows Bubu's introduction.
+ * and hands over to the campaign (introduction, menu, chapters, saving).
  *
- * Testing helpers (URL parameters):
+ * The teacher can open every chapter with ?profesor.
+ *
+ * Testing helpers (URL parameters; they bypass the menu and do not save):
  *   ?from=<station id>   start stopped at that station (e.g. ?from=ilva-mica)
  *   ?speed=<factor>      run the journey faster (e.g. ?speed=4)
  *   ?skip                skip the introduction
@@ -19,6 +21,9 @@ import { PointerInput } from '../../shared/js/core/input.js';
 import { GameLoop } from '../../shared/js/core/loop.js';
 import { clamp } from '../../shared/js/core/math.js';
 import { Stage } from '../../shared/js/core/stage.js';
+import { Campaign } from '../../shared/js/game/campaign.js';
+import { ChapterBook } from '../../shared/js/game/chapters.js';
+import { SaveStore } from '../../shared/js/game/save.js';
 import { GameState } from '../../shared/js/game/state.js';
 import { Journey } from '../../shared/js/journey/journey.js';
 import { Route } from '../../shared/js/journey/route.js';
@@ -29,10 +34,12 @@ import { LanternMission } from '../../shared/js/missions/lantern-mission.js';
 import { MissionDirector } from '../../shared/js/missions/director.js';
 import { RotatePuzzleMission } from '../../shared/js/missions/rotate-puzzle-mission.js';
 import { loadBubu } from '../../shared/js/train/bubu.js';
+import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
 import { Hud } from '../../shared/js/ui/hud.js';
 import { MissionHud } from '../../shared/js/ui/mission-hud.js';
 import { setupFullscreen, showOverlay } from '../../shared/js/ui/screens.js';
 import { WorldView } from '../../shared/js/world/world-view.js';
+import { WINTER_CHAPTERS } from './chapters-data.js';
 import { WINTER_MISSIONS } from './missions-data.js';
 import { WINTER_ROUTE } from './route-data.js';
 
@@ -47,6 +54,8 @@ const MISSION_TYPES = {
 
 const params = new URLSearchParams(location.search);
 const timeScale = clamp(Number(params.get('speed')) || 1, 0.25, 20);
+/** Testing: start straight in the journey, without the menu and without saving. */
+const testMode = ['from', 'at', 'skip'].some(p => params.has(p));
 
 const byId = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.getElementById(id));
 
@@ -78,7 +87,6 @@ state.on('change', (/** @type {string} */ what) => {
 journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Station} */ station) => {
   hud.showStation(station.name);
 });
-journey.on('finish', () => setTimeout(showFinale, 2500));
 
 // ------------------------------------------------------------ input and loop
 const input = new PointerInput(stage);
@@ -115,15 +123,14 @@ function render() {
   ctx.restore();
 }
 
-// ------------------------------------------------------------ screens
-async function showIntro() {
-  if (!params.has('skip')) await showOverlay(byId('intro'), byId('btnStart'));
-  director.atStation(journey.station);
-}
-
-async function showFinale() {
-  await showOverlay(byId('finale'), byId('btnAgain'));
-  location.reload();
+// ------------------------------------------------------------ test mode
+async function startTest() {
+  journey.on('finish', () => setTimeout(async () => {
+    await showOverlay(byId('finale'), byId('btnAgain'));
+    location.reload();
+  }, 2500));
+  if (params.has('at')) fastForward(Number(params.get('at')) || 0);
+  else director.atStation(journey.station);
 }
 
 /**
@@ -143,5 +150,15 @@ function fastForward(seconds) {
 if (params.has('debug')) Object.assign(window, { trenulDebug: { stage, journey, world, state, director } });
 
 loop.start();
-if (params.has('at')) fastForward(Number(params.get('at')) || 0);
-else showIntro();
+if (testMode) {
+  startTest();
+} else {
+  const campaign = new Campaign({
+    journey, director, world, state, hud, missionHud,
+    store: new SaveStore('trenul-lui-bubu/winter'),
+    book: new ChapterBook(route, WINTER_CHAPTERS, WINTER_MISSIONS),
+    screens: new ChapterScreens(),
+    teacher: params.has('profesor'),
+  });
+  campaign.open();
+}

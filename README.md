@@ -18,6 +18,16 @@ winter/          the Christmas journey
 
 A future summer journey will live in `summer/` and reuse `shared/`.
 
+## Playing
+
+The journey has four chapters, which unlock one after another. Progress is
+saved in the browser after every station (no accounts, nothing leaves the
+device), so it can be continued another day with “Continuă călătoria”.
+Finished chapters can be replayed for more stars.
+
+The teacher can open every chapter with `?profesor`, e.g.
+`winter/?profesor`.
+
 ## Running locally
 
 The game uses JavaScript modules, so it must be served over HTTP (opening
@@ -35,7 +45,8 @@ device.
 
 ### Testing helpers
 
-URL parameters that make testing faster:
+URL parameters that make testing faster (the first four skip the menu and
+do not save anything):
 
 | Parameter        | Effect                                                    |
 |------------------|-----------------------------------------------------------|
