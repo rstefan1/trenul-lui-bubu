@@ -17,7 +17,8 @@
  * director.
  *
  * When the train is ready to leave a station (its mission finished, or the
- * short stop over), the director emits "ready" (station); at the last
+ * short stop over), the director emits "ready" (station), the locomotive
+ * whistles and the train leaves once the whistle is over; at the last
  * station it emits "complete" (station) instead: the journey is over. If the `holdAt`
  * policy says so (e.g. at the end of a chapter), the train then waits until
  * {@link MissionDirector#release} is called.
@@ -78,6 +79,8 @@ export class MissionDirector extends Emitter {
     this.announced = new Set();
     /** Seconds until the train is ready to leave the station it waits at. */
     this.readyIn = Infinity;
+    /** Seconds until the train leaves (while the locomotive whistles). */
+    this.departIn = Infinity;
     /** The station mission holding the train, if any. */
     this.holding = false;
     /** True while the train waits for {@link release}. */
@@ -111,7 +114,21 @@ export class MissionDirector extends Emitter {
   release() {
     if (!this.held) return;
     this.held = false;
-    this.ctx.journey.depart();
+    this.leave();
+  }
+
+  /**
+   * The train leaves the station: first the whistle, then the departure.
+   * @private
+   */
+  leave() {
+    const audio = this.ctx.audio;
+    if (audio?.canPlay('whistle')) {
+      audio.play('whistle');
+      this.departIn = audio.duration('whistle');
+    } else {
+      this.departIn = 0;
+    }
   }
 
   /** Stops every mission and timer (when a chapter is started again, for example). */
@@ -122,6 +139,7 @@ export class MissionDirector extends Emitter {
     this.started.clear();
     this.announced.clear();
     this.readyIn = Infinity;
+    this.departIn = Infinity;
     this.holding = false;
     this.held = false;
     this.pending = null;
@@ -132,6 +150,10 @@ export class MissionDirector extends Emitter {
   /** @param {number} dt  game seconds */
   update(dt) {
     const j = this.ctx.journey;
+    if (this.departIn !== Infinity && (this.departIn -= dt) <= 0) {
+      this.departIn = Infinity;
+      j.depart();
+    }
     if (this.readyIn !== Infinity) {
       this.readyIn -= dt;
       if (this.readyIn <= 0) {
@@ -143,7 +165,7 @@ export class MissionDirector extends Emitter {
         }
         this.emit('ready', station);
         if (this.holdAt(station)) this.held = true;
-        else j.depart();
+        else this.leave();
       }
     }
 

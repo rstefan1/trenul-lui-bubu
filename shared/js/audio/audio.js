@@ -78,6 +78,22 @@ export class AudioEngine {
   }
 
   /**
+   * Can a recorded sound be heard right now (loaded, sound on)?
+   * @param {string} name
+   */
+  canPlay(name) {
+    return this.ready && this.buffers.has(name);
+  }
+
+  /**
+   * Seconds a recorded sound lasts (0 if it is not loaded).
+   * @param {string} name
+   */
+  duration(name) {
+    return this.buffers.get(name)?.duration ?? 0;
+  }
+
+  /**
    * Plays a recorded sound once.
    * @param {string} name
    * @param {number} [volume=1]

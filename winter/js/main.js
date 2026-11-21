@@ -124,8 +124,6 @@ audio.register('train', '../shared/assets/sounds/train.mp3');
 audio.register('whistle', '../shared/assets/sounds/whistle.mp3');
 setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
 const railSound = new RailSound(audio, 'train');
-// a short whistle whenever the train leaves a station
-journey.on('depart', () => audio.play('whistle', 0.5));
 
 const director = new MissionDirector(
   { stage, journey, world, state, hud: missionHud, panel: byId('missionPanel'), audio },
