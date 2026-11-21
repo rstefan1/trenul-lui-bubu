@@ -742,3 +742,70 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .mission-panel.is-bottom { align-items: end; pointer-events: none; }
 .mission-panel.is-bottom > * { pointer-events: auto; }
 .panel--bottom { width: min(720px, 100%); gap: 6px; padding: 14px 20px 18px; }
+
+/* ======================================================================
+   Menu and chapters
+   ====================================================================== */
+.menu-card { width: min(720px, 100%); gap: 10px; }
+.menu-head { display: flex; align-items: center; gap: 16px; }
+.menu-bubu { width: clamp(70px, 12vmin, 104px); height: auto; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .25)); animation: bubu-hop 2.4s ease-in-out infinite; }
+.menu-head .intro-title { font-size: clamp(32px, 6vmin, 56px); }
+.menu-traveler { margin: 0; font-size: clamp(17px, 2.6vmin, 22px); font-weight: 700; color: var(--green-dark); }
+.chapter-list {
+  list-style: none;
+  margin: 4px 0;
+  padding: 0;
+  width: 100%;
+  display: grid;
+  gap: 8px;
+}
+.chapter-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 14px;
+  border: 3px solid #e6d3a8;
+  border-radius: 18px;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  transition: transform .12s, box-shadow .12s;
+}
+.chapter-card:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0, 0, 0, .12); }
+.chapter-card.is-current { border-color: var(--green); box-shadow: 0 0 0 4px rgba(46, 157, 87, .25); }
+.chapter-card.is-done { border-color: var(--gold); }
+.chapter-card.is-locked { background: #f1ece2; color: #9a8f7c; cursor: not-allowed; }
+.chapter-card__number {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--station-blue);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+}
+.is-locked .chapter-card__number { background: #c9bfae; }
+.chapter-card__body { flex: 1; display: flex; flex-direction: column; line-height: 1.15; }
+.chapter-card__title { font-size: clamp(17px, 2.6vmin, 22px); font-weight: 800; }
+.chapter-card__route { font-size: 15px; font-weight: 600; opacity: .8; }
+.chapter-card__badge { font-size: 13px; font-weight: 700; color: var(--green-dark); }
+.is-locked .chapter-card__badge { color: #9a8f7c; }
+.chapter-card__stars { flex: none; font-size: 18px; font-weight: 800; color: #c79400; }
+.menu-links { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+.link-btn {
+  border: 0;
+  background: none;
+  color: var(--station-blue);
+  font-size: 17px;
+  font-weight: 700;
+  text-decoration: underline;
+  padding: 6px 4px;
+}
+.chapter-end-stars { margin: 10px 0 0; font-size: clamp(30px, 6vmin, 48px); font-weight: 800; color: #c79400; }
+.chapter-end-next { margin: 8px 0 0; max-width: 520px; font-size: clamp(16px, 2.5vmin, 20px); }
+.chapter-end-buttons { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 16px; }
+@media (prefers-reduced-motion: reduce) { .menu-bubu { animation: none; } }

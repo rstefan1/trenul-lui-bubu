@@ -76,13 +76,47 @@
     </div>
   </section>
 
+  <!-- ===== Main menu: the chapters ===== -->
+  <section class="overlay menu" id="menu" aria-labelledby="menuTitle" hidden>
+    <div class="overlay-card menu-card">
+      <div class="menu-head">
+        <img class="menu-bubu" src="../shared/assets/bubu.webp" alt="" width="96" height="96">
+        <div>
+          <h1 class="intro-title" id="menuTitle">Trenul lui Bubu</h1>
+          <p class="intro-subtitle">Drumul de Crăciun</p>
+        </div>
+      </div>
+      <p class="menu-traveler" id="menuTraveler" hidden></p>
+      <ol class="chapter-list" id="chapterList"></ol>
+      <button class="big-btn" id="btnContinue" type="button">🚂 Începe călătoria</button>
+      <div class="menu-links">
+        <button class="link-btn" id="btnWhoIsBubu" type="button">Cine e Bubu?</button>
+        <button class="link-btn" id="btnReset" type="button" hidden>O iau de la capăt</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== End of a chapter ===== -->
+  <section class="overlay chapter-end" id="chapterEnd" aria-labelledby="chapterEndTitle" hidden>
+    <div class="overlay-card">
+      <p class="mission-kicker" id="chapterEndKicker">Capitolul 1 – terminat!</p>
+      <h2 class="intro-title" id="chapterEndTitle"></h2>
+      <p class="chapter-end-stars" id="chapterEndStars"></p>
+      <p class="chapter-end-next" id="chapterEndNext"></p>
+      <div class="chapter-end-buttons">
+        <button class="big-btn" id="btnNextChapter" type="button">Mergi mai departe 🚂</button>
+        <button class="link-btn" id="btnPause" type="button">Fac o pauză (meniu)</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== End of the journey (placeholder until the final mission exists) ===== -->
   <section class="overlay finale" id="finale" aria-labelledby="finaleTitle" hidden>
     <div class="overlay-card">
       <img class="intro-bubu" src="../shared/assets/bubu.webp" alt="" width="160" height="160">
       <h2 class="intro-title" id="finaleTitle">Am ajuns la Putna!</h2>
       <p class="intro-subtitle">Crăciun fericit! 🎄</p>
-      <button class="big-btn" id="btnAgain" type="button">🔁 Încă o dată</button>
+      <button class="big-btn" id="btnAgain" type="button">Înapoi la meniu</button>
     </div>
   </section>
 
