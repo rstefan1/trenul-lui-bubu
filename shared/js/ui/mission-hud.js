@@ -57,6 +57,16 @@ export class MissionHud {
     if (seconds > 0) this.cardTimer = window.setTimeout(() => this.hideAnnouncement(), seconds * 1000);
   }
 
+  /**
+   * Bottom edge of the announcement card in CSS pixels (0 when hidden), so
+   * that a mission can keep important things below it.
+   * @returns {number}
+   */
+  get cardBottom() {
+    const { card } = this.el;
+    return card.hidden ? 0 : card.getBoundingClientRect().bottom;
+  }
+
   hideAnnouncement() {
     clearTimeout(this.cardTimer);
     hide(this.el.card);

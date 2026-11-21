@@ -66,32 +66,35 @@ export function devaLayout(W) {
  * @param {CanvasRenderingContext2D} c
  * @param {DevaLayout} L
  * @param {import('../../world/lighting.js').Light} light
- * @param {{top: number, bottom: number}} view   visible rows
+ * @param {{top: number, bottom: number, left: number, right: number}} view
+ *        visible area in scene units (it may extend beyond the stage width when zoomed)
  */
 export function drawDevaBackground(c, L, light, view) {
   const { W } = L;
+  const left = Math.min(0, view.left);
+  const right = Math.max(W, view.right);
   const g = c.createLinearGradient(0, view.top, 0, 700);
   g.addColorStop(0, css(light.top));
   g.addColorStop(0.6, css(light.mid));
   g.addColorStop(1, css(light.bottom));
   c.fillStyle = g;
-  c.fillRect(0, view.top, W, view.bottom - view.top);
+  c.fillRect(left, view.top, right - left, view.bottom - view.top);
   // stars
   c.fillStyle = 'rgba(255,255,255,0.8)';
   for (let i = 0; i < 70; i++) {
-    const x = ((i * 977) % 1000) / 1000 * W;
+    const x = left + ((i * 977) % 1000) / 1000 * (right - left);
     const y = view.top + ((i * 613) % 1000) / 1000 * (420 - view.top);
     fillCircle(c, x, y, (i % 3) * 0.6 + 0.7);
   }
   // the town at the foot of the hill: rows of lit windows
   c.fillStyle = '#26315e';
-  c.fillRect(0, 800, W, view.bottom - 800);
-  for (let i = 0; i < W / 34; i++) {
-    const x = i * 34 + ((i * 37) % 13);
-    const h = 40 + ((i * 53) % 60);
+  c.fillRect(left, 800, right - left, view.bottom - 800);
+  for (let i = Math.floor(left / 34); i < right / 34; i++) {
+    const x = i * 34 + ((((i * 37) % 13) + 13) % 13);
+    const h = 40 + ((((i * 53) % 60) + 60) % 60);
     c.fillStyle = '#2e3a6c';
     c.fillRect(x, 800 - h, 30, h);
-    c.fillStyle = (i % 3) ? '#ffd877' : '#ffe7a8';
+    c.fillStyle = ((i % 3) + 3) % 3 ? '#ffd877' : '#ffe7a8';
     c.fillRect(x + 8, 800 - h + 10, 6, 8);
     if (h > 70) c.fillRect(x + 17, 800 - h + 30, 6, 8);
   }
@@ -102,9 +105,9 @@ export function drawDevaBackground(c, L, light, view) {
   snow.addColorStop(1, mixHex('#c9d5ea', '#7d8fb8', night));
   c.fillStyle = snow;
   c.beginPath();
-  c.moveTo(0, view.bottom);
-  for (let x = 0; x <= W; x += 10) c.lineTo(x, L.hill(x));
-  c.lineTo(W, view.bottom);
+  c.moveTo(left, view.bottom);
+  for (let x = left; x <= right + 10; x += 10) c.lineTo(x, L.hill(x));
+  c.lineTo(right + 10, view.bottom);
   c.closePath();
   c.fill();
   // firs on the slopes

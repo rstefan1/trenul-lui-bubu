@@ -4,7 +4,8 @@
  * Three acts:
  *
  *   1. the ride — Bubu climbs the hill in the cabin of the inclined lift
- *      (the child only watches, a few seconds);
+ *      (the child only watches, a few seconds); then the view zooms in on
+ *      the fortress, as large as the screen allows below the instructions;
  *   2. the torches — it is dark on the walls; the child moves Bubu's
  *      lantern (mouse or finger) and holds its light over every torch until
  *      it catches fire. Half-way, a gust of wind blows one torch out, which
@@ -12,7 +13,9 @@
  *   3. the fortress shines — sparkles, a real fact about the place, and a
  *      button to go back to the train.
  *
- * Stars depend on how long the torches took (generously).
+ * Stars depend on how long the torches took (generously). When the mission
+ * ends it sets its `flag` in the game state, so the fortress seen from the
+ * train keeps its torches burning.
  */
 
 import { approach, clamp, easeInOut, lerp } from '../core/math.js';
@@ -21,7 +24,7 @@ import { fillStar, glow } from '../gfx/shapes.js';
 import { drawBubu } from '../train/bubu.js';
 import { el } from '../ui/dom.js';
 import { Mission } from './mission.js';
-import { devaLayout, drawDevaBackground, drawDevaFortress, drawDevaTorches, drawLiftCabin } from './scenes/deva-fortress.js';
+import { devaLayout, drawDevaBackground, drawDevaFortress, drawDevaTorches, drawLiftCabin } from '../gfx/scenes/deva-fortress.js';
 
 /** Seconds of the ride up the hill. */
 const RIDE_TIME = 5;
@@ -31,12 +34,16 @@ const LIGHT_TIME = 0.6;
 const BEAM_R = 115;
 /** With a finger, the light is this far above the touch point (stage units). */
 const TOUCH_LIFT = 90;
+/** Seconds of the zoom from the whole hill to the fortress. */
+const ZOOM_TIME = 1.4;
+/** Height of the fortress from the Christmas star above it to the foot of its walls, at zoom 1. */
+const FORTRESS_H = 400;
 /** Seconds of the fade between the world and the scene. */
 const FADE = 0.6;
 
 /**
  * @typedef {import('./mission.js').MissionConfig & {
- *   lightText: string, windText: string, doneText: string, fact: string
+ *   lightText: string, windText: string, doneText: string, fact: string, flag?: string
  * }} LanternConfig
  */
 
@@ -63,6 +70,58 @@ export class LanternMission extends Mission {
     this.lightSeconds = 0;
     this.glowAll = 0;
     this.particles = new Particles();
+    // the camera: the scene point `focus` is shown at `screen`, magnified `zoom` times
+    const L = this.layout;
+    this.focus = { x: (L.wallLeft + L.wallRight) / 2, y: L.wallTop - 250 + FORTRESS_H / 2 };
+    this.cam = { zoom: 1, x: this.focus.x, y: this.focus.y };
+    /** @type {{zoom: number, x: number, y: number} | null} camera at the start of a zoom */
+    this.zoomFrom = null;
+  }
+
+  /**
+   * The largest view of the fortress that fits between the instructions card
+   * and the bottom of the screen.
+   * @private
+   * @param {number} [reserveBottom=0]  CSS pixels kept free at the bottom (for a panel)
+   */
+  fortressView(reserveBottom = 0) {
+    const stage = this.ctx.stage;
+    const L = this.layout;
+    const cardBottom = this.ctx.hud.cardBottom;
+    const top = Math.max(stage.viewTop + 110, cardBottom ? stage.toStage(0, cardBottom + 16).y : 0);
+    const bottom = stage.toStage(0, window.innerHeight - reserveBottom).y - 30;
+    const span = L.wallRight - L.wallLeft + 140;   // walls and corner towers
+    const zoom = Math.max(1, Math.min(2.6, (bottom - top) / FORTRESS_H, (stage.width * 0.86) / span));
+    return { zoom, x: stage.width / 2, y: top + (FORTRESS_H * zoom) / 2 };
+  }
+
+  /**
+   * Scene → screen.
+   * @param {{x: number, y: number}} p
+   */
+  toScreen(p) {
+    const { zoom, x, y } = this.cam;
+    return { x: x + (p.x - this.focus.x) * zoom, y: y + (p.y - this.focus.y) * zoom };
+  }
+
+  /**
+   * Screen → scene.
+   * @param {{x: number, y: number}} p
+   */
+  toScene(p) {
+    const { zoom, x, y } = this.cam;
+    return { x: this.focus.x + (p.x - x) / zoom, y: this.focus.y + (p.y - y) / zoom };
+  }
+
+  /**
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   */
+  applyCamera(c) {
+    const { zoom, x, y } = this.cam;
+    c.translate(x, y);
+    c.scale(zoom, zoom);
+    c.translate(-this.focus.x, -this.focus.y);
   }
 
   start() {
@@ -102,16 +161,32 @@ export class LanternMission extends Mission {
     if (this.act === 'ride' && this.actTime >= RIDE_TIME) {
       this.setAct('light');
       this.ctx.hud.announce(this.config.title, this.config.lightText, 'Misiune', 0);
+      this.zoomFrom = { ...this.cam };
     } else if (this.act === 'light') {
+      if (this.actTime <= ZOOM_TIME + 0.1) {
+        // zoom in on the fortress (the target follows the card's real height)
+        const to = this.fortressView();
+        const k = easeInOut(clamp(this.actTime / ZOOM_TIME, 0, 1));
+        const from = this.zoomFrom ?? this.cam;
+        this.cam = { zoom: lerp(from.zoom, to.zoom, k), x: lerp(from.x, to.x, k), y: lerp(from.y, to.y, k) };
+      }
       this.lightSeconds += dt;
       this.updateTorches(dt);
     } else if (this.act === 'shine') {
       this.glowAll = Math.min(1, this.glowAll + dt / 1.5);
+      if (this.actTime <= ZOOM_TIME + 0.1) {
+        // step back a little, so the lit fortress stays visible above the fact panel
+        const to = this.fortressView(Math.min(340, window.innerHeight * 0.45));
+        const k = easeInOut(clamp(this.actTime / ZOOM_TIME, 0, 1));
+        const from = this.zoomFrom ?? this.cam;
+        this.cam = { zoom: lerp(from.zoom, to.zoom, k), x: lerp(from.x, to.x, k), y: lerp(from.y, to.y, k) };
+      }
       if (Math.random() < dt * 3) {
         const L = this.layout;
         this.particles.burst(lerp(L.wallLeft, L.wallRight, Math.random()), L.wallTop - 60 - Math.random() * 120, SPARKS, 16, 240);
       }
     } else if (this.act === 'leave' && this.fade < 0.02) {
+      if (this.config.flag) this.ctx.state.setFlag(this.config.flag);
       const s = this.lightSeconds;
       this.complete(s <= 25 ? 3 : s <= 45 ? 2 : 1, 'Cetatea Devei strălucește din nou deasupra orașului!');
     }
@@ -123,9 +198,10 @@ export class LanternMission extends Mission {
    */
   updateTorches(dt) {
     const { torches } = this.layout;
+    const beam = this.toScene(this.beam);
     torches.forEach((t, i) => {
       if (this.lit[i]) return;
-      const near = Math.hypot(t.x - this.beam.x, t.y - this.beam.y) < BEAM_R * 0.7;
+      const near = Math.hypot(t.x - beam.x, t.y - beam.y) < (BEAM_R * 0.7) / this.cam.zoom;
       this.heat[i] = near ? this.heat[i] + dt : Math.max(0, this.heat[i] - dt * 0.5);
       if (this.heat[i] >= LIGHT_TIME) {
         this.lit[i] = true;
@@ -145,6 +221,7 @@ export class LanternMission extends Mission {
     }
     if (count === torches.length) {
       this.setAct('shine');
+      this.zoomFrom = { ...this.cam };
       this.ctx.hud.hideAnnouncement();
       this.showFact();
     }
@@ -182,7 +259,14 @@ export class LanternMission extends Mission {
     const view = { top: stage.viewTop, bottom: stage.viewBottom };
     c.save();
     c.globalAlpha = this.fade;
-    drawDevaBackground(c, L, this.ctx.world.light, view);
+    // the background must cover the whole screen, whatever the zoom
+    const tl = this.toScene({ x: stage.viewLeft, y: stage.viewTop });
+    const br = this.toScene({ x: stage.viewRight, y: stage.viewBottom });
+    c.save();
+    this.applyCamera(c);
+    drawDevaBackground(c, L, this.ctx.world.light, {
+      top: Math.min(view.top, tl.y), bottom: Math.max(view.bottom, br.y), left: tl.x, right: br.x,
+    });
     drawDevaFortress(c, L, this.glowAll, this.time);
 
     if (this.act === 'ride') {
@@ -195,7 +279,10 @@ export class LanternMission extends Mission {
       drawBubu(c, L.bubu.x, L.bubu.y, 80, Math.sin(this.time * 2) * 0.05);
     }
 
+    c.restore();
     if (this.act === 'light') this.drawDarkness(c);
+    c.save();
+    this.applyCamera(c);
     drawDevaTorches(c, L, this.lit, this.time);
     if (this.act === 'light') this.drawHeat(c);
     if (this.act === 'shine' || this.act === 'leave') {
@@ -207,6 +294,7 @@ export class LanternMission extends Mission {
       fillStar(c, sx, L.wallTop - 215, 28 * k, 11 * k);
     }
     this.particles.draw(c);
+    c.restore();
     c.restore();
   }
 
@@ -226,7 +314,7 @@ export class LanternMission extends Mission {
     c.fill('evenodd');
     // soft edge and the cone from the lantern
     glow(c, x, y, BEAM_R * 1.25, 'rgba(255,240,190,0.25)', 'rgba(255,240,190,0)');
-    const b = this.layout.bubu;
+    const b = this.toScreen(this.layout.bubu);
     const g = c.createLinearGradient(b.x, b.y, x, y);
     g.addColorStop(0, 'rgba(255,240,190,0.35)');
     g.addColorStop(1, 'rgba(255,240,190,0.05)');
