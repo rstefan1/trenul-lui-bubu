@@ -27,6 +27,7 @@ const WIRE_H = TRACK_Y - WIRE_Y;
  * @property {number[]} wheels             x of every wheel centre
  * @property {{x: number, y: number} | null} headlight   only on the leading car
  * @property {{x: number, y: number} | null} taillight
+ * @property {number} roofY                top edge of the body (garlands hang from it)
  */
 
 /**
@@ -127,6 +128,28 @@ function drawLadybugEmblem(c, x, y, r) {
   }
 }
 
+/**
+ * The car number on a white plate, as on real coaches (passengers find
+ * their car by it).
+ * @param {CanvasRenderingContext2D} c
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} n
+ */
+function drawCarNumber(c, cx, cy, n) {
+  fillRoundRect(c, cx - 24, cy - 19, 48, 38, 8, '#ffffff');
+  c.strokeStyle = '#1b2440';
+  c.lineWidth = 2;
+  c.beginPath();
+  roundRectPath(c, cx - 21, cy - 16, 42, 32, 6);
+  c.stroke();
+  c.fillStyle = '#1b2440';
+  c.font = '800 30px "Baloo 2", system-ui, sans-serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText(String(n), cx, cy + 2);
+}
+
 /** @type {CarPainter} */
 function electricLoco(c, car, pos) {
   const L = car.length;
@@ -206,6 +229,7 @@ function electricLoco(c, car, pos) {
     wheels,
     headlight: pos.leading ? { x: L - 4, y: -50 } : null,
     taillight: pos.trailing ? { x: 4, y: -50 } : null,
+    roofY: top,
   };
 }
 
@@ -261,6 +285,7 @@ function coach(c, car, pos) {
   }
   // door windows are lit too
   windows.push([20, -150, 20, 34], [L - 40, -150, 20, 34]);
+  if (car.number !== undefined) drawCarNumber(c, L / 2, -62, car.number);
 
   return {
     windows,
@@ -268,6 +293,7 @@ function coach(c, car, pos) {
     wheels,
     headlight: null,
     taillight: pos.trailing ? { x: 3, y: -48 } : null,
+    roofY: top,
   };
 }
 
@@ -354,6 +380,7 @@ function railcar(c, car, pos, noseRight) {
     wheels,
     headlight: pos.leading ? { x: L - 8, y: -66 } : null,
     taillight: pos.trailing ? { x: 8, y: -66 } : null,
+    roofY: top,
   };
 }
 

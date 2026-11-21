@@ -54,11 +54,31 @@ export class WorldView {
     return w - Math.max(150, w * 0.18);
   }
 
+  /**
+   * Converts train coordinates to stage coordinates (camera included).
+   * @param {{x: number, y: number}} p
+   * @returns {{x: number, y: number}}
+   */
+  trainToStage(p) {
+    return { x: this.anchorX + p.x, y: TRACK_Y + p.y - this.cameraY };
+  }
+
+  /**
+   * The car under a point of the stage, if any.
+   * @param {number} x
+   * @param {number} y
+   * @returns {import('../train/specs.js').CarSpec | null}
+   */
+  carAtStage(x, y) {
+    return this.train.carAt(x - this.anchorX, y - TRACK_Y + this.cameraY);
+  }
+
   /** @param {number} dt */
   update(dt) {
     this.time += dt;
     const j = this.journey;
     if (TRAINS[j.trainId] !== this.train.spec) this.train.setSpec(TRAINS[j.trainId]);
+    this.train.update(dt);
     const target = this.features.cameraLift(j.distance, this.train.length);
     this.cameraY = approach(this.cameraY, target, 1.6, dt);
     const w = j.weather;

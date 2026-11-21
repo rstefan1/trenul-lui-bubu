@@ -23,6 +23,7 @@
  * @property {number} length
  * @property {CarColors} colors
  * @property {number} [bubuWindow]  index of the window where Bubu sits (from the front)
+ * @property {number} [number]      car number painted on the side (passenger coaches)
  */
 
 /**
@@ -42,9 +43,10 @@ export const NIGHT_TRAIN = Object.freeze({
   gap: 12,
   cars: [
     { kind: 'electricLoco', length: 290, colors: { body: '#d8382f', band: '#fbeed2', roof: '#7d8796', accent: '#ffd23f' } },
-    { kind: 'coach', length: 340, colors: COACH, bubuWindow: 0 },
-    { kind: 'coach', length: 340, colors: COACH },
-    { kind: 'coach', length: 340, colors: COACH },
+    // coaches are numbered from the back of the train, as often happens
+    { kind: 'coach', length: 340, colors: COACH, bubuWindow: 0, number: 3 },
+    { kind: 'coach', length: 340, colors: COACH, number: 2 },
+    { kind: 'coach', length: 340, colors: COACH, number: 1 },
   ],
 });
 

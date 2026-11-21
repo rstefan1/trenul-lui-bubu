@@ -10,10 +10,15 @@
  * Train coordinates: x = 0 at the front of the train, negative towards the
  * back; y = 0 on the rail top. The renderer is told where the front of the
  * train is on screen.
+ *
+ * Decorations. Baubles caught during the journey hang from fir garlands
+ * along the roof edges, from the locomotive backwards. A car gets its
+ * garland when its first bauble arrives.
  */
 
 import { createOffscreen } from '../core/canvas-cache.js';
-import { TAU, clamp } from '../core/math.js';
+import { TAU, approach, clamp } from '../core/math.js';
+import { drawBauble, drawGarland } from '../gfx/ornaments.js';
 import { fillCircle, glow } from '../gfx/shapes.js';
 import { drawBubu } from './bubu.js';
 import { CAR_PAINTERS, WHEEL_R } from './cars.js';
@@ -23,6 +28,12 @@ const TOP = -262;
 const BOTTOM = 6;
 /** Bubu's size on screen. */
 const BUBU_SIZE = 88;
+/** Distance between two garland hooks. */
+const HOOK_SPACING = 58;
+/** How far the garland hangs between hooks. */
+const GARLAND_SAG = 7;
+/** Radius of a bauble hanging on the train. */
+export const HANGING_BAUBLE_R = 11;
 
 /**
  * @typedef {object} LaidOutCar
@@ -51,6 +62,13 @@ export class TrainRenderer {
     this.stage = stage;
     /** @type {HTMLCanvasElement | null} */
     this.body = null;
+    /** @type {string | null} colour chosen by the player for the locomotive */
+    this.locoColor = null;
+    /** @type {string[]} colours of the baubles hanging on the train */
+    this.baubles = [];
+    /** How far Bubu has appeared at her window (0 = not on the train yet). */
+    this.bubuShown = 1;
+    this.bubuTarget = 1;
     this.setSpec(spec);
     stage.on('resize', () => { this.body = null; });
   }
@@ -72,6 +90,66 @@ export class TrainRenderer {
     /** Train x of the rear end. */
     this.rearX = cursor + spec.gap;
     this.body = null;
+  }
+
+  /**
+   * Repaints the locomotive in another colour.
+   * @param {string | null} color
+   */
+  setLocoColor(color) {
+    this.locoColor = color;
+    this.body = null;
+  }
+
+  /**
+   * Shows or hides Bubu at her window; she pops up (or ducks down) smoothly.
+   * @param {boolean} visible
+   * @param {boolean} [instant=false]
+   */
+  setBubuVisible(visible, instant = false) {
+    this.bubuTarget = visible ? 1 : 0;
+    if (instant) this.bubuShown = this.bubuTarget;
+  }
+
+  /** @param {number} dt */
+  update(dt) {
+    this.bubuShown = approach(this.bubuShown, this.bubuTarget, 7, dt);
+  }
+
+  /**
+   * Where the baubles hang, front to back, in train coordinates.
+   * @returns {Array<{x: number, y: number, car: number}>}
+   */
+  get baubleSlots() {
+    this.ensureBody();
+    return /** @type {Array<{x: number, y: number, car: number}>} */ (this.slots);
+  }
+
+  /**
+   * Train coordinates of Bubu (centre of her window).
+   * @returns {{x: number, y: number}}
+   */
+  get bubuPosition() {
+    this.ensureBody();
+    for (const car of this.cars) {
+      const r = car.geo.bubuWindow;
+      if (r) return { x: car.left + r[0] + r[2] / 2, y: r[1] + r[3] * 0.4 };
+    }
+    return { x: 0, y: -120 };
+  }
+
+  /**
+   * Which car is at a point (train coordinates), if any.
+   * @param {number} x
+   * @param {number} y
+   * @returns {import('./specs.js').CarSpec | null}
+   */
+  carAt(x, y) {
+    if (y < -200 || y > 0) return null;
+    for (const car of this.cars) {
+      if (x >= car.left && x <= car.left + car.spec.length) return car.spec;
+    }
+    return null;
   }
 
   /** Total length of the train. */
@@ -101,12 +179,36 @@ export class TrainRenderer {
     });
     const last = this.cars.length - 1;
     this.cars.forEach((car, i) => {
+      const spec = car.spec.kind === 'electricLoco' && this.locoColor
+        ? { ...car.spec, colors: { ...car.spec.colors, body: this.locoColor } }
+        : car.spec;
       ctx.save();
       ctx.translate(car.left, 0);
-      car.geo = CAR_PAINTERS[car.spec.kind](ctx, car.spec, { leading: i === 0, trailing: i === last });
+      car.geo = CAR_PAINTERS[car.spec.kind](ctx, spec, { leading: i === 0, trailing: i === last });
       ctx.restore();
     });
     this.body = canvas;
+    this.layoutDecorations();
+  }
+
+  /** @private Computes the garland hooks and the bauble slots of every car. */
+  layoutDecorations() {
+    /** @type {Array<{x: number, y: number, car: number}>} */
+    this.slots = [];
+    this.cars.forEach((car, index) => {
+      const L = car.spec.length;
+      const n = Math.max(2, Math.round((L - 30) / HOOK_SPACING) + 1);
+      const step = (L - 30) / (n - 1);
+      const y = car.geo.roofY + 6;
+      car.hooks = Array.from({ length: n }, (_, i) => ({ x: car.left + 15 + i * step, y }));
+      const bubu = car.geo.bubuWindow;
+      // front to back: from the right end of the car to the left
+      for (let i = n - 2; i >= 0; i--) {
+        const x = car.hooks[i].x + step / 2;
+        if (bubu && x > car.left + bubu[0] - 14 && x < car.left + bubu[0] + bubu[2] + 14) continue;
+        this.slots.push({ x, y: y + GARLAND_SAG + 13, car: index });
+      }
+    });
   }
 
   /**
@@ -120,7 +222,36 @@ export class TrainRenderer {
     const x0 = f.frontX + this.rearX - 20;
     c.drawImage(/** @type {HTMLCanvasElement} */ (this.body), x0, f.railY + TOP, -this.rearX + 40, BOTTOM - TOP);
     this.drawWheels(c, f);
+    this.drawDecorations(c, f);
     this.drawBubu(c, f);
+  }
+
+  /**
+   * Garlands and baubles.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {TrainFrame} f
+   */
+  drawDecorations(c, f) {
+    const count = Math.min(this.baubles.length, this.baubleSlots.length);
+    if (count === 0) return;
+    const decorated = new Set();
+    for (let i = 0; i < count; i++) decorated.add(this.baubleSlots[i].car);
+    c.save();
+    c.translate(f.frontX, f.railY);
+    for (const index of decorated) drawGarland(c, this.cars[index].hooks, GARLAND_SAG);
+    for (let i = 0; i < count; i++) {
+      const s = this.baubleSlots[i];
+      const swing = Math.sin(f.time * 2.2 + i * 1.3) * 1.5;
+      c.strokeStyle = '#c9a227';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.moveTo(s.x, s.y - 14);
+      c.lineTo(s.x + swing, s.y - HANGING_BAUBLE_R);
+      c.stroke();
+      drawBauble(c, s.x + swing, s.y, HANGING_BAUBLE_R, this.baubles[i], false);
+    }
+    c.restore();
   }
 
   /**
@@ -219,6 +350,8 @@ export class TrainRenderer {
    * @param {TrainFrame} f
    */
   drawBubu(c, f) {
+    if (this.bubuShown < 0.01) return;
+    const hidden = (1 - this.bubuShown) * BUBU_SIZE * 0.9;
     for (const car of this.cars) {
       const r = car.geo.bubuWindow;
       if (!r) continue;
@@ -231,7 +364,7 @@ export class TrainRenderer {
       c.beginPath();
       c.rect(cx - BUBU_SIZE, sill - BUBU_SIZE * 1.5, BUBU_SIZE * 2, BUBU_SIZE * 1.5);
       c.clip();
-      drawBubu(c, cx, sill - BUBU_SIZE * 0.4 + bob, BUBU_SIZE, tilt);
+      drawBubu(c, cx, sill - BUBU_SIZE * 0.4 + bob + hidden, BUBU_SIZE, tilt);
       c.restore();
     }
   }
