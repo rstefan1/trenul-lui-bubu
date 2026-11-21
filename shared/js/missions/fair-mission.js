@@ -23,6 +23,7 @@
 import { approach, clamp, lerp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { drawFir, fillCircle, fillRoundRect, fillStar, glow } from '../gfx/shapes.js';
+import { drawWinterValley } from '../gfx/scenes/winter-valley.js';
 import { drawSleighTeam } from '../gfx/sleigh.js';
 import { SceneMission } from './scene-mission.js';
 
@@ -240,9 +241,10 @@ export class FairMission extends SceneMission {
     for (let i = 0; i < 70; i++) {
       fillCircle(c, stage.viewLeft + ((i * 977) % 1000) / 1000 * L.w, stage.viewTop + ((i * 613) % 1000) / 1000 * (L.bottom - stage.viewTop) * 0.6, (i % 3) * 0.6 + 0.7);
     }
-    glow(c, L.right - 180, stage.viewTop + 160, 140, 'rgba(255,248,225,0.3)', 'rgba(255,248,225,0)');
+    const moon = { x: L.right - 280, y: Math.max(stage.viewTop + 170, L.top + 40) };
+    glow(c, moon.x, moon.y, 140, 'rgba(255,248,225,0.3)', 'rgba(255,248,225,0)');
     c.fillStyle = '#fff6d8';
-    fillCircle(c, L.right - 180, stage.viewTop + 160, 44);
+    fillCircle(c, moon.x, moon.y, 44);
 
     if (this.act === 'fair') this.drawFair(c, L);
     else this.drawRide(c, L);
@@ -267,23 +269,9 @@ export class FairMission extends SceneMission {
    * @param {{top: number, bottom: number, left: number, right: number, w: number}} L
    */
   drawRide(c, L) {
-    // snowy hills with firs, scrolling by
-    for (const [speed, color, base, amp] of [[0.25, '#5f72a8', L.bottom - 120, 90], [0.6, '#c9d5ea', L.bottom - 20, 50]]) {
-      c.fillStyle = /** @type {string} */ (color);
-      c.beginPath();
-      c.moveTo(L.left, L.bottom + 80);
-      for (let x = L.left; x <= L.right + 20; x += 20) {
-        const u = (x + this.scroll * /** @type {number} */ (speed)) / 300;
-        c.lineTo(x, /** @type {number} */ (base) - Math.sin(u) * /** @type {number} */ (amp) * 0.5 - Math.sin(u * 0.37) * /** @type {number} */ (amp) * 0.5);
-      }
-      c.lineTo(L.right + 20, L.bottom + 80);
-      c.closePath();
-      c.fill();
-    }
-    const firOffset = (this.scroll * 0.6) % 220;
-    for (let x = L.left - firOffset; x < L.right + 220; x += 220) {
-      drawFir(c, x, L.bottom - 10, 120, { snowy: true });
-    }
+    // mountains, a valley with a village and many firs, scrolling by
+    const stage = this.ctx.stage;
+    drawWinterValley(c, { left: L.left, right: L.right, top: stage.viewTop, bottom: L.bottom + 60 }, this.scroll);
     // the fair's lights far away, up the hill
     for (let i = 0; i < 12; i++) {
       c.fillStyle = ['#ffd54f', '#ff8a80', '#80d8ff'][i % 3];
@@ -325,6 +313,8 @@ export class FairMission extends SceneMission {
    */
   drawFair(c, L) {
     const ground = L.bottom - 70;
+    const stage = this.ctx.stage;
+    drawWinterValley(c, { left: L.left, right: L.right, top: stage.viewTop, bottom: ground + 40 }, this.scroll, { slope: false });
     c.fillStyle = '#dfe7f3';
     c.fillRect(L.left, ground, L.w, L.bottom + 200 - ground);
     // stalls in the background with garlands of lights
