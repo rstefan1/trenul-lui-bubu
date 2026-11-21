@@ -144,10 +144,54 @@ export class BirdsMission extends Mission {
       k >= 1 ? 'Toate păsărelele au primit semințe!' : `Ai hrănit păsările de la ${this.fed} căsuțe din ${total}.`);
   }
 
+  /**
+   * A clear hint over a hungry feeder: a pulsing golden ring, a bouncing
+   * arrow and the words "Atinge aici!".
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {number} x
+   * @param {number} top  top of the post
+   */
+  drawHint(c, x, top) {
+    const pulse = (this.time * 1.4) % 1;
+    c.save();
+    c.strokeStyle = `rgba(255,214,90,${1 - pulse})`;
+    c.lineWidth = 6;
+    c.beginPath();
+    c.arc(x, top - 32, 50 + pulse * 40, 0, TAU);
+    c.stroke();
+    const bob = Math.abs(Math.sin(this.time * 4)) * 14;
+    c.fillStyle = '#ffd23f';
+    c.strokeStyle = '#7a5a00';
+    c.lineWidth = 3;
+    c.beginPath();
+    c.moveTo(x, top - 96 + bob);
+    c.lineTo(x - 22, top - 128 + bob);
+    c.lineTo(x - 9, top - 128 + bob);
+    c.lineTo(x - 9, top - 156 + bob);
+    c.lineTo(x + 9, top - 156 + bob);
+    c.lineTo(x + 9, top - 128 + bob);
+    c.lineTo(x + 22, top - 128 + bob);
+    c.closePath();
+    c.fill();
+    c.stroke();
+    c.font = '800 24px "Baloo 2", system-ui, sans-serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.lineWidth = 6;
+    c.strokeStyle = 'rgba(27,36,64,0.85)';
+    c.strokeText('Atinge aici!', x, top - 180 + bob);
+    c.fillStyle = '#ffffff';
+    c.fillText('Atinge aici!', x, top - 180 + bob);
+    c.restore();
+  }
+
   /** @param {CanvasRenderingContext2D} c */
   draw(c) {
     const stage = this.ctx.stage;
     const cam = this.ctx.world.cameraY;
+    // the first two hungry feeders show very clearly what to do
+    const hints = new Set(this.feeders.filter(f => f.hungry).slice(0, 2).filter(f => f.fedT < 0));
     for (const f of this.feeders) {
       const x = this.toScreen(f.worldX);
       if (x < stage.viewLeft - 160 || x > stage.viewRight + 160) continue;
@@ -162,6 +206,7 @@ export class BirdsMission extends Mission {
       c.fillRect(x - 5, top, 10, POST);
       const filled = f.full || f.fedT >= 0;
       if (f.hungry && f.fedT < 0) glow(c, x, top - 20, 70, `rgba(255,236,150,${0.35 + 0.15 * Math.sin(this.time * 5)})`, 'rgba(255,236,150,0)');
+      if (hints.has(f)) this.drawHint(c, x, top);
       fillRoundRect(c, x - 40, top - 14, 80, 16, 4, '#8d6e63');          // tray
       fillRoundRect(c, x - 30, top - 52, 60, 40, 4, '#a1887f');          // box
       c.fillStyle = '#5d4037';
