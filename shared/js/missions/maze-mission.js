@@ -4,9 +4,14 @@
  * Seen from above, the paths between the walls of the fortress form a
  * maze. Bubu starts at the gate; the Christmas tree stands at the farthest
  * point. Three stars are hidden in dead ends. The child moves Bubu by
- * touching a square in a straight, open line from her, by dragging a finger
- * along the paths, or with the arrow keys. When Bubu reaches the tree it
- * lights up, and a real fact about the place is shown.
+ *   - touching a square in a straight, open line from her (small dots show
+ *     where she can go);
+ *   - swiping in a direction: she runs along the alley, following its turns,
+ *     until the next crossing;
+ *   - dragging a finger along the alleys (she follows square by square);
+ *   - the arrow keys.
+ * When Bubu reaches the tree it lights up, and a real fact about the place
+ * is shown.
  *
  * The maze is generated anew every time (depth-first "recursive
  * backtracker", which gives long corridors that children enjoy), sized to
@@ -130,6 +135,8 @@ export class MazeMission extends SceneMission {
     this.path = [];
     this.stepT = 0;
     this.dragging = false;
+    /** @type {{x: number, y: number, used: boolean} | null} where the current touch started */
+    this.touch = null;
     this.reached = false;
     /** @type {(e: KeyboardEvent) => void} */
     this.onKey = e => {
@@ -225,12 +232,18 @@ export class MazeMission extends SceneMission {
     return out;
   }
 
+  /** Where Bubu will be after the squares already planned. */
+  get endCell() {
+    return this.path.length ? this.path[this.path.length - 1] : this.at;
+  }
+
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerDown(p) {
     if (this.reached) return;
+    this.touch = { x: p.x, y: p.y, used: false };
     const target = this.cellAt(p);
     if (target < 0) return;
-    const from = this.path.length ? this.path[this.path.length - 1] : this.at;
+    const from = this.endCell;
     if (target === from) {
       this.dragging = true;
       return;
@@ -239,6 +252,7 @@ export class MazeMission extends SceneMission {
     if (line) {
       this.path.push(...line);
       this.dragging = true;
+      this.touch.used = true;
     }
   }
 
@@ -249,11 +263,62 @@ export class MazeMission extends SceneMission {
     const from = this.path.length ? this.path[this.path.length - 1] : this.at;
     if (target < 0 || target === from) return;
     const line = this.straightPath(from, target);
-    if (line && line.length <= 2) this.path.push(...line);
+    if (line && line.length <= 2) {
+      this.path.push(...line);
+      if (this.touch) this.touch.used = true;
+    }
   }
 
-  pointerUp() {
+  /** @param {import('../core/input.js').PointerInfo} p */
+  pointerUp(p) {
     this.dragging = false;
+    const t = this.touch;
+    this.touch = null;
+    if (!t || t.used || this.reached) return;
+    // a swipe: Bubu runs in that direction
+    const dx = p.x - t.x;
+    const dy = p.y - t.y;
+    if (Math.hypot(dx, dy) < this.cell * 0.45) return;
+    const d = Math.abs(dx) > Math.abs(dy) ? DIRS[dx > 0 ? 1 : 3] : DIRS[dy > 0 ? 2 : 0];
+    this.run(d);
+  }
+
+  /**
+   * Runs along the alley in a direction, following its turns, and stops at
+   * the next crossing or dead end.
+   * @private
+   * @param {typeof DIRS[number]} first
+   */
+  run(first) {
+    let cell = this.endCell;
+    let d = first;
+    if (!(this.open[cell] & d.bit)) return;
+    for (let guard = 0; guard < this.open.length; guard++) {
+      cell += d.dy * this.cols + d.dx;
+      this.path.push(cell);
+      if (cell === this.goal || this.stars.has(cell)) return;
+      const exits = DIRS.filter(x => (this.open[cell] & x.bit) && x.bit !== d.back);
+      if (exits.length !== 1) return;   // a crossing or a dead end
+      d = exits[0];
+    }
+  }
+
+  /**
+   * Squares Bubu can reach by a touch (in a straight, open line).
+   * @private
+   * @returns {number[]}
+   */
+  reachable() {
+    const out = [];
+    const from = this.endCell;
+    for (const d of DIRS) {
+      let cell = from;
+      while (this.open[cell] & d.bit) {
+        cell += d.dy * this.cols + d.dx;
+        out.push(cell);
+      }
+    }
+    return out;
   }
 
   /** @param {number} dt */
@@ -306,6 +371,14 @@ export class MazeMission extends SceneMission {
     c.fillStyle = g;
     c.fillRect(stage.viewLeft, stage.viewTop, stage.viewRight - stage.viewLeft, stage.viewBottom - stage.viewTop);
     this.drawFortress(c);
+    if (!this.reached && !this.path.length) {
+      // small dots where a touch can send Bubu
+      c.fillStyle = 'rgba(80,110,170,0.35)';
+      for (const i of this.reachable()) {
+        const ct = this.centre(i);
+        fillCircle(c, ct.x, ct.y, Math.max(4, this.cell * 0.08));
+      }
+    }
     this.drawStars(c);
     this.drawTree(c);
     this.drawBubu(c);
