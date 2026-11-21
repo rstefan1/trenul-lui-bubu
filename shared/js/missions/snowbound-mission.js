@@ -227,7 +227,8 @@ export class SnowboundMission extends Mission {
     c.lineTo(bx + 60 + Math.cos(dig) * 20, TRACK_Y - 10 + Math.sin(dig) * 30);
     c.stroke();
     fillRoundRect(c, bx + 66 + Math.cos(dig) * 20, TRACK_Y - 26 + Math.sin(dig) * 30, 26, 22, 4, '#90a4ae');
-    if (this.step !== 'out' && this.step !== 'back') drawBubu(c, bx, TRACK_Y + 30, 90, dig * 0.3);
+    // Bubu stands by the drift only between climbing out and climbing back in
+    if (this.step === 'dig' || this.step === 'signal' || this.step === 'plough') drawBubu(c, bx, TRACK_Y + 30, 90, dig * 0.3);
     const l = { x: x0 - 190, y: TRACK_Y + 40 };
     if (this.step === 'signal' || this.flash > 0) {
       glow(c, l.x, l.y - 40, 90 + this.flash * 160, `rgba(255,214,120,${0.35 + 0.5 * this.flash})`, 'rgba(255,214,120,0)');
