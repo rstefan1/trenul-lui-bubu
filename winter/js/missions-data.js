@@ -145,5 +145,16 @@ export const WINTER_MISSIONS = {
         fact: 'Cetatea Alba Carolina are forma unei stele cu șapte colțuri. Aici, la 1 Decembrie 1918, s-a hotărât Marea Unire – de aceea 1 Decembrie este Ziua Națională a României.',
       },
     },
+
+    'cluj-napoca': {
+      type: 'circuit',
+      config: {
+        id: 'circuit-cluj',
+        title: 'Bradul din Piața Unirii',
+        text: 'Bradul cel mare din Piața Unirii nu se aprinde: s-au încurcat firele! Atinge piesele de pe panou ca să le rotești și du curentul de la generator ⚡ până la brad.',
+        doneText: 'Bradul s-a aprins și toată piața strălucește!',
+        fact: 'În Piața Unirii din Cluj-Napoca se află Biserica Sfântul Mihail, una dintre cele mai mari biserici gotice din România. De Crăciun, aici se ține un târg mare, cu un brad uriaș.',
+      },
+    },
   },
 };

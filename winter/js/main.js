@@ -29,6 +29,7 @@ import { Journey } from '../../shared/js/journey/journey.js';
 import { Route } from '../../shared/js/journey/route.js';
 import { BellsMission } from '../../shared/js/missions/bells-mission.js';
 import { CatchMission } from '../../shared/js/missions/catch-mission.js';
+import { CircuitMission } from '../../shared/js/missions/circuit-mission.js';
 import { DeliveryMission } from '../../shared/js/missions/delivery-mission.js';
 import { DepartureMission } from '../../shared/js/missions/departure-mission.js';
 import { LanternMission } from '../../shared/js/missions/lantern-mission.js';
@@ -49,6 +50,7 @@ import { WINTER_ROUTE } from './route-data.js';
 const MISSION_TYPES = {
   bells: BellsMission,
   catch: CatchMission,
+  circuit: CircuitMission,
   delivery: DeliveryMission,
   departure: DepartureMission,
   lantern: LanternMission,
