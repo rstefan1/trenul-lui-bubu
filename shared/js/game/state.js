@@ -16,6 +16,7 @@ import { Emitter } from '../core/emitter.js';
  * @property {string | null} locoColor
  * @property {Array<[string, number]>} stars
  * @property {string[]} baubles
+ * @property {number} [hat]
  * @property {number} [lightBulbs]
  * @property {string[]} [flags]
  */
@@ -36,6 +37,8 @@ export class GameState extends Emitter {
     /** Things that changed in the world thanks to the player (e.g. "deva-fortress-lit"). */
     /** @type {Set<string>} */
     this.flags = new Set();
+    /** The festive hat Bubu wears (index in HATS, −1 = none). */
+    this.hat = -1;
   }
 
   /** Total number of stars. */
@@ -74,6 +77,7 @@ export class GameState extends Emitter {
       locoColor: this.locoColor,
       stars: [...this.stars],
       baubles: [...this.baubles],
+      hat: this.hat,
       lightBulbs: this.lightBulbs,
       flags: [...this.flags],
     };
@@ -93,7 +97,8 @@ export class GameState extends Emitter {
     this.lightBulbs = data?.lightBulbs ?? 0;
     this.flags.clear();
     for (const f of data?.flags ?? []) this.flags.add(f);
-    for (const what of ['travelerName', 'locoColor', 'stars', 'baubles', 'lightBulbs', 'flags']) this.emit('change', what);
+    this.hat = data?.hat ?? -1;
+    for (const what of ['travelerName', 'locoColor', 'stars', 'baubles', 'lightBulbs', 'flags', 'hat']) this.emit('change', what);
   }
 
   /** @param {string} flag */
@@ -109,6 +114,12 @@ export class GameState extends Emitter {
   setLightBulbs(fraction) {
     this.lightBulbs = Math.max(this.lightBulbs, Math.min(1, fraction));
     this.emit('change', 'lightBulbs');
+  }
+
+  /** @param {number} index  the hat Bubu wears from now on */
+  setHat(index) {
+    this.hat = index;
+    this.emit('change', 'hat');
   }
 
   /** @param {string} color */

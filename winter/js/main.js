@@ -125,6 +125,7 @@ state.on('change', (/** @type {string} */ what) => {
   if (what === 'locoColor') world.train.setLocoColor(state.locoColor);
   if (what === 'baubles') world.train.baubles = state.baubles;
   if (what === 'lightBulbs') world.train.lightBulbs = state.lightBulbs;
+  if (what === 'hat') world.train.hat = state.hat;
   if (what === 'flags') {
     world.flags = state.flags;
     world.train.setTreeWagon(state.flags.has('tree-bought'));

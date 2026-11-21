@@ -22,6 +22,7 @@ import { createOffscreen } from '../core/canvas-cache.js';
 import { TAU, approach, clamp } from '../core/math.js';
 import { drawBauble, drawGarland } from '../gfx/ornaments.js';
 import { fillCircle, glow } from '../gfx/shapes.js';
+import { drawBubuHat } from '../gfx/hats.js';
 import { drawBubu } from './bubu.js';
 import { CAR_PAINTERS, WHEEL_R } from './cars.js';
 import { TREE_WAGON } from './specs.js';
@@ -71,6 +72,8 @@ export class TrainRenderer {
     this.baubles = [];
     /** How much of the string of lights is lit (0..1). */
     this.lightBulbs = 0;
+    /** The hat Bubu wears at her window (index in HATS, −1 = none). */
+    this.hat = -1;
     /** The train carries the flat wagon with the Christmas tree (after Vatra Dornei). */
     this.treeWagon = false;
     /** How far Bubu has appeared at her window (0 = not on the train yet). */
@@ -457,6 +460,7 @@ export class TrainRenderer {
       c.rect(cx - BUBU_SIZE, sill - BUBU_SIZE * 1.5, BUBU_SIZE * 2, BUBU_SIZE * 1.5);
       c.clip();
       drawBubu(c, cx, sill - BUBU_SIZE * 0.38 + bob + hidden, BUBU_SIZE, tilt);
+      drawBubuHat(c, this.hat, cx, sill - BUBU_SIZE * 0.38 + bob + hidden, BUBU_SIZE);
       c.restore();
     }
   }

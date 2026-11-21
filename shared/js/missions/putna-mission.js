@@ -18,6 +18,7 @@ import { clamp, easeOutBack } from '../core/math.js';
 import { BAUBLE_COLORS, drawBauble } from '../gfx/ornaments.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { drawFir, fillCircle, fillRoundRect, fillStar, glow } from '../gfx/shapes.js';
+import { drawBubuHat } from '../gfx/hats.js';
 import { drawBubu } from '../train/bubu.js';
 import { SceneMission } from './scene-mission.js';
 
@@ -195,6 +196,7 @@ export class PutnaMission extends SceneMission {
     c.fillRect(L.left, L.ground, L.right - L.left, stage.viewBottom - L.ground);
     const bx = this.step === 'bell' || (this.step === 'done' && this.hung === 0) ? L.tower.x + 120 * L.k : L.tree.x - 170 * L.k;
     drawBubu(c, bx, L.ground - 40 * L.k, 90 * L.k, Math.sin(this.time * 2) * 0.06);
+    drawBubuHat(c, this.ctx.state.hat, bx, L.ground - 40 * L.k, 90 * L.k);
     this.particles.draw(c);
     c.restore();
   }
