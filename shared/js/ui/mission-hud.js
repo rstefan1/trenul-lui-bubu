@@ -67,10 +67,11 @@ export class MissionHud {
    * @param {string} icon
    * @param {number} value
    * @param {number} total
+   * @param {string} [extra]  more information after the count (e.g. gifts left)
    */
-  setCounter(icon, value, total) {
+  setCounter(icon, value, total, extra = '') {
     const { counter } = this.el;
-    counter.textContent = `${icon} ${value} / ${total}`;
+    counter.textContent = `${icon} ${value} / ${total}${extra ? ` · ${extra}` : ''}`;
     counter.classList.remove('is-bumped');
     void counter.offsetWidth;   // restart the bump animation
     counter.classList.add('is-bumped');

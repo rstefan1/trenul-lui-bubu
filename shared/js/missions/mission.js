@@ -64,7 +64,8 @@ export class Mission {
 
   /**
    * Starts the mission.
-   * @param {{duration?: number}} [hints]  duration: expected play seconds (travel missions)
+   * @param {{duration?: number, window?: {from: number, to: number}}} [hints]
+   *        travel missions: expected play seconds, and the window in the segment
    */
   start(hints = {}) {
     this.phase = 'running';

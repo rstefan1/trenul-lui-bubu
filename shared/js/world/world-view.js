@@ -44,6 +44,8 @@ export class WorldView {
     this.snow = new Snowfall(stage, REDUCED_MOTION ? 50 : 150);
     this.cameraY = 0;
     this.time = 0;
+    /** The light of the last drawn frame (missions use it to match the world). */
+    this.light = lightAt(journey.clock);
     /** Snow cover shown on screen (follows the journey smoothly). */
     this.cover = journey.weather.cover;
   }
@@ -73,6 +75,27 @@ export class WorldView {
     return this.train.carAt(x - this.anchorX, y - TRACK_Y + this.cameraY);
   }
 
+  /**
+   * Lets a mission draw something that belongs to the world (houses, people
+   * next to the track): it is drawn with the camera of the near layer and
+   * tinted by the time of day like the rest of the world.
+   * @param {CanvasRenderingContext2D} c
+   * @param {number} top     band to tint, in stage units
+   * @param {number} bottom
+   * @param {(c: CanvasRenderingContext2D) => void} paint
+   */
+  drawTinted(c, top, bottom, paint) {
+    c.save();
+    c.translate(0, -this.cameraY);
+    this.compositor.draw(c, top, bottom, paint, [this.light.wash]);
+    c.restore();
+  }
+
+  /** How strongly lamps and windows glow now (0 by day, 1 at night). */
+  get glowStrength() {
+    return smoothstep(0.25, 0.8, this.light.night);
+  }
+
   /** @param {number} dt */
   update(dt) {
     this.time += dt;
@@ -90,6 +113,7 @@ export class WorldView {
   draw(c) {
     const j = this.journey;
     const light = lightAt(j.clock);
+    this.light = light;
     const stage = this.stage;
     this.compositor.resize(stage.canvas);
 

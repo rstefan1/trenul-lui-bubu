@@ -70,3 +70,36 @@ export function drawGarland(c, hooks, sag) {
   c.fillStyle = '#d32f2f';
   for (const h of hooks) fillCircle(c, h.x, h.y, 4);
 }
+
+/**
+ * A wrapped gift box with a ribbon and a bow, centred at (x, y).
+ * @param {CanvasRenderingContext2D} c
+ * @param {number} x
+ * @param {number} y
+ * @param {number} s       width of the box
+ * @param {string} color
+ * @param {number} [tilt=0]
+ */
+export function drawGift(c, x, y, s, color, tilt = 0) {
+  const ribbon = color === '#fbc02d' || color === '#ffd54f' ? '#e53935' : '#ffd54f';
+  c.save();
+  c.translate(x, y);
+  if (tilt) c.rotate(tilt);
+  const h = s * 0.8;
+  c.fillStyle = color;
+  c.fillRect(-s / 2, -h / 2 + s * 0.12, s, h - s * 0.12);
+  c.fillStyle = 'rgba(0,0,0,0.12)';
+  c.fillRect(0, -h / 2 + s * 0.12, s / 2, h - s * 0.12);
+  c.fillStyle = color;
+  c.fillRect(-s * 0.56, -h / 2 - s * 0.06, s * 1.12, s * 0.2);
+  c.fillStyle = ribbon;
+  c.fillRect(-s * 0.08, -h / 2 - s * 0.06, s * 0.16, h + s * 0.06);
+  c.beginPath();
+  c.ellipse(-s * 0.16, -h / 2 - s * 0.14, s * 0.17, s * 0.1, -0.5, 0, TAU);
+  c.ellipse(s * 0.16, -h / 2 - s * 0.14, s * 0.17, s * 0.1, 0.5, 0, TAU);
+  c.fill();
+  c.restore();
+}
+
+/** Gift wrapping colours. */
+export const GIFT_COLORS = ['#e53935', '#1e88e5', '#43a047', '#8e44ad', '#fbc02d', '#ec407a'];
