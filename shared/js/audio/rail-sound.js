@@ -1,6 +1,7 @@
 /**
  * @file The sound of the train running: a real recording played in a plain
- * loop, always at its natural speed and volume, whatever the train's speed
+ * loop, softly in the background, always at the same speed and volume
+ * whatever the train's speed
  * (missions slow the train down on purpose, and that must not change how
  * it sounds). It is heard while the train moves and goes quiet while it
  * stands or while the game waits for the player. It starts with the first
@@ -14,6 +15,8 @@
 
 /** Below this speed the train is considered stopped. */
 const MIN_SPEED = 0.5;
+/** Volume of the running train: a soft sound in the background, so the whistle stands out. */
+const VOLUME = 0.3;
 /** Seconds to go quiet or to be heard again (just enough to avoid a click). */
 const SWITCH = 0.12;
 
@@ -53,7 +56,7 @@ export class RailSound {
     const on = !view.paused && speed > MIN_SPEED;
     if (on === this.on) return;
     this.on = on;
-    this.gate.gain.setTargetAtTime(on ? 1 : 0, ctx.currentTime, SWITCH / 3);
+    this.gate.gain.setTargetAtTime(on ? VOLUME : 0, ctx.currentTime, SWITCH / 3);
   }
 }
 
