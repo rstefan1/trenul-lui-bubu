@@ -18,7 +18,7 @@
 
 import { TAU, clamp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
-import { fillCircle, fillRoundRect, fillStar, glow } from '../gfx/shapes.js';
+import { drawFir, fillCircle, fillRoundRect, fillStar, glow } from '../gfx/shapes.js';
 import { drawBubu } from '../train/bubu.js';
 import { SceneMission } from './scene-mission.js';
 
@@ -166,6 +166,8 @@ export class RhythmMission extends SceneMission {
       const y = stage.viewTop + ((i * 613) % 1000) / 1000 * (L.groundY - stage.viewTop - 120);
       fillCircle(c, x, y, (i % 3) * 0.6 + 0.8);
     }
+    // the little station of Ilva Mică behind the platform
+    this.drawStation(c, L);
     // the platform, snowy, with a lamp
     c.fillStyle = '#dfe7f3';
     c.fillRect(stage.viewLeft, L.groundY, stage.viewRight - stage.viewLeft, stage.viewBottom - L.groundY);
@@ -224,6 +226,97 @@ export class RhythmMission extends SceneMission {
     }
     this.particles.draw(c);
     c.restore();
+  }
+
+  /**
+   * The station building behind the carollers: snowy roof, warm windows, a
+   * clock and the name of the station, with firs and the hills around.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {{groundY: number, drumX: number, right: number}} L
+   */
+  drawStation(c, L) {
+    const stage = this.ctx.stage;
+    const g = L.groundY;
+    // snowy hills and firs far behind
+    c.fillStyle = '#2f4277';
+    c.beginPath();
+    c.moveTo(stage.viewLeft, g);
+    for (let x = stage.viewLeft; x <= stage.viewRight + 40; x += 40) c.lineTo(x, g - 150 - Math.sin(x / 210) * 40 - Math.sin(x / 77) * 12);
+    c.lineTo(stage.viewRight + 40, g);
+    c.closePath();
+    c.fill();
+    for (let x = stage.viewLeft + 10; x < stage.viewRight; x += 46) drawFir(c, x, g - 100 - Math.sin(x / 210) * 30, 70 + (x % 3) * 12, { color: '#1f3b45', shade: '#1a3239', snowy: true });
+    // the building
+    const w = Math.min(760, L.right - L.drumX + 120);
+    const x0 = (L.drumX + L.right) / 2 - w / 2;
+    const h = 210;
+    c.fillStyle = '#e8d9c0';
+    c.fillRect(x0, g - h, w, h);
+    c.fillStyle = '#c9b48f';
+    c.fillRect(x0, g - 30, w, 30);
+    // roof with snow
+    c.fillStyle = '#7b3f2f';
+    c.beginPath();
+    c.moveTo(x0 - 40, g - h);
+    c.lineTo(x0 + 60, g - h - 80);
+    c.lineTo(x0 + w - 60, g - h - 80);
+    c.lineTo(x0 + w + 40, g - h);
+    c.closePath();
+    c.fill();
+    c.fillStyle = '#f4f8ff';
+    c.beginPath();
+    c.moveTo(x0 - 44, g - h + 2);
+    c.lineTo(x0 + 58, g - h - 84);
+    c.lineTo(x0 + w - 58, g - h - 84);
+    c.lineTo(x0 + w + 44, g - h + 2);
+    c.lineTo(x0 + w + 20, g - h + 8);
+    c.lineTo(x0 + w - 70, g - h - 66);
+    c.lineTo(x0 + 70, g - h - 66);
+    c.lineTo(x0 - 20, g - h + 8);
+    c.closePath();
+    c.fill();
+    // warm windows and a door
+    const n = Math.max(3, Math.floor(w / 130));
+    for (let i = 0; i < n; i++) {
+      const wx = x0 + ((i + 0.5) * w) / n;
+      if (i === Math.floor(n / 2)) {
+        fillRoundRect(c, wx - 32, g - 130, 64, 130, 14, '#5d4037');
+        c.fillStyle = '#ffd36b';
+        c.fillRect(wx - 22, g - 118, 44, 40);
+        continue;
+      }
+      glow(c, wx, g - 110, 70, 'rgba(255,214,120,0.35)', 'rgba(255,214,120,0)');
+      fillRoundRect(c, wx - 34, g - 150, 68, 76, 8, '#5d4037');
+      fillRoundRect(c, wx - 28, g - 144, 56, 64, 6, '#ffd36b');
+      c.fillStyle = '#5d4037';
+      c.fillRect(wx - 2, g - 144, 4, 64);
+      c.fillRect(wx - 28, g - 114, 56, 4);
+      // a little garland under each window
+      for (let k = 0; k < 5; k++) {
+        c.fillStyle = ['#e53935', '#ffd23f', '#43a047'][k % 3];
+        fillCircle(c, wx - 26 + k * 13, g - 68 + Math.sin(k) * 2, 3.5);
+      }
+    }
+    // the name sign and the station clock
+    const signW = 260;
+    fillRoundRect(c, x0 + w / 2 - signW / 2, g - h - 60, signW, 46, 10, '#1565c0');
+    c.fillStyle = '#ffffff';
+    c.font = '800 28px "Baloo 2", system-ui, sans-serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText('Ilva Mică', x0 + w / 2, g - h - 36);
+    c.fillStyle = '#fffaf0';
+    fillCircle(c, x0 + w - 70, g - h + 46, 26);
+    c.strokeStyle = '#3e2723';
+    c.lineWidth = 3;
+    c.beginPath();
+    c.arc(x0 + w - 70, g - h + 46, 26, 0, TAU);
+    c.moveTo(x0 + w - 70, g - h + 46);
+    c.lineTo(x0 + w - 70, g - h + 28);
+    c.moveTo(x0 + w - 70, g - h + 46);
+    c.lineTo(x0 + w - 58, g - h + 50);
+    c.stroke();
   }
 
   /**
