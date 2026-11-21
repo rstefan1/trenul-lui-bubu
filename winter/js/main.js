@@ -166,8 +166,7 @@ const loop = new GameLoop(dt => {
   render();
   hud.update(journey);
   railSound.update(journey.distance, journey.speed, world.train.axles, {
-    anchorX: world.anchorX,
-    width: stage.width,
+    listener: world.train.bubuPosition.x,
     tunnel: world.features.tunnelState(journey.distance, world.train.length).any,
     paused: missionHud.paused,
   });
