@@ -31,6 +31,8 @@
  * @property {string} id
  * @property {boolean} electric   has a pantograph (needs an overhead line)
  * @property {number} gap         space between cars
+ * @property {number} [front]     where its front stands, as a share of the screen's width (short
+ *                                trains stand further left, so what comes is seen early)
  * @property {CarSpec[]} cars     front to back
  */
 
@@ -55,6 +57,7 @@ export const REGIONAL_TRAIN = Object.freeze({
   id: 'regional',
   electric: false,
   gap: 6,
+  front: 0.6,
   cars: [
     { kind: 'railcarFront', length: 330, colors: { body: '#f4f6f8', band: '#2e9d57', roof: '#9aa4b1', accent: '#e53935' }, bubuWindow: 0 },
     { kind: 'railcarRear', length: 330, colors: { body: '#f4f6f8', band: '#2e9d57', roof: '#9aa4b1', accent: '#e53935' } },

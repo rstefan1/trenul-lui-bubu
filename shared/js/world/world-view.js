@@ -59,7 +59,20 @@ export class WorldView {
   /** Where the front of the train normally is: near the right edge, room for the headlight. */
   get baseAnchorX() {
     const w = this.stage.width;
-    return w - Math.max(150, w * 0.18);
+    const usual = w - Math.max(150, w * 0.18);
+    const front = this.train.spec.front;
+    return front ? Math.min(usual, w * front) : usual;
+  }
+
+  /**
+   * Pans the view so the front of the train is at a given share of the
+   * screen's width (missions use it to show more of what lies ahead);
+   * null goes back to the usual place.
+   * @param {number | null} share  e.g. 0.5 = the middle of the screen
+   */
+  lookAhead(share) {
+    const stage = this.stage;
+    this.panTarget = share === null ? 0 : Math.max(0, this.baseAnchorX - (stage.viewLeft + (stage.viewRight - stage.viewLeft) * share));
   }
 
   /** Screen x of the front of the train (missions may pan the view to show what is ahead). */
