@@ -13,7 +13,10 @@
 
 import { clamp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
-import { fillCircle, glow } from '../gfx/shapes.js';
+import { fillCircle, fillRoundRect, glow } from '../gfx/shapes.js';
+import { drawWinterValley } from '../gfx/scenes/winter-valley.js';
+import { drawBubuHat } from '../gfx/hats.js';
+import { drawBubu } from '../train/bubu.js';
 import { el } from '../ui/dom.js';
 import { SceneMission } from './scene-mission.js';
 
@@ -115,7 +118,8 @@ export class PaintMission extends SceneMission {
     const card = this.ctx.panel.hidden ? null : this.ctx.panel.firstElementChild;
     const panel = card ? card.getBoundingClientRect() : null;
     const bottom = panel ? stage.toStage(0, panel.top).y - 16 : stage.viewBottom - 20;
-    const w = stage.viewRight - stage.viewLeft - 60;
+    // the church takes most of the width; the bell tower and Bubu stand beside it
+    const w = (stage.viewRight - stage.viewLeft) * 0.66;
     const scale = Math.max(1, Math.min(w / DESIGN_W, (bottom - top) / DESIGN_H));
     return { x: stage.width / 2 - (DESIGN_W * scale) / 2, y: bottom - DESIGN_H * scale, scale };
   }
@@ -201,8 +205,15 @@ export class PaintMission extends SceneMission {
     c.fillStyle = 'rgba(255,255,255,0.8)';
     for (let i = 0; i < 50; i++) fillCircle(c, stage.viewLeft + ((i * 977) % 1000) / 1000 * (stage.viewRight - stage.viewLeft), stage.viewTop + ((i * 613) % 1000) / 1000 * (stage.viewBottom - stage.viewTop) * 0.5, (i % 3) * 0.5 + 0.7);
     const b = this.box;
+    const ground = b.y + 95 * b.scale;
+    // the mountains of Bucovina, the monastery's wall, its bell tower and Bubu with her brush
+    drawWinterValley(c, { left: stage.viewLeft, right: stage.viewRight, top: stage.viewTop, bottom: ground + 30 }, 0, { slope: false });
+    this.drawWall(c, ground, b.scale);
     c.fillStyle = '#dfe7f3';
-    c.fillRect(stage.viewLeft, b.y + 95 * b.scale, stage.viewRight - stage.viewLeft, stage.viewBottom);
+    c.fillRect(stage.viewLeft, ground, stage.viewRight - stage.viewLeft, stage.viewBottom);
+    this.drawTower(c, b.x - 17 * b.scale, ground, b.scale);
+    this.drawPainter(c, b.x + (DESIGN_W + 13) * b.scale, ground, b.scale);
+    this.drawSnow(c);
 
     c.save();
     c.translate(b.x, b.y);
@@ -252,6 +263,112 @@ export class PaintMission extends SceneMission {
     c.restore();
     this.particles.draw(c);
     c.restore();
+  }
+
+  /**
+   * The white wall around the monastery, with a shingle roof and snow.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {number} ground
+   * @param {number} k  scale of the drawing
+   */
+  drawWall(c, ground, k) {
+    const stage = this.ctx.stage;
+    const h = 26 * k;
+    c.fillStyle = '#f2ede2';
+    c.fillRect(stage.viewLeft, ground - h, stage.viewRight - stage.viewLeft, h);
+    c.fillStyle = '#5d4037';
+    c.fillRect(stage.viewLeft, ground - h - 4 * k, stage.viewRight - stage.viewLeft, 5 * k);
+    c.fillStyle = '#f4f8ff';
+    c.fillRect(stage.viewLeft, ground - h - 6 * k, stage.viewRight - stage.viewLeft, 2.5 * k);
+  }
+
+  /**
+   * The bell tower beside the church.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {number} x  centre
+   * @param {number} ground
+   * @param {number} k
+   */
+  drawTower(c, x, ground, k) {
+    c.fillStyle = '#f7f2e6';
+    c.fillRect(x - 13 * k, ground - 62 * k, 26 * k, 62 * k);
+    c.fillStyle = '#3e2f27';
+    c.beginPath();
+    c.moveTo(x - 7 * k, ground - 44 * k);
+    c.lineTo(x - 7 * k, ground - 54 * k);
+    c.quadraticCurveTo(x, ground - 60 * k, x + 7 * k, ground - 54 * k);
+    c.lineTo(x + 7 * k, ground - 44 * k);
+    c.fill();
+    c.fillStyle = '#c9952c';
+    c.beginPath();
+    c.moveTo(x - 3 * k, ground - 53 * k);
+    c.lineTo(x - 5 * k, ground - 46 * k);
+    c.lineTo(x + 5 * k, ground - 46 * k);
+    c.lineTo(x + 3 * k, ground - 53 * k);
+    c.fill();
+    c.fillStyle = '#5d4037';
+    c.beginPath();
+    c.moveTo(x - 18 * k, ground - 61 * k);
+    c.lineTo(x, ground - 78 * k);
+    c.lineTo(x + 18 * k, ground - 61 * k);
+    c.closePath();
+    c.fill();
+    c.fillStyle = '#e3b23c';
+    c.fillRect(x - 0.8 * k, ground - 88 * k, 1.6 * k, 10 * k);
+    c.fillRect(x - 3 * k, ground - 85 * k, 6 * k, 1.6 * k);
+    c.fillStyle = '#6d4c41';
+    fillRoundRect(c, x - 5 * k, ground - 18 * k, 10 * k, 18 * k, 4 * k, '#6d4c41');
+  }
+
+  /**
+   * Bubu next to the church with a brush dipped in the chosen colour.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {number} x
+   * @param {number} ground
+   * @param {number} k
+   */
+  drawPainter(c, x, ground, k) {
+    const s = 22 * k;
+    const bob = Math.sin(this.time * 2) * 0.6 * k;
+    // the easel-like paint pot
+    fillRoundRect(c, x + 6 * k, ground - 7 * k, 9 * k, 7 * k, 2 * k, '#8d6e63');
+    c.fillStyle = COLORS[this.brush].color;
+    c.fillRect(x + 6.5 * k, ground - 7 * k, 8 * k, 2 * k);
+    drawBubu(c, x, ground - s * 0.5 + bob, s, Math.sin(this.time * 1.5) * 0.05);
+    drawBubuHat(c, this.ctx.state.hat, x, ground - s * 0.5 + bob, s);
+    // the brush, waving a little
+    const a = -0.9 + Math.sin(this.time * 3) * 0.25;
+    const bx = x - 8 * k;
+    const by = ground - s * 0.45;
+    c.strokeStyle = '#8d6e63';
+    c.lineWidth = 1.6 * k;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(bx, by);
+    c.lineTo(bx + Math.cos(a) * 14 * k, by + Math.sin(a) * 14 * k);
+    c.stroke();
+    c.fillStyle = COLORS[this.brush].color;
+    fillCircle(c, bx + Math.cos(a) * 15 * k, by + Math.sin(a) * 15 * k, 1.8 * k);
+  }
+
+  /**
+   * A few big snowflakes falling slowly over the scene.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   */
+  drawSnow(c) {
+    const stage = this.ctx.stage;
+    const w = stage.viewRight - stage.viewLeft;
+    const h = stage.viewBottom - stage.viewTop;
+    c.fillStyle = 'rgba(255,255,255,0.85)';
+    for (let i = 0; i < 40; i++) {
+      const x = stage.viewLeft + ((((i * 977) % 1000) / 1000) * w + Math.sin(this.time * 0.7 + i) * 20 + w) % w;
+      const y = stage.viewTop + ((((i * 613) % 1000) / 1000) * h + this.time * (30 + (i % 4) * 10)) % h;
+      fillCircle(c, x, y, 1.5 + (i % 3));
+    }
   }
 
   /**
