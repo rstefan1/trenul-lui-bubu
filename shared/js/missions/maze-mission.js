@@ -39,8 +39,10 @@ const DIRS = [
   { bit: S, dx: 0, dy: 1, back: N },
   { bit: W, dx: -1, dy: 0, back: E },
 ];
-/** Preferred size of a square, in stage units. */
-const CELL = 82;
+/** Smallest size of a square, in stage units. */
+const CELL = 110;
+/** Largest number of squares in the maze. */
+const MAX_SQUARES = 56;
 /** Room left at the top for the heads-up display and the star counter (stage units). */
 const TOP_MARGIN = 200;
 /** Seconds Bubu needs to walk one square. */
@@ -161,11 +163,13 @@ export class MazeMission extends SceneMission {
     let far = 0;
     dist.forEach((d, i) => { if (d > dist[far]) far = i; });
     this.goal = far;
-    // stars: the farthest dead ends (one open side), except the tree's square
-    const deadEnds = [...dist.keys()]
-      .filter(i => i !== far && i !== this.at && [N, E, S, W].filter(b => this.open[i] & b).length === 1)
-      .sort((a, b) => dist[b] - dist[a]);
-    for (const i of deadEnds.slice(0, this.config.hidden)) this.stars.add(i);
+    // stars: the farthest dead ends (one open side), except the tree's square;
+    // in small mazes with few dead ends, other far squares complete the set
+    const isDeadEnd = (/** @type {number} */ i) => [N, E, S, W].filter(b => this.open[i] & b).length === 1;
+    const spots = [...dist.keys()]
+      .filter(i => i !== far && i !== this.at && dist[i] > 2)
+      .sort((a, b) => (Number(isDeadEnd(b)) - Number(isDeadEnd(a))) || dist[b] - dist[a]);
+    for (const i of spots.slice(0, this.config.hidden)) this.stars.add(i);
     this.hiddenTotal = this.stars.size;
     this.ctx.hud.setCounter('⭐', 0, this.stars.size);
     window.addEventListener('keydown', this.onKey);
@@ -179,10 +183,11 @@ export class MazeMission extends SceneMission {
   layout() {
     const stage = this.ctx.stage;
     const area = this.area(stage.viewTop + TOP_MARGIN);
-    // squares at least about 48 screen pixels wide, so a finger can hit them
+    // big squares (at least about 48 screen pixels, for fingers), and a maze
+    // of moderate size (about 55 squares): a challenge, but not a chore
     const size = Math.max(CELL, 48 / stage.scale);
-    this.cols = clamp(Math.floor(area.w / size), 6, 15);
-    this.rows = clamp(Math.floor(area.h / size), 5, 13);
+    this.cols = clamp(Math.floor(area.w / size), 6, Math.floor(MAX_SQUARES / 5));
+    this.rows = clamp(Math.floor(area.h / size), 5, Math.floor(MAX_SQUARES / this.cols));
     Object.assign(this, this.fit());
   }
 
