@@ -25,7 +25,14 @@ const NET_TIME = 0.22;
 /** Seconds for the caught ornament to fly to the train. */
 const FLY_TIME = 0.8;
 /** Extra touch tolerance around an ornament (fingers are big). */
-const TOUCH_SLACK = 38;
+const TOUCH_SLACK = 46;
+/**
+ * Horizontal speed of the ornaments (stage units per second), from the first
+ * to the last one. Slow enough that a child can comfortably touch them: an
+ * ornament crosses a laptop screen in about ten seconds.
+ */
+const MIN_SPEED = 130;
+const MAX_SPEED = 185;
 /** Vertical band of the sky where ornaments fly (stage units). */
 const SKY_TOP = 170;
 const SKY_BOTTOM = 520;
@@ -75,7 +82,7 @@ export class CatchMission extends Mission {
     super.start(hints);
     const duration = hints.duration ?? 36;
     // leave the last seconds free, so the last ornament can still be caught
-    this.spawnEvery = Math.max(1.2, (duration - 6) / this.config.count);
+    this.spawnEvery = Math.max(1.5, (duration - 10) / this.config.count);
     this.ctx.hud.setCounter('🎄', 0, this.config.goal);
   }
 
@@ -96,7 +103,7 @@ export class CatchMission extends Mission {
       const o = this.ornaments[i];
       if (o.state === 'free') {
         o.x += o.vx * dt;
-        o.y = o.baseY + Math.sin(this.time * 2.1 + o.phase) * 24;
+        o.y = o.baseY + Math.sin(this.time * 1.6 + o.phase) * 18;
         if (o.x < left) this.ornaments.splice(i, 1);
       } else {
         o.t += dt;
@@ -127,8 +134,8 @@ export class CatchMission extends Mission {
       x: stage.viewRight + 60,
       y: 0,
       baseY: lerp(SKY_TOP, SKY_BOTTOM, Math.random()),
-      vx: -lerp(250, 360, k) * (0.9 + Math.random() * 0.2),
-      r: lerp(30, 25, k),
+      vx: -lerp(MIN_SPEED, MAX_SPEED, k) * (0.9 + Math.random() * 0.2),
+      r: lerp(36, 31, k),
       phase: Math.random() * 6.28,
       color: BAUBLE_COLORS[this.spawned % BAUBLE_COLORS.length],
       state: 'free',
