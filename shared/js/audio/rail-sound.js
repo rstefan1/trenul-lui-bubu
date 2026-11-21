@@ -159,13 +159,15 @@ function wander(depth, speed, n = 64) {
 }
 
 /**
- * A squeal of steel brakes on steel wheels, made the way the real one
- * sounds: two wheels (one a little to the left, one to the right, each with
- * its own pitch) whose rims ring through a few narrow resonances. The pitch
- * slides and wavers irregularly and rises a little as the train slows; the
- * loudness flutters as the brake shoe sticks and slips; now and then the
- * ringing "locks" into a piercing tone, then falls back into a rasp. A dull
- * grinding of the shoes runs underneath. Every squeal is a little different.
+ * A squeal of steel brakes on steel wheels. The heart of it is how a real
+ * squeal is born: the brake shoe sticks to the wheel and slips, hundreds of
+ * times a second ("stick-slip"), so the sound is a rough, gritty tone — not
+ * a smooth whistle. Each vibration is drawn one by one (a slow push, a
+ * sudden slip), its length jitters a little, and the grip comes and goes in
+ * quick, uneven grabs. Two wheels squeal (one a little to the left, one to
+ * the right, each with its own pitch); their rims colour the tone like
+ * small bells, the pitch wanders and rises a little as the train slows, and
+ * a dull grinding of the shoes runs underneath. Every squeal is different.
  * @param {AudioContext} ctx
  * @param {AudioNode} out
  * @param {number} t  start time
@@ -175,40 +177,47 @@ function synthSqueal(ctx, out, t) {
   const noise = whiteNoise(ctx);
   /** @type {AudioScheduledSourceNode[]} */
   const sources = [];
-  const base = 2300 + Math.random() * 500;
-  for (const [detune, pan, level] of [[1, -0.45, 1], [1.07 + Math.random() * 0.05, 0.45, 0.7]]) {
+  const base = 1750 + Math.random() * 450;
+  for (const [detune, pan, level] of [[1, -0.45, 1], [1.09 + Math.random() * 0.06, 0.45, 0.6]]) {
     const panner = ctx.createStereoPanner();
     panner.pan.value = pan;
     panner.connect(out);
-    const pitch = wander(0.035, 0.5).map((k, i, arr) => base * detune * k * (1 + 0.05 * (i / arr.length)));
-    // the ringing rim: noise through narrow resonances (main tone and overtones)
-    for (const [ratio, q, amount] of [[1, 42, 1], [1.61, 55, 0.45], [2.43, 60, 0.22]]) {
-      const src = ctx.createBufferSource();
-      src.buffer = noise;
-      src.loop = true;
+    const f0 = base * detune;
+    // the stick-slip tone itself
+    const src = ctx.createBufferSource();
+    src.buffer = stickSlip(ctx, f0, SQUEAL_LENGTH);
+    // the wheel's rim colours it: its main ring and an overtone, a little brighter on top
+    const body = ctx.createGain();
+    for (const [ratio, q, amount] of [[1, 3, 1], [2.02, 5, 0.5], [3.1, 7, 0.22]]) {
       const f = ctx.createBiquadFilter();
       f.type = 'bandpass';
+      f.frequency.value = f0 * ratio;
       f.Q.value = q;
-      f.frequency.setValueCurveAtTime(pitch.map(p => p * ratio), t, SQUEAL_LENGTH);
       const g = ctx.createGain();
-      g.gain.setValueCurveAtTime(wander(0.45, 0.9).map(k => Math.max(0.05, k) * amount * level * 6), t, SQUEAL_LENGTH);
-      src.connect(f).connect(g).connect(panner);
-      src.start(t, Math.random());
-      sources.push(src);
+      g.gain.value = amount;
+      src.connect(f).connect(g).connect(body);
     }
-    // moments when the ringing locks into a piercing tone
-    const tone = ctx.createOscillator();
-    tone.type = 'sawtooth';
-    tone.frequency.setValueCurveAtTime(pitch, t, SQUEAL_LENGTH);
-    const shape = ctx.createBiquadFilter();
-    shape.type = 'bandpass';
-    shape.frequency.setValueCurveAtTime(pitch, t, SQUEAL_LENGTH);
-    shape.Q.value = 6;
-    const lock = ctx.createGain();
-    lock.gain.setValueCurveAtTime(wander(1, 1.2, 96).map(k => Math.max(0, k - 1.15) * 0.5 * level), t, SQUEAL_LENGTH);
-    tone.connect(shape).connect(lock).connect(panner);
-    tone.start(t);
-    sources.push(tone);
+    const soft = ctx.createBiquadFilter();
+    soft.type = 'lowpass';
+    soft.frequency.value = 7000;
+    const lvl = ctx.createGain();
+    lvl.gain.value = 0.75 * level;
+    body.connect(soft).connect(lvl).connect(panner);
+    src.start(t);
+    sources.push(src);
+    // a little ringing metal under the rasp
+    const ring = ctx.createBufferSource();
+    ring.buffer = noise;
+    ring.loop = true;
+    const rf = ctx.createBiquadFilter();
+    rf.type = 'bandpass';
+    rf.frequency.value = f0;
+    rf.Q.value = 40;
+    const rg = ctx.createGain();
+    rg.gain.value = 1.2 * level;
+    ring.connect(rf).connect(rg).connect(panner);
+    ring.start(t, Math.random());
+    sources.push(ring);
   }
   // the duller grinding of the brake shoes underneath
   const grind = ctx.createBufferSource();
@@ -216,14 +225,59 @@ function synthSqueal(ctx, out, t) {
   grind.loop = true;
   const gf = ctx.createBiquadFilter();
   gf.type = 'bandpass';
-  gf.frequency.value = 1100;
-  gf.Q.value = 0.8;
+  gf.frequency.value = 900;
+  gf.Q.value = 0.9;
   const gg = ctx.createGain();
-  gg.gain.setValueCurveAtTime(wander(0.4, 0.8).map(k => 0.12 * k), t, SQUEAL_LENGTH);
+  gg.gain.setValueCurveAtTime(wander(0.4, 0.8).map(k => 0.14 * k), t, SQUEAL_LENGTH);
   grind.connect(gf).connect(gg).connect(out);
   grind.start(t, Math.random());
   sources.push(grind);
   return sources;
+}
+
+/**
+ * The stick-slip vibration of a brake shoe on a wheel, drawn one cycle at a
+ * time: a slow push (the shoe sticks and bends) and a sudden slip back. The
+ * pitch wanders and rises a little over time, each cycle's length jitters,
+ * now and then a cycle skips, and the grip comes in quick uneven grabs with
+ * short gaps.
+ * @param {AudioContext} ctx
+ * @param {number} f0       frequency (Hz)
+ * @param {number} seconds
+ */
+function stickSlip(ctx, f0, seconds) {
+  const sr = ctx.sampleRate;
+  const buffer = ctx.createBuffer(1, Math.round(sr * seconds), sr);
+  const d = buffer.getChannelData(0);
+  const pitch = wander(0.04, 0.5, 128);
+  let phase = 0;
+  let jitter = 1;
+  let grip = 0;
+  let gripTarget = 1;
+  let nextGrab = 0;
+  for (let i = 0; i < d.length; i++) {
+    const u = i / d.length;
+    const p = pitch[Math.min(pitch.length - 1, Math.floor(u * pitch.length))];
+    const f = f0 * p * (1 + 0.06 * u) * jitter;
+    phase += f / sr;
+    if (phase >= 1) {
+      phase -= 1;
+      // the next cycle is a little longer or shorter; rarely the shoe skips one
+      jitter = 0.97 + Math.random() * 0.06;
+      if (Math.random() < 0.03) phase -= 0.5 + Math.random() * 0.5;
+    }
+    // quick, uneven grabs of the brake (every 15–45 ms), with short gaps
+    if (i >= nextGrab) {
+      nextGrab = i + Math.round(sr * (0.015 + Math.random() * 0.03));
+      gripTarget = Math.random() < 0.12 ? 0.05 : 0.35 + Math.random() * 0.65;
+    }
+    grip += (gripTarget - grip) * 0.004;
+    // slow push, sudden slip
+    const ph = Math.max(0, phase);
+    const wave = ph < 0.82 ? (ph / 0.82) * 2 - 1 : 1 - ((ph - 0.82) / 0.18) * 2;
+    d[i] = wave * grip;
+  }
+  return buffer;
 }
 
 /**
@@ -273,7 +327,7 @@ function echo(ctx, master) {
     node = ctx.createConvolver();
     node.buffer = ir;
     const wet = ctx.createGain();
-    wet.gain.value = 0.35;
+    wet.gain.value = 0.2;
     node.connect(wet).connect(master);
     echoCache.set(ctx, node);
   }
