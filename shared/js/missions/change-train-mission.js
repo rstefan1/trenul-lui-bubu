@@ -107,8 +107,11 @@ export class ChangeTrainMission extends SceneMission {
   get platforms() {
     const a = this.area;
     const n = 3;
-    const gap = (a.bottom - a.top) / n;
-    return Array.from({ length: n }, (_, i) => ({ number: i + 1, y: a.top + gap * (i + 0.72), x0: a.left + 90, x1: a.right - 20 }));
+    // in the middle of the screen (clear of the "?" button), with room below for Bubu
+    const gap = (a.bottom - a.top - 110) / n;
+    const width = Math.min(780, a.right - a.left - 260);
+    const x0 = (a.left + a.right) / 2 - width / 2 + 40;
+    return Array.from({ length: n }, (_, i) => ({ number: i + 1, y: a.top + gap * (i + 0.78), x0, x1: x0 + width }));
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */
@@ -296,7 +299,7 @@ export class ChangeTrainMission extends SceneMission {
     // Bubu (and her tree) at the bottom, walking to the right train
     const a = this.area;
     const pl = this.platforms[target - 1];
-    const start = { x: a.left + 40, y: a.bottom - 20 };
+    const start = { x: (a.left + a.right) / 2, y: a.bottom - 10 };
     const end = { x: pl.x0 + 200, y: pl.y - 70 };
     const k = this.step === 'walk' ? easeInOut(clamp(this.stepT / WALK, 0, 1)) : this.step === 'done' ? 1 : 0;
     if (this.step !== 'done') {
