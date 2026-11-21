@@ -24,6 +24,7 @@ import { MotionPlan, tripLength } from './motion.js';
  * @property {string} [arrive]      "DD HH:MM" (missing for the first station)
  * @property {string} [depart]      "DD HH:MM" (missing for the last station)
  * @property {'large' | 'small'} size
+ * @property {{kind: string, litFlag?: string}} [backdrop]  a landmark behind the station
  *
  * @typedef {object} FeatureData
  * @property {'viaduct' | 'bridge' | 'tunnel'} type
@@ -149,7 +150,8 @@ export class Route {
     this.length = distance;
 
     for (const s of this.stations) {
-      this.features.push({ type: 'station', x: s.distance, name: s.name, size: s.size, seed: hashString(s.id) });
+      const backdrop = data.stations[s.index].backdrop;
+      this.features.push({ type: 'station', x: s.distance, name: s.name, size: s.size, seed: hashString(s.id), backdrop });
     }
   }
 

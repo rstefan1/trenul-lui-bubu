@@ -62,6 +62,7 @@ const state = new GameState();
 const world = new WorldView(stage, journey);
 const hud = new Hud(route, { month: 11, dayLabels: { 24: 'Ajunul Crăciunului', 25: 'Crăciunul' } });
 const missionHud = new MissionHud(state);
+world.flags = state.flags;
 const director = new MissionDirector(
   { stage, journey, world, state, hud: missionHud, panel: byId('missionPanel') },
   WINTER_MISSIONS,
@@ -72,6 +73,7 @@ const director = new MissionDirector(
 state.on('change', (/** @type {string} */ what) => {
   if (what === 'locoColor') world.train.setLocoColor(state.locoColor);
   if (what === 'baubles') world.train.baubles = state.baubles;
+  if (what === 'flags') world.flags = state.flags;
 });
 journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Station} */ station) => {
   hud.showStation(station.name);

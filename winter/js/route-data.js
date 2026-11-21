@@ -31,7 +31,10 @@ export const WINTER_ROUTE = {
   stations: [
     { id: 'timisoara', name: 'Timișoara Nord', short: 'Timișoara', depart: '24 15:00', size: 'large' },
     { id: 'arad', name: 'Arad', arrive: '24 15:58', depart: '24 16:03', size: 'large' },
-    { id: 'deva', name: 'Deva', arrive: '24 18:10', depart: '24 18:15', size: 'small' },
+    {
+      id: 'deva', name: 'Deva', arrive: '24 18:10', depart: '24 18:15', size: 'small',
+      backdrop: { kind: 'deva-fortress', litFlag: 'deva-fortress-lit' },
+    },
     { id: 'alba-iulia', name: 'Alba Iulia', arrive: '24 19:20', depart: '24 19:23', size: 'small' },
     { id: 'cluj-napoca', name: 'Cluj-Napoca', short: 'Cluj', arrive: '24 21:25', depart: '24 21:37', size: 'large' },
     { id: 'dej', name: 'Dej Călători', short: 'Dej', arrive: '24 22:35', depart: '24 22:40', size: 'small' },

@@ -25,6 +25,7 @@ import { hexToRgb, css, mixRgb } from '../gfx/color.js';
 import { drawFir, fillRoundRect, glow, lightWindows } from '../gfx/shapes.js';
 import { NEAR_GROUND_Y, paletteFor } from './biomes/terrain.js';
 import { TRACK_Y, screenX } from './track.js';
+import { devaLayout, drawDevaFortress, drawDevaTorches } from '../gfx/scenes/deva-fortress.js';
 
 /**
  * @typedef {object} StationFeature
@@ -33,6 +34,7 @@ import { TRACK_Y, screenX } from './track.js';
  * @property {string} name
  * @property {'large' | 'small'} size
  * @property {number} seed
+ * @property {{kind: string, litFlag?: string}} [backdrop]
  *
  * @typedef {object} SpanFeature
  * @property {'viaduct' | 'bridge' | 'tunnel'} type
@@ -54,6 +56,7 @@ import { TRACK_Y, screenX } from './track.js';
  * @property {number} bottom      lowest row to paint (stage units, camera included)
  * @property {number} bubuOffset  train x of Bubu's window (negative)
  * @property {number} time
+ * @property {ReadonlySet<string>} flags   what the player changed in the world
  */
 
 /** How far a station reaches on both sides of its centre. */
@@ -153,6 +156,10 @@ export class TrackFeatures {
 
   /** @param {CanvasRenderingContext2D} c @param {FeatureView} v */
   drawBack(c, v) {
+    // landmarks behind stations first (they are far away)
+    for (const f of this.features) {
+      if (f.type === 'station' && f.backdrop) drawBackdrop(c, v, f, false);
+    }
     for (const f of this.visible(v)) {
       if (f.type === 'station') drawStation(c, v, f, false);
       else if (f.type === 'viaduct') drawValley(c, v, f, 'viaduct');
@@ -170,6 +177,9 @@ export class TrackFeatures {
 
   /** @param {CanvasRenderingContext2D} c @param {FeatureView} v */
   drawLights(c, v) {
+    for (const f of this.features) {
+      if (f.type === 'station' && f.backdrop) drawBackdrop(c, v, f, true);
+    }
     for (const f of this.visible(v)) {
       if (f.type === 'station') drawStation(c, v, f, true);
     }
@@ -626,5 +636,56 @@ function drawNameBoard(c, cx, top, name, scale) {
   c.textAlign = 'center';
   c.textBaseline = 'middle';
   c.fillText(name, cx, top + h / 2 + 2 * scale);
+  c.restore();
+}
+
+// ------------------------------------------------------------------ landmarks behind stations
+
+/** The fortress drawings are made for this stage width (see devaLayout). */
+const DEVA = devaLayout(1600);
+/** Landmarks are far away: they slide by slower than the station. */
+const BACKDROP_PARALLAX = 0.45;
+
+/**
+ * A landmark on a hill behind a station (for now: the Deva fortress). Its
+ * torches burn once the player has lit them in the station's mission.
+ * Drawn twice: the hill and walls in the tinted pass, the flames in the
+ * lights pass.
+ * @param {CanvasRenderingContext2D} c
+ * @param {FeatureView} v
+ * @param {StationFeature} f
+ * @param {boolean} lights
+ */
+function drawBackdrop(c, v, f, lights) {
+  const b = /** @type {{kind: string, litFlag?: string}} */ (f.backdrop);
+  if (b.kind !== 'deva-fortress') return;
+  // where the fortress stands when the train is stopped: to the right of the station
+  const cx = (f.x - v.distance) * BACKDROP_PARALLAX + v.anchorX + v.bubuOffset + 330;
+  if (cx < v.left - 500 || cx > v.right + 500) return;
+  const lit = !!(b.litFlag && v.flags.has(b.litFlag));
+  const k = 0.5;                       // scale of the fortress
+  const base = NEAR_GROUND_Y - 300;    // foot of the walls, on top of the hill
+
+  c.save();
+  if (!lights) {
+    // the hill
+    c.fillStyle = css(mixRgb(GROUND_TOP[0], GROUND_TOP[1], v.cover));
+    c.beginPath();
+    c.moveTo(cx - 620, NEAR_GROUND_Y + 4);
+    c.bezierCurveTo(cx - 380, NEAR_GROUND_Y - 60, cx - 260, base + 6, cx, base + 6);
+    c.bezierCurveTo(cx + 260, base + 6, cx + 380, NEAR_GROUND_Y - 60, cx + 620, NEAR_GROUND_Y + 4);
+    c.closePath();
+    c.fill();
+    for (let i = 0; i < 9; i++) {
+      const x = cx - 420 + i * 105;
+      const y = NEAR_GROUND_Y - 40 - 160 * Math.exp(-(((x - cx) / 300) ** 2));
+      drawFir(c, x, y + 30, 46 + (i % 3) * 10, { snowy: v.cover > 0.5 });
+    }
+  }
+  c.translate(cx, base);
+  c.scale(k, k);
+  c.translate(-(DEVA.wallLeft + DEVA.wallRight) / 2, -(DEVA.wallTop + 150));
+  if (!lights) drawDevaFortress(c, DEVA, lit ? 0.6 : 0, v.time);
+  drawDevaTorches(c, DEVA, DEVA.torches.map(() => lit && lights), v.time);
   c.restore();
 }

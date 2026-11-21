@@ -44,6 +44,9 @@ export class WorldView {
     this.snow = new Snowfall(stage, REDUCED_MOTION ? 50 : 150);
     this.cameraY = 0;
     this.time = 0;
+    /** What the player changed in the world (set by the game, e.g. lit torches). */
+    /** @type {ReadonlySet<string>} */
+    this.flags = new Set();
     /** The light of the last drawn frame (missions use it to match the world). */
     this.light = lightAt(journey.clock);
     /** Snow cover shown on screen (follows the journey smoothly). */
@@ -54,6 +57,17 @@ export class WorldView {
   get anchorX() {
     const w = this.stage.width;
     return w - Math.max(150, w * 0.18);
+  }
+
+  /**
+   * Jumps to the journey's current situation without transitions (after
+   * placing the train somewhere else, e.g. at the start of a chapter).
+   */
+  snap() {
+    const j = this.journey;
+    this.train.setSpec(TRAINS[j.trainId]);
+    this.cover = j.weather.cover;
+    this.cameraY = this.features.cameraLift(j.distance, this.train.length);
   }
 
   /**
@@ -135,6 +149,7 @@ export class WorldView {
       bottom: stage.viewBottom + this.cameraY,
       bubuOffset: this.train.bubuOffset,
       time: this.time,
+      flags: this.flags,
     };
     const electric = this.train.spec.electric;
 

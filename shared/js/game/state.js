@@ -4,11 +4,20 @@
  * ornaments collected for the train.
  *
  * The state is a plain observable object: the HUD and the train renderer
- * listen to "change" events instead of being called by the missions.
- * (Saving it in the browser, so a journey can be resumed, comes later.)
+ * listen to "change" events instead of being called by the missions. It can
+ * be turned into plain JSON and back, to be saved in the browser.
  */
 
 import { Emitter } from '../core/emitter.js';
+
+/**
+ * @typedef {object} GameStateData
+ * @property {string} travelerName
+ * @property {string | null} locoColor
+ * @property {Array<[string, number]>} stars
+ * @property {string[]} baubles
+ * @property {string[]} [flags]
+ */
 
 export class GameState extends Emitter {
   constructor() {
@@ -21,6 +30,9 @@ export class GameState extends Emitter {
     /** Colours of the baubles hanging on the train, in the order they were caught. */
     /** @type {string[]} */
     this.baubles = [];
+    /** Things that changed in the world thanks to the player (e.g. "deva-fortress-lit"). */
+    /** @type {Set<string>} */
+    this.flags = new Set();
   }
 
   /** Total number of stars. */
@@ -50,6 +62,39 @@ export class GameState extends Emitter {
   awardStars(missionId, stars) {
     this.stars.set(missionId, Math.max(stars, this.stars.get(missionId) || 0));
     this.emit('change', 'stars');
+  }
+
+  /** @returns {GameStateData} */
+  toJSON() {
+    return {
+      travelerName: this.travelerName,
+      locoColor: this.locoColor,
+      stars: [...this.stars],
+      baubles: [...this.baubles],
+      flags: [...this.flags],
+    };
+  }
+
+  /**
+   * Replaces everything with saved data (or with an empty state) and tells
+   * every listener.
+   * @param {Partial<GameStateData> | null} data
+   */
+  load(data) {
+    this.travelerName = data?.travelerName ?? '';
+    this.locoColor = data?.locoColor ?? null;
+    this.stars = new Map(data?.stars ?? []);
+    this.baubles.length = 0;
+    this.baubles.push(...(data?.baubles ?? []));
+    this.flags.clear();
+    for (const f of data?.flags ?? []) this.flags.add(f);
+    for (const what of ['travelerName', 'locoColor', 'stars', 'baubles', 'flags']) this.emit('change', what);
+  }
+
+  /** @param {string} flag */
+  setFlag(flag) {
+    this.flags.add(flag);
+    this.emit('change', 'flags');
   }
 
   /** @param {string} color */

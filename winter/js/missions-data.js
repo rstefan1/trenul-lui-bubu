@@ -118,6 +118,7 @@ export const WINTER_MISSIONS = {
         windText: 'Uf! O pală de vânt a stins un felinar. Mai aprinde-l o dată!',
         doneText: 'Toate felinarele ard! Cetatea se vede acum din tren, de departe.',
         fact: 'Cetatea Deva a fost ridicată pe un deal care, cu milioane de ani în urmă, a fost un vulcan. Este pomenită în documente încă din anul 1269.',
+        flag: 'deva-fortress-lit',
       },
     },
   },
