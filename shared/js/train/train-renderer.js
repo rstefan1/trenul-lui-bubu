@@ -57,6 +57,9 @@ export const HANGING_BAUBLE_R = 11;
  * @property {number} headlight  0..1
  */
 
+/** Seconds a passenger needs to get off and walk away. */
+const PASSENGER_LEAVE = 2.6;
+
 export class TrainRenderer {
   /**
    * @param {import('../core/stage.js').Stage} stage
@@ -74,6 +77,13 @@ export class TrainRenderer {
     this.lightBulbs = 0;
     /** The hat Bubu wears at her window (index in HATS, −1 = none). */
     this.hat = -1;
+    /**
+     * Passengers a mission brought on board (animals of the forest), sitting
+     * at windows; when they leave, they hop out and walk away.
+     * @type {Array<{emoji: string, seat: number, leaving: number}>}
+     */
+    this.passengers = [];
+    this.time = 0;
     /** The train carries the flat wagon with the Christmas tree (after Vatra Dornei). */
     this.treeWagon = false;
     /** How far Bubu has appeared at her window (0 = not on the train yet). */
@@ -92,8 +102,10 @@ export class TrainRenderer {
     /** @type {LaidOutCar[]} */
     this.cars = [];
     let cursor = 0;
-    // the tree wagon goes right behind the front car, where it is always on screen
-    const cars = this.treeWagon ? [spec.cars[0], TREE_WAGON, ...spec.cars.slice(1)] : spec.cars;
+    // the tree wagon goes right behind a locomotive (a long train: there it is on
+    // screen); a short railcar train, which stands further left, pulls it at the end
+    const loco = spec.cars[0].kind === 'electricLoco';
+    const cars = !this.treeWagon ? spec.cars : loco ? [spec.cars[0], TREE_WAGON, ...spec.cars.slice(1)] : [...spec.cars, TREE_WAGON];
     cars.forEach((car) => {
       const left = cursor - car.length;
       this.cars.push({ spec: car, left, geo: /** @type {any} */ (null) });
@@ -136,7 +148,59 @@ export class TrainRenderer {
 
   /** @param {number} dt */
   update(dt) {
+    this.time += dt;
     this.bubuShown = approach(this.bubuShown, this.bubuTarget, 7, dt);
+    for (const p of this.passengers) if (p.leaving >= 0) p.leaving += dt;
+    this.passengers = this.passengers.filter(p => p.leaving < PASSENGER_LEAVE);
+  }
+
+  /**
+   * A passenger sits down at a window.
+   * @param {string} emoji
+   * @param {number} seat  index in passengerWindows
+   */
+  addPassenger(emoji, seat) {
+    this.passengers.push({ emoji, seat, leaving: -1 });
+  }
+
+  /** All passengers get off (one after another) and walk away. */
+  leaveAll() {
+    this.passengers.forEach((p, i) => {
+      if (p.leaving < 0) p.leaving = -i * 0.5;
+    });
+  }
+
+  /**
+   * The passengers at their windows, or hopping out onto the platform.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {TrainFrame} f
+   */
+  drawPassengers(c, f) {
+    if (!this.passengers.length) return;
+    const windows = this.passengerWindows;
+    c.font = '44px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    for (const p of this.passengers) {
+      const w = windows[Math.min(p.seat, windows.length - 1)];
+      if (!w) continue;
+      const sx = f.frontX + w.x;
+      const sy = f.railY + w.y;
+      const t = Math.max(0, p.leaving);
+      if (p.leaving < 0) {
+        c.fillText(p.emoji, sx, sy + Math.sin(this.time * 3 + p.seat) * 2);
+        continue;
+      }
+      // hop down in front of the train, then walk off to the right and fade
+      const hop = Math.min(1, t / 0.8);
+      const x = sx + hop * 60 + Math.max(0, t - 0.8) * 120;
+      const y = sy + (f.railY + 70 - sy) * hop - Math.sin(hop * Math.PI) * 90;
+      c.save();
+      c.globalAlpha = Math.max(0, Math.min(1, (PASSENGER_LEAVE - t) / 0.6));
+      c.fillText(p.emoji, x, y);
+      c.restore();
+    }
   }
 
   /**
@@ -273,6 +337,7 @@ export class TrainRenderer {
     this.drawWheels(c, f);
     this.drawDecorations(c, f);
     this.drawBubu(c, f);
+    this.drawPassengers(c, f);
   }
 
   /**
@@ -283,6 +348,16 @@ export class TrainRenderer {
    */
   drawDecorations(c, f) {
     this.drawBulbs(c, f, false);
+    this.drawBaubles(c, f);
+  }
+
+  /**
+   * The garlands and the baubles hanging on them.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {TrainFrame} f
+   */
+  drawBaubles(c, f) {
     const count = Math.min(this.baubles.length, this.baubleSlots.length);
     if (count === 0) return;
     const decorated = new Set();
@@ -352,11 +427,6 @@ export class TrainRenderer {
    */
   drawLights(c, f) {
     this.ensureBody();
-    if (this.lightBulbs > 0) {
-      c.globalAlpha = 0.35 + 0.65 * Math.max(f.lights, 0.2);
-      this.drawBulbs(c, f, true);
-      c.globalAlpha = 1;
-    }
     if (f.lights > 0.02) {
       c.globalAlpha = f.lights;
       for (const car of this.cars) {
@@ -368,14 +438,25 @@ export class TrainRenderer {
         }
         const b = car.geo.bubuWindow;
         if (b) {
-          // the warm lamp inside, then Bubu in front of it, fully opaque
-          c.fillStyle = '#ffd98a';
+          // the warm lamp inside (as in the other windows), then Bubu in front of it, fully opaque
+          glow(c, ox + b[0] + b[2] / 2, f.railY + b[1] + b[3] / 2, b[2] * 1.1, 'rgba(255,214,120,0.35)', 'rgba(255,214,120,0)');
+          c.fillStyle = '#ffe39a';
           c.fillRect(ox + b[0], f.railY + b[1], b[2], b[3]);
           c.globalAlpha = 1;
           this.drawBubu(c, f);
           c.globalAlpha = f.lights;
         }
       }
+      c.globalAlpha = 1;
+      this.drawPassengers(c, f);
+      // the baubles hang in front of the windows: lit by the warm light, never hidden by it
+      c.globalAlpha = Math.min(1, f.lights * 1.2);
+      this.drawBaubles(c, f);
+      c.globalAlpha = 1;
+    }
+    if (this.lightBulbs > 0) {
+      c.globalAlpha = 0.35 + 0.65 * Math.max(f.lights, 0.2);
+      this.drawBulbs(c, f, true);
       c.globalAlpha = 1;
     }
     for (const car of this.cars) {

@@ -74,14 +74,9 @@ function drawBuffers(c, x, dir) {
  * A window with a frame and a reflection.
  * @param {CanvasRenderingContext2D} c
  * @param {Rect} r
- * @param {boolean} [open=false]  Bubu's window is open: no glass, dark inside
  */
-function drawWindow(c, [x, y, w, h], open = false) {
+function drawWindow(c, [x, y, w, h]) {
   fillRoundRect(c, x - 3, y - 3, w + 6, h + 6, 9, '#3a4352');
-  if (open) {
-    fillRoundRect(c, x, y, w, h, 7, '#4b3a3f');
-    return;
-  }
   const g = c.createLinearGradient(x, y, x + w, y + h);
   g.addColorStop(0, '#9fc3e6');
   g.addColorStop(1, '#5d86b6');
@@ -270,7 +265,7 @@ function coach(c, car, pos) {
     const isBubu = car.bubuWindow === i;
     /** @type {Rect} */
     const r = [x, -154, ww, wh];
-    drawWindow(c, r, isBubu);
+    drawWindow(c, r);
     if (isBubu) bubuWindow = r;
     else windows.push(r);
   }
@@ -360,7 +355,7 @@ function railcar(c, car, pos, noseRight) {
     const isBubu = car.bubuWindow === i;
     /** @type {Rect} */
     const r = [x, -150, ww, wh];
-    drawWindow(c, r, isBubu);
+    drawWindow(c, r);
     if (isBubu) bubuWindow = r;
     else windows.push(r);
   }

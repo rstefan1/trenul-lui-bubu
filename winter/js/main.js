@@ -133,6 +133,8 @@ state.on('change', (/** @type {string} */ what) => {
 });
 journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Station} */ station) => {
   hud.showStation(station.name);
+  // passengers brought on board by a mission get off at the next station
+  if (world.train.passengers.length) setTimeout(() => world.train.leaveAll(), 700);
 });
 
 // ------------------------------------------------------------ input and loop

@@ -41,11 +41,12 @@ export class WorldView {
     this.landscape = new Landscape(stage, this.compositor, d => route.biomeAt(d));
     this.features = new TrackFeatures(route.features);
     this.train = new TrainRenderer(stage, TRAINS[journey.trainId]);
-    this.snow = new Snowfall(stage, REDUCED_MOTION ? 50 : 150);
+    this.snow = new Snowfall(stage, REDUCED_MOTION ? 100 : 300);
     this.cameraY = 0;
     /** How far the view is panned forward (the whole world moves left), and where it is heading. */
     this.pan = 0;
     this.panTarget = 0;
+
     this.time = 0;
     /** What the player changed in the world (set by the game, e.g. lit torches). */
     /** @type {ReadonlySet<string>} */
@@ -87,6 +88,7 @@ export class WorldView {
   snap() {
     const j = this.journey;
     this.train.setSpec(TRAINS[j.trainId]);
+    this.train.passengers = [];
     this.cover = j.weather.cover;
     this.cameraY = this.features.cameraLift(j.distance, this.train.length);
   }
