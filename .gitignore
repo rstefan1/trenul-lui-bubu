@@ -1,3 +1,6 @@
 .DS_Store
 Thumbs.db
 *.log
+
+# Windows download markers (copied from NTFS)
+*:Zone.Identifier
