@@ -36,6 +36,7 @@ import { ChangeTrainMission } from '../../shared/js/missions/change-train-missio
 import { CostumeMission } from '../../shared/js/missions/costume-mission.js';
 import { FrostMission } from '../../shared/js/missions/frost-mission.js';
 import { PaintMission } from '../../shared/js/missions/paint-mission.js';
+import { WhistleMission } from '../../shared/js/missions/whistle-mission.js';
 import { PutnaMission } from '../../shared/js/missions/putna-mission.js';
 import { SnowflakeMission } from '../../shared/js/missions/snowflake-mission.js';
 import { ConnectStarsMission } from '../../shared/js/missions/connect-stars-mission.js';
@@ -92,6 +93,7 @@ const MISSION_TYPES = {
   paint: PaintMission,
   putna: PutnaMission,
   snowflake: SnowflakeMission,
+  whistle: WhistleMission,
 };
 
 const params = new URLSearchParams(location.search);
