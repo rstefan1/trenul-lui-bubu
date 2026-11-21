@@ -86,6 +86,9 @@ export class Mission {
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerDown(p) {}
 
+  /** @param {import('../core/input.js').PointerInfo} p  (mouse: also without a button pressed) */
+  pointerMove(p) {}
+
   /**
    * Ends the mission.
    * @protected

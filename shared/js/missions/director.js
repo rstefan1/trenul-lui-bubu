@@ -146,6 +146,12 @@ export class MissionDirector {
     if (m) m.pointerDown(p);
   }
 
+  /** @param {import('../core/input.js').PointerInfo} p */
+  pointerMove(p) {
+    const m = this.active[this.active.length - 1];
+    if (m) m.pointerMove(p);
+  }
+
   /** True when a mission wants the pointer (the canvas then shows a hand cursor). */
   get wantsPointer() {
     return this.active.length > 0;
