@@ -187,15 +187,17 @@ export class WorldView {
     };
     this.compositor.draw(c, TRACK_Y - 280, TRACK_Y + 30, b => this.train.drawBody(b, frame), [light.wash]);
     this.compositor.draw(c, 0, stage.viewBottom + this.cameraY, b => this.features.drawFront(b, fview), [light.wash]);
-    this.train.drawLights(c, frame);
-    if (tunnel.any && frame.lights < 1) {
-      // inside a tunnel the windows are lit even by day
+    if (tunnel.any) {
+      // the part of the train inside a mountain stays hidden, lights included
       c.save();
       c.beginPath();
+      c.rect(stage.viewLeft, stage.viewTop + this.cameraY - 10, stage.viewRight - stage.viewLeft, stage.viewBottom - stage.viewTop + 20);
       for (const [x, y, w, h] of this.features.tubes(fview)) c.rect(x, y, w, h);
-      c.clip();
-      this.train.drawLights(c, { ...frame, lights: 1 - frame.lights, headlight: 0 });
+      c.clip('evenodd');
+      this.train.drawLights(c, frame);
       c.restore();
+    } else {
+      this.train.drawLights(c, frame);
     }
     c.restore();
 

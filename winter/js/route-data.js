@@ -123,10 +123,11 @@ export const WINTER_ROUTE = {
       cover: [[0, 1]],
     },
     // Mestecăniș → Câmpulung Moldovenesc: through the long tunnel under the pass
+    // (the longest tunnel of the journey: for a while, only darkness)
     {
       duration: 45,
       biomes: [[0, 'forest'], [0.62, 'hills'], [0.9, 'city']],
-      features: [{ type: 'tunnel', at: 0.16, length: 1100 }],
+      features: [{ type: 'tunnel', at: 0.14, length: 3600 }],
       snowfall: [[0, 0.5], [1, 0.3]],
       cover: [[0, 1]],
     },

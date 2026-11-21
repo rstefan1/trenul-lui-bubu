@@ -61,6 +61,8 @@ import { devaLayout, drawDevaFortress, drawDevaTorches } from '../gfx/scenes/dev
 
 /** How far a station reaches on both sides of its centre. */
 const STATION_HALF = 460;
+/** Colour of the inside of a tunnel (opaque: the train disappears in it). */
+const TUNNEL_DARK = '#16121e';
 /** Top of a tunnel tube (just above the pantograph). */
 const TUBE_TOP = TRACK_Y - 268;
 
@@ -458,8 +460,8 @@ function drawTunnelFront(c, v, f) {
   const span = f.x1 - f.x0;
   const rock = css(mixRgb(ROCK_BARE, ROCK_SNOWY, v.cover * 0.5));
 
-  // the dark tube: the train is still faintly visible inside
-  c.fillStyle = 'rgba(14,12,24,0.88)';
+  // the dark tube: inside the mountain the train cannot be seen at all
+  c.fillStyle = TUNNEL_DARK;
   c.fillRect(p0, TUBE_TOP + 20, p1 - p0, TRACK_Y + 28 - TUBE_TOP - 20);
 
   // rock above the tube
@@ -492,7 +494,7 @@ function drawTunnelFront(c, v, f) {
       c.fillRect(px - 32, TUBE_TOP - 14, 64, 6);
     }
   }
-  c.fillStyle = 'rgba(14,12,24,0.88)';
+  c.fillStyle = TUNNEL_DARK;
   c.fillRect(p0 + 8, TUBE_TOP + 12, p1 - p0 - 16, 10);
 }
 
