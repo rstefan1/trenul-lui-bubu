@@ -666,23 +666,38 @@ function drawBackdrop(c, v, f, lights) {
   const k = 0.5;                       // scale of the fortress
   const base = NEAR_GROUND_Y - 300;    // foot of the walls, on top of the hill
 
+  // the hill has a wide flat top, so the whole fortress stands on it
+  const plateau = 230;
+  const slope = 480;
+  const hillY = (/** @type {number} */ x) => {
+    const d = Math.max(0, Math.abs(x - cx) - plateau) / slope;
+    return base + (NEAR_GROUND_Y + 4 - base) * smoothstep(0, 1, d);
+  };
+
   c.save();
   if (!lights) {
-    // the hill
     c.fillStyle = css(mixRgb(GROUND_TOP[0], GROUND_TOP[1], v.cover));
     c.beginPath();
-    c.moveTo(cx - 620, NEAR_GROUND_Y + 4);
-    c.bezierCurveTo(cx - 380, NEAR_GROUND_Y - 60, cx - 260, base + 6, cx, base + 6);
-    c.bezierCurveTo(cx + 260, base + 6, cx + 380, NEAR_GROUND_Y - 60, cx + 620, NEAR_GROUND_Y + 4);
+    c.moveTo(cx - plateau - slope - 10, NEAR_GROUND_Y + 6);
+    for (let x = cx - plateau - slope; x <= cx + plateau + slope; x += 12) c.lineTo(x, hillY(x));
+    c.lineTo(cx + plateau + slope + 10, NEAR_GROUND_Y + 6);
     c.closePath();
     c.fill();
-    for (let i = 0; i < 9; i++) {
-      const x = cx - 420 + i * 105;
-      const y = NEAR_GROUND_Y - 40 - 160 * Math.exp(-(((x - cx) / 300) ** 2));
-      drawFir(c, x, y + 30, 46 + (i % 3) * 10, { snowy: v.cover > 0.5 });
+    // rocks where the walls meet the hill
+    c.fillStyle = css(mixRgb(ROCK_BARE, ROCK_SNOWY, v.cover * 0.5));
+    for (const dx of [-plateau + 10, -120, 40, plateau - 30]) {
+      c.beginPath();
+      c.ellipse(cx + dx, base + 10, 34, 14, 0, Math.PI, 0);
+      c.fill();
+    }
+    // firs on the slopes, below the walls
+    for (let i = 0; i < 10; i++) {
+      const side = i % 2 ? 1 : -1;
+      const x = cx + side * (plateau + 30 + (i >> 1) * 85);
+      drawFir(c, x, hillY(x) + 26, 44 + (i % 3) * 10, { snowy: v.cover > 0.5 });
     }
   }
-  c.translate(cx, base);
+  c.translate(cx, base + 8);     // the foot of the walls sits a little in the ground
   c.scale(k, k);
   c.translate(-(DEVA.wallLeft + DEVA.wallRight) / 2, -(DEVA.wallTop + 150));
   if (!lights) drawDevaFortress(c, DEVA, lit ? 0.6 : 0, v.time);
