@@ -69,7 +69,7 @@ export class Mission {
    */
   start(hints = {}) {
     this.phase = 'running';
-    this.ctx.hud.announce(this.config.title, this.config.text);
+    this.ctx.hud.instruct(this.config.title, this.config.text);
   }
 
   /** Travel missions: the window is closing, finish what is in progress. */

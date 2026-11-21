@@ -48,6 +48,17 @@
     <h2 class="mission-title" id="missionTitle"></h2>
     <p class="mission-text" id="missionText"></p>
   </div>
+  <div class="briefing" id="briefing" role="dialog" aria-modal="true" aria-labelledby="briefingTitle" hidden>
+    <div class="briefing__card">
+      <img class="briefing__bubu" src="../shared/assets/bubu.webp" alt="" width="96" height="96">
+      <p class="mission-kicker" id="briefingKicker">Misiune</p>
+      <h2 class="mission-title" id="briefingTitle"></h2>
+      <p class="briefing__text" id="briefingText"></p>
+      <button class="big-btn" id="btnBriefingOk" type="button">Am înțeles! ▶</button>
+      <p class="briefing__note">Jocul așteaptă până apeși butonul.</p>
+    </div>
+  </div>
+  <button class="hud-btn help-btn" id="btnHelp" type="button" title="Ce am de făcut?" aria-label="Ce am de făcut?" hidden>?</button>
   <div class="mission-counter" id="missionCounter" aria-live="polite" hidden></div>
   <div class="mission-result" id="missionResult" role="status" hidden>
     <div class="mission-result__stars" id="missionResultStars" aria-hidden="true"></div>

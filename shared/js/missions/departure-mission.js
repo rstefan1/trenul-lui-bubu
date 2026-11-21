@@ -211,7 +211,7 @@ export class DepartureMission extends Mission {
     this.step = 'boarding';
     this.setPanel(null);
     const t = this.config.ticket;
-    this.ctx.hud.announce('Urcarea în tren', this.config.boardingText, 'Misiune', 0);
+    this.ctx.hud.instruct('Urcarea în tren', this.config.boardingText);
     this.chip = el('div', { class: 'ticket-chip' }, [
       el('span', { class: 'ticket-chip__label' }, ['Biletul lui Bubu']),
       el('span', {}, [`Vagon ${t.car} · Loc ${t.seat}`]),

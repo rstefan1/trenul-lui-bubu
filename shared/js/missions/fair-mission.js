@@ -73,7 +73,7 @@ export class FairMission extends SceneMission {
   start() {
     this.phase = 'running';
     this.ctx.world.train.setBubuVisible(false);
-    this.ctx.hud.announce(this.config.title, this.config.climbText, 'Misiune', 8);
+    this.ctx.hud.instruct(this.config.title, this.config.climbText);
     this.ctx.hud.setCounter('🪙', 0, 0);
     const L = this.layout;
     this.sleighY = this.targetY = (L.top + L.bottom) / 2;
@@ -135,7 +135,7 @@ export class FairMission extends SceneMission {
       const cheapest = Math.min(...this.config.trees.filter(t => t.height <= this.config.maxHeight).map(t => t.price));
       if (this.coins < cheapest) this.coins = cheapest;
       this.ctx.hud.setCounter('🪙', this.coins, 0);
-      this.ctx.hud.announce('Târgul fermecat', this.config.fairText, 'Misiune', 0);
+      this.ctx.hud.instruct('Târgul fermecat', this.config.fairText);
     }
     if (act === 'down') {
       this.ctx.hud.hideAnnouncement();

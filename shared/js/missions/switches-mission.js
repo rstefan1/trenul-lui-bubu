@@ -71,7 +71,7 @@ export class SwitchesMission extends SceneMission {
 
   start() {
     this.phase = 'running';
-    this.ctx.hud.announce(this.config.title, this.config.text, 'Misiune', 10);
+    this.ctx.hud.instruct(this.config.title, this.config.text);
     this.startLevel(0);
     this.box = this.freeBox();
   }

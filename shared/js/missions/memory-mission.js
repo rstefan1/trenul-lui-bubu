@@ -109,7 +109,7 @@ export class MemoryMission extends SceneMission {
 
   start() {
     this.phase = 'running';
-    this.ctx.hud.announce(this.config.title, this.config.text, 'Misiune', 7);
+    this.ctx.hud.instruct(this.config.title, this.config.text);
     this.ctx.hud.setCounter('🥄', 0, this.config.motifs.length);
     this.buttons = this.cards.map((motif, i) => {
       const front = el('canvas', { class: 'memory-card__front', width: '120', height: '160' });

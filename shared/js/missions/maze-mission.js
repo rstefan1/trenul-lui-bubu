@@ -154,7 +154,7 @@ export class MazeMission extends SceneMission {
 
   start() {
     this.phase = 'running';
-    this.ctx.hud.announce(this.config.title, this.config.text, 'Misiune', 9);
+    this.ctx.hud.instruct(this.config.title, this.config.text);
     this.layout();
     this.open = generateMaze(this.cols, this.rows);
     this.at = this.cols * (this.rows - 1);

@@ -123,7 +123,7 @@ export class LanternMission extends SceneMission {
   start() {
     this.phase = 'running';
     this.ctx.world.train.setBubuVisible(false);
-    this.ctx.hud.announce(this.config.title, this.config.text);
+    this.ctx.hud.instruct(this.config.title, this.config.text);
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */
@@ -156,7 +156,7 @@ export class LanternMission extends SceneMission {
 
     if (this.act === 'ride' && this.actTime >= RIDE_TIME) {
       this.setAct('light');
-      this.ctx.hud.announce(this.config.title, this.config.lightText, 'Misiune', 0);
+      this.ctx.hud.instruct(this.config.title, this.config.lightText);
       this.zoomFrom = { ...this.cam };
     } else if (this.act === 'light') {
       if (this.actTime <= ZOOM_TIME + 0.1) {
@@ -209,7 +209,7 @@ export class LanternMission extends SceneMission {
       this.lit[i] = false;
       const t = torches[i];
       this.particles.burst(t.x, t.y - 10, ['#d7dce8', '#ffffff'], 14, 160);
-      this.ctx.hud.announce(this.config.title, this.config.windText, 'Misiune', 0);
+      this.ctx.hud.instruct(this.config.title, this.config.windText);
     }
     if (count === torches.length) {
       this.setAct('shine');

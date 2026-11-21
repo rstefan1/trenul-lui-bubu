@@ -59,7 +59,7 @@ export class RhythmMission extends SceneMission {
     this.particles = new Particles();
     /** @type {(e: KeyboardEvent) => void} */
     this.onKey = e => {
-      if (e.code !== 'Space' && e.code !== 'Enter') return;
+      if ((e.code !== 'Space' && e.code !== 'Enter') || this.ctx.hud.paused) return;
       e.preventDefault();
       this.strike();
     };
@@ -67,7 +67,7 @@ export class RhythmMission extends SceneMission {
 
   start() {
     this.phase = 'running';
-    this.ctx.hud.announce(this.config.title, this.config.text, 'Misiune', 8);
+    this.ctx.hud.instruct(this.config.title, this.config.text);
     this.ctx.hud.setCounter('🎵', 0, this.notes.length);
     window.addEventListener('keydown', this.onKey);
   }

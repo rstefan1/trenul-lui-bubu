@@ -132,7 +132,8 @@ loadBubu('../shared/assets/bubu.webp');
 document.fonts?.ready.then(() => world.train.setLocoColor(state.locoColor));
 
 const loop = new GameLoop(dt => {
-  const step = dt * timeScale;
+  // while the child reads a mission's instructions, the game waits
+  const step = missionHud.paused ? 0 : dt * timeScale;
   director.update(step);
   journey.update(step);
   world.update(step);

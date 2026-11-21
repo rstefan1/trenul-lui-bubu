@@ -920,3 +920,64 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .memory-card.is-up .memory-card__back { transform: rotateY(180deg); }
 .memory-card.is-up .memory-card__front { transform: rotateY(0); }
 .memory-card.is-matched { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold); }
+
+/* ---------- Mission briefing (pauses the game until it is closed) ---------- */
+.briefing {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(8, 18, 45, .55);
+  opacity: 0;
+  transition: opacity .25s;
+}
+.briefing.is-visible { opacity: 1; }
+.briefing__card {
+  position: relative;
+  width: min(640px, 100%);
+  max-height: calc(100% - 20px);
+  overflow-y: auto;
+  padding: 14px 26px 18px;
+  background: #fffaf0;
+  color: var(--ink);
+  border: 6px solid #fff;
+  border-radius: 28px;
+  box-shadow: 0 10px 0 rgba(0, 0, 0, .2), 0 22px 44px rgba(0, 0, 0, .35);
+  text-align: center;
+  transform: translateY(18px) scale(.97);
+  transition: transform .35s cubic-bezier(.2, 1.3, .4, 1);
+}
+.briefing.is-visible .briefing__card { transform: none; }
+.briefing__bubu {
+  display: block;
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 2px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .3));
+}
+.briefing__text {
+  margin: 10px 0 18px;
+  font-size: clamp(19px, 3vmin, 24px);
+  line-height: 1.45;
+}
+.briefing__note { margin: 10px 0 0; font-size: 14px; color: #7a6a55; }
+.help-btn {
+  position: fixed;
+  left: max(var(--gap), env(safe-area-inset-left));
+  top: calc(max(var(--gap), env(safe-area-inset-top)) + 96px);
+  z-index: 17;
+  background: var(--green);
+  font-weight: 800;
+  animation: help-pulse 2.4s ease-in-out 3;
+}
+@keyframes help-pulse { 50% { transform: scale(1.12); } }
+@media (max-width: 640px) {
+  .help-btn { top: calc(max(var(--gap), env(safe-area-inset-top)) + 146px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .help-btn { animation: none; }
+  .briefing__card { transition: none; }
+}

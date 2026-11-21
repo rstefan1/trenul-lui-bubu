@@ -119,6 +119,7 @@ export class MissionDirector extends Emitter {
   reset() {
     for (const m of this.active) m.dispose();
     this.active = [];
+    this.ctx.hud.clearInstructions();
     this.started.clear();
     this.announced.clear();
     this.readyIn = Infinity;
@@ -235,6 +236,7 @@ export class MissionDirector extends Emitter {
   finish(m) {
     this.active.splice(this.active.indexOf(m), 1);
     m.dispose();
+    if (!this.active.length) this.ctx.hud.clearInstructions();
     this.ctx.state.awardStars(m.id, m.stars);
     this.ctx.hud.showResult(m.stars, m.resultText);
     // a travel mission finished early: if nothing else is left on this trip,

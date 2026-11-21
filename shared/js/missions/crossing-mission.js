@@ -60,7 +60,7 @@ export class CrossingMission extends Mission {
     this.particles = new Particles();
     /** @type {(e: KeyboardEvent) => void} */
     this.onKey = e => {
-      if (e.code !== 'Space') return;
+      if (e.code !== 'Space' || this.ctx.hud.paused) return;
       e.preventDefault();
       this.toggle();
     };
