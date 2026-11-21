@@ -2,8 +2,9 @@
  * @file Station mission "the spoon museum" (a memory game, Câmpulung
  * Moldovenesc).
  *
- * Twelve cards lie face down; under each is a carved wooden spoon. The
- * child turns two at a time; matching spoons stay up, different ones turn
+ * A few cards (four pairs) lie on the table; at the start they are shown
+ * face up for a few seconds, then turned down. The child turns two at a
+ * time; matching spoons stay up, different ones turn
  * back after a moment. All pairs found: the museum's fact and back to the
  * train.
  *
@@ -19,6 +20,8 @@ import { SceneMission } from './scene-mission.js';
 
 /** Seconds two different cards stay up before turning back. */
 const PEEK = 0.9;
+/** Seconds all cards are shown face up at the start. */
+const PREVIEW = 4;
 
 /**
  * Carvings on the spoons' handles; each draws in a small box centred at
@@ -104,7 +107,9 @@ export class MemoryMission extends SceneMission {
     this.tries = 0;
     /** @type {HTMLButtonElement[]} */
     this.buttons = [];
-    this.locked = false;
+    /** The cards cannot be turned while they are shown at the start. */
+    this.locked = true;
+    this.previewT = 0;
   }
 
   start() {
@@ -122,8 +127,9 @@ export class MemoryMission extends SceneMission {
     });
     this.setPanel(el('div', { class: 'panel memory-panel' }, [
       el('p', { class: 'program-title' }, ['Întoarce câte două cartonașe și găsește lingurile la fel.']),
-      el('div', { class: 'memory-grid' }, this.buttons),
+      el('div', { class: 'memory-grid', style: `--cols: ${Math.min(4, this.cards.length / 2)}` }, this.buttons),
     ]));
+    for (const b of this.buttons) b.classList.add('is-up');
   }
 
   /**
@@ -205,6 +211,13 @@ export class MemoryMission extends SceneMission {
   /** @param {number} dt */
   update(dt) {
     this.updateFade(dt);
+    if (this.previewT < PREVIEW) {
+      this.previewT += dt;
+      if (this.previewT >= PREVIEW) {
+        for (const b of this.buttons) b.classList.remove('is-up');
+        this.locked = false;
+      }
+    }
   }
 
   /** @param {CanvasRenderingContext2D} c */

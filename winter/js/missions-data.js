@@ -300,8 +300,8 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'spoons-campulung',
         title: 'Muzeul lingurilor de lemn',
-        text: 'La Câmpulung Moldovenesc, Bubu vizitează un muzeu plin de linguri de lemn sculptate. Găsește perechile de linguri la fel!',
-        motifs: ['star', 'heart', 'sun', 'fir', 'flower', 'bird'],
+        text: 'La Câmpulung Moldovenesc, Bubu vizitează un muzeu plin de linguri de lemn sculptate. Uită-te bine la linguri cât stau întoarse cu fața în sus, apoi găsește perechile la fel!',
+        motifs: ['star', 'heart', 'sun', 'fir'],
         doneText: 'Ai găsit toate perechile de linguri sculptate!',
         fact: 'La Câmpulung Moldovenesc se află un muzeu cu mii de linguri de lemn sculptate, adunate de un singur om de-a lungul vieții.',
       },
