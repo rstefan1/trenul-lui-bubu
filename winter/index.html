@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Trenul lui Bubu – Drumul de Crăciun</title>
+  <meta name="description" content="Joc de Crăciun: Bubu, o buburuză de pluș, călătorește cu trenul din Timișoara până la Putna, în noaptea de Ajun. Merge pe calculator, tabletă și telefon.">
+  <meta name="theme-color" content="#13295a">
+  <link rel="icon" href="../shared/assets/favicon.ico" sizes="48x48">
+  <link rel="icon" href="../shared/assets/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="preload" href="../shared/assets/bubu.webp" as="image" type="image/webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/css/game.css">
+</head>
+<body>
+  <!-- The world is drawn on this canvas (shared/js/world/world-view.js). -->
+  <canvas id="game" aria-label="Trenul lui Bubu călătorește prin țară"></canvas>
+
+  <!-- ===== Heads-up display ===== -->
+  <header class="hud" aria-label="Informații despre călătorie">
+    <div class="hud-card clock-card" aria-live="off">
+      <span class="clock-time" id="hudTime">15:00</span>
+      <span class="clock-date" id="hudDate">24 decembrie</span>
+    </div>
+    <div class="hud-card route-card">
+      <div class="route-line">
+        <ol class="route-track" id="hudTrack" aria-hidden="true">
+          <li class="route-marker" id="hudMarker">🚂</li>
+        </ol>
+      </div>
+      <p class="route-next" id="hudNext">Suntem în gara <b>Timișoara</b></p>
+    </div>
+    <button class="hud-btn" id="btnFullscreen" type="button" title="Ecran complet" aria-label="Ecran complet">⛶</button>
+  </header>
+
+  <!-- ===== Station sign, shown when the train stops ===== -->
+  <div class="station-banner" id="stationBanner" role="status" hidden>
+    <span class="station-banner__label">Gara</span>
+    <span class="station-banner__name" id="stationBannerName"></span>
+  </div>
+
+  <!-- ===== Intro: Bubu introduces herself ===== -->
+  <section class="overlay intro" id="intro" aria-labelledby="introTitle" hidden>
+    <div class="overlay-card intro-card">
+      <h1 class="intro-title" id="introTitle">Trenul lui Bubu</h1>
+      <p class="intro-subtitle">Drumul de Crăciun</p>
+      <div class="intro-body">
+        <img class="intro-bubu" src="../shared/assets/bubu.webp" alt="Bubu, o buburuză de pluș" width="200" height="200">
+        <div class="speech">
+          <p class="speech-hello">Eu sunt Bubu!</p>
+          <p>Sunt o buburuză de pluș și ador călătoriile cu trenul.</p>
+          <p>În seara de Ajun plec din Timișoara spre Putna, la slujba de Crăciun. Drumul e lung, toată noaptea, și am multe de făcut pe drum.</p>
+          <p class="speech-ask">Vii cu mine?</p>
+        </div>
+      </div>
+      <button class="big-btn" id="btnStart" type="button">🚂 Hai la drum!</button>
+    </div>
+  </section>
+
+  <!-- ===== End of the journey (placeholder until the final mission exists) ===== -->
+  <section class="overlay finale" id="finale" aria-labelledby="finaleTitle" hidden>
+    <div class="overlay-card">
+      <img class="intro-bubu" src="../shared/assets/bubu.webp" alt="" width="160" height="160">
+      <h2 class="intro-title" id="finaleTitle">Am ajuns la Putna!</h2>
+      <p class="intro-subtitle">Crăciun fericit! 🎄</p>
+      <button class="big-btn" id="btnAgain" type="button">🔁 Încă o dată</button>
+    </div>
+  </section>
+
+  <noscript><p class="noscript">Pentru acest joc trebuie activat JavaScript în browser.</p></noscript>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
