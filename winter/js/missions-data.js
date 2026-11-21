@@ -25,6 +25,30 @@ export const WINTER_MISSIONS = {
         goal: 0.8,
       },
     },
+    {
+      segment: 1,
+      from: 0.1,
+      to: 0.86,
+      type: 'delivery',
+      config: {
+        id: 'gifts-mures-valley',
+        title: 'Daruri pe Valea Mureșului',
+        text: 'În satele de pe Valea Mureșului, copiii așteaptă în curte. Atinge ecranul ca Bubu să arunce un dar: el cade în cercul auriu. Ochește doar curțile unde te așteaptă un copil!',
+        houses: 14,
+        empty: 4,
+        spare: 3,
+      },
+    },
+  ],
+
+  moments: [
+    {
+      segment: 1,
+      at: 0.47,
+      kicker: 'Surpriză',
+      title: 'Ninge! ❄️',
+      text: 'Primii fulgi de zăpadă din călătoria lui Bubu! Uită-te cum se albește totul în jur.',
+    },
   ],
 
   stations: {

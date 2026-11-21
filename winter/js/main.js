@@ -23,6 +23,7 @@ import { GameState } from '../../shared/js/game/state.js';
 import { Journey } from '../../shared/js/journey/journey.js';
 import { Route } from '../../shared/js/journey/route.js';
 import { CatchMission } from '../../shared/js/missions/catch-mission.js';
+import { DeliveryMission } from '../../shared/js/missions/delivery-mission.js';
 import { DepartureMission } from '../../shared/js/missions/departure-mission.js';
 import { MissionDirector } from '../../shared/js/missions/director.js';
 import { RotatePuzzleMission } from '../../shared/js/missions/rotate-puzzle-mission.js';
@@ -37,6 +38,7 @@ import { WINTER_ROUTE } from './route-data.js';
 /** Mission types used by the winter journey. */
 const MISSION_TYPES = {
   catch: CatchMission,
+  delivery: DeliveryMission,
   departure: DepartureMission,
   'rotate-puzzle': RotatePuzzleMission,
 };
