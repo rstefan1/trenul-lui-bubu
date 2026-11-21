@@ -390,8 +390,12 @@ function flatcar(c, car, pos) {
   for (let x = 14; x < L; x += 44) c.fillRect(x, -82, 6, 32);
   // the tree standing in the middle, tied to the stakes, with baubles and a star
   const cx = L * 0.5;
-  const base = -52;
-  const h = 170;
+  // a wooden crate holds the tree well above the deck
+  fillRoundRect(c, cx - 34, -92, 68, 42, 5, '#a1887f');
+  c.fillStyle = '#795548';
+  c.fillRect(cx - 34, -76, 68, 5);
+  const base = -88;
+  const h = 160;
   drawFir(c, cx, base, h, { snowy: true });
   c.strokeStyle = '#c9a26b';
   c.lineWidth = 3;
