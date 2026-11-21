@@ -15,6 +15,10 @@
  *   houses   how many houses pass by
  *   empty    how many of them are dark and empty (decoys)
  *   spare    gifts in the sack beyond one per child
+ *   where    where the villages are (for the result), e.g. "pe Valea Mureșului"
+ *   pace     optional {near, far}: the mission drives the train itself, slowly
+ *            (near) while a child waits on screen and faster (far) between
+ *            the villages; without it the route's own speed is kept
  */
 
 import { TAU, clamp } from '../core/math.js';
@@ -58,8 +62,11 @@ const THROW_COOLDOWN = 0.4;
  */
 
 /**
- * @typedef {import('./mission.js').MissionConfig & {houses: number, empty: number, spare: number}} DeliveryConfig
+ * @typedef {import('./mission.js').MissionConfig & {houses: number, empty: number, spare: number, where?: string, pace?: {near: number, far: number}}} DeliveryConfig
  */
+
+/** Where the front of the train stands during the mission (share of the screen's width). */
+const LOOK_AHEAD = 0.55;
 
 export class DeliveryMission extends Mission {
   /**
@@ -84,6 +91,8 @@ export class DeliveryMission extends Mission {
     this.cooldown = 0;
     /** @type {boolean[]} which houses have a child (decided at the start) */
     this.plan = [];
+    /** @type {import('../journey/journey.js').Controls | null} set when the mission sets the pace */
+    this.controls = null;
   }
 
   /** @param {{duration?: number, window?: {from: number, to: number}}} hints */
@@ -109,7 +118,32 @@ export class DeliveryMission extends Mission {
     const length = hints.window ? (hints.window.to - hints.window.from) * j.segment.length : 15000;
     this.spacing = Math.max(900, (length - this.ctx.stage.width) / houses);
     this.nextWorldX = j.distance - w.anchorX + this.ctx.stage.viewRight + 150;
+    if (this.config.pace) {
+      this.controls = j.takeControl();
+      // the houses come one after another; the train speeds up between them
+      this.spacing = Math.min(this.spacing, 1500);
+    }
     this.updateCounter();
+  }
+
+  /**
+   * Slow while a child waits on screen (or is about to appear), faster otherwise.
+   * @private
+   */
+  updatePace() {
+    if (!this.controls || !this.config.pace) return;
+    const right = this.ctx.stage.viewRight;
+    const from = this.landingX - 250;
+    const waiting = this.houses.some(h => h.child && !h.served && this.childX(h) > from && this.childX(h) < right + 250);
+    const coming = this.spawned < this.config.houses && this.plan[this.spawned] && this.toScreen(this.nextWorldX) < right + 700;
+    this.controls.target = waiting || coming ? this.config.pace.near : this.config.pace.far;
+  }
+
+  /** @private Gives the train back to its timetable. */
+  releasePace() {
+    if (!this.controls) return;
+    this.controls = null;
+    this.ctx.journey.releaseControl();
   }
 
   /** @private */
@@ -154,9 +188,12 @@ export class DeliveryMission extends Mission {
 
   /** @param {number} dt */
   update(dt) {
+    // the train moves to the middle of the screen: what comes is seen early
+    this.ctx.world.lookAhead(this.phase === 'finished' ? null : LOOK_AHEAD);
     this.time += dt;
     this.cooldown -= dt;
     this.particles.update(dt);
+    this.updatePace();
     const right = this.ctx.stage.viewRight;
 
     // new houses appear beyond the right edge, at regular distances
@@ -197,11 +234,12 @@ export class DeliveryMission extends Mission {
     const empty = this.sack === 0 && this.gifts.length === 0;
     if ((this.phase === 'wrapping' && this.gifts.length === 0) || out || empty) {
       this.ctx.hud.hideCounter();
+      this.releasePace();
       const n = this.delivered;
       const k = n / Math.max(1, this.children);
       this.complete(k >= 0.9 ? 3 : k >= 0.6 ? 2 : 1,
         n === this.children ? `Minunat! Toți cei ${n} copii au primit câte un dar!`
-          : n > 0 ? `Ai dus daruri la ${n} copii din ${this.children}. Ce bucurie pe Valea Mureșului!`
+          : n > 0 ? `Ai dus daruri la ${n} copii din ${this.children}. Ce bucurie ${this.config.where ?? 'pe Valea Mureșului'}!`
             : 'De data asta darurile au căzut în zăpadă… dar copiii au văzut trenul lui Bubu!');
     }
   }
@@ -373,6 +411,12 @@ export class DeliveryMission extends Mission {
       // a little glow, so waiting children are easy to spot
       glow(c, x, y - 40, 60, 'rgba(255,230,140,0.25)', 'rgba(255,230,140,0)');
     }
+  }
+
+  dispose() {
+    super.dispose();
+    this.releasePace();
+    this.ctx.world.lookAhead(null);
   }
 }
 
