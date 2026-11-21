@@ -96,7 +96,7 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 16px 22px 4px;   /* room above the line for Bubu riding her locomotive */
+  padding: 10px 22px 4px;   /* room around the line for Bubu */
 }
 .route-line { position: relative; height: 26px; }
 .route-track {
@@ -126,19 +126,16 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .route-dot.is-current { transform: scale(1.35); }
 .route-marker {
   position: absolute;
-  left: -19px;
-  top: -24px;
+  left: -17px;
+  top: -17px;
   line-height: 0;
   will-change: transform;
   z-index: 1;
-  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .35));
 }
 .route-marker__bubu {
-  position: absolute;
-  left: 9px;
-  top: -12px;
-  width: 22px;
-  height: 22px;
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .45));
 }
 .route-next {
   margin: 2px 0 0;
@@ -331,7 +328,7 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 @media (max-width: 640px) {
   .hud { flex-wrap: wrap; }
   .clock-card { min-width: 92px; }
-  .route-card { order: 3; flex-basis: 100%; padding: 14px 16px 4px; }
+  .route-card { order: 3; flex-basis: 100%; padding: 10px 16px 4px; }
   .hud-btn { width: 48px; height: 48px; font-size: 22px; margin-left: auto; }
 }
 @media (max-width: 640px), (max-height: 520px) {
