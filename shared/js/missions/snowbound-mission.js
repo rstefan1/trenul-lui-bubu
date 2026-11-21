@@ -70,7 +70,10 @@ export class SnowboundMission extends Mission {
   }
 
   start(hints) {
-    super.start(hints);
+    // no instructions yet: the train first brakes (the brakes squeal) and
+    // stops in front of the drift; the game pauses for reading only then
+    void hints;
+    this.phase = 'running';
     const j = this.ctx.journey;
     this.controls = j.takeControl();
     if (this.controls) this.controls.target = 0;
@@ -157,7 +160,7 @@ export class SnowboundMission extends Mission {
       this.whistleFor = audio?.canPlay('whistle') ? audio.duration('whistle') : 0;
       audio?.play('whistle');
     }
-    if (step === 'dig') hud.instruct(this.config.title, this.config.digText);
+    if (step === 'dig') hud.instruct(this.config.title, `${this.config.text} ${this.config.digText}`);
     if (step === 'signal') hud.instruct(this.config.title, this.config.signalText);
     if (step === 'plough') {
       hud.instruct(this.config.title, this.config.ploughText);
