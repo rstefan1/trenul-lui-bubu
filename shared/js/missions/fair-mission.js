@@ -6,7 +6,8 @@
  *   1. up the hill — Bubu rides the reindeer sleigh up to the fair; the
  *      sleigh follows the mouse or the finger up and down, and catches the
  *      coins floating in the night;
- *   2. the fair — four trees are for sale, each with its height and price.
+ *   2. the fair — among open stalls with animal and human sellers, four
+ *      trees are for sale, each with its height and price.
  *      Bubu must choose one that fits on the train's flat wagon (at most
  *      1,80 m) and that she can pay for with the coins she caught. A wrong
  *      choice only gets a friendly explanation;
@@ -23,6 +24,7 @@
 import { approach, clamp, lerp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { drawFir, fillCircle, fillRoundRect, fillStar, glow } from '../gfx/shapes.js';
+import { drawFairStalls } from '../gfx/scenes/fair-stalls.js';
 import { drawWinterValley } from '../gfx/scenes/winter-valley.js';
 import { drawSleighTeam } from '../gfx/sleigh.js';
 import { SceneMission } from './scene-mission.js';
@@ -305,22 +307,8 @@ export class FairMission extends SceneMission {
     drawWinterValley(c, { left: L.left, right: L.right, top: stage.viewTop, bottom: ground + 40 }, this.scroll, { slope: false });
     c.fillStyle = '#dfe7f3';
     c.fillRect(L.left, ground, L.w, L.bottom + 200 - ground);
-    // stalls in the background with garlands of lights
-    for (let i = 0; i < 6; i++) {
-      const x = L.left + (i + 0.3) * (L.w / 6);
-      fillRoundRect(c, x, ground - 170, L.w / 6 - 30, 140, 8, ['#8d5524', '#a0522d', '#7b4a2a'][i % 3]);
-      c.fillStyle = ['#e53935', '#2e7d32', '#1565c0'][i % 3];
-      c.beginPath();
-      c.moveTo(x - 10, ground - 170);
-      c.lineTo(x + (L.w / 6 - 30) / 2, ground - 215);
-      c.lineTo(x + L.w / 6 - 20, ground - 170);
-      c.closePath();
-      c.fill();
-      for (let k = 0; k < 6; k++) {
-        c.fillStyle = ['#ffd54f', '#ff8a80', '#80d8ff', '#b9f6ca'][(k + i) % 4];
-        fillCircle(c, x + k * ((L.w / 6 - 30) / 5), ground - 160 + Math.sin(k + this.time * 2) * 2, 4);
-      }
-    }
+    // the open stalls of the fair, with their sellers and visitors
+    drawFairStalls(c, { left: L.left, right: L.right, ground, height: (ground - L.top) * 0.5 }, this.time);
     // the trees for sale
     const max = this.config.maxHeight;
     this.config.trees.forEach((offer, i) => {
