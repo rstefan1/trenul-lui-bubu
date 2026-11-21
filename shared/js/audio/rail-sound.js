@@ -16,7 +16,7 @@
 /** Below this speed the train is considered stopped. */
 const MIN_SPEED = 0.5;
 /** Volume of the running train: a soft sound in the background, so the whistle stands out. */
-const VOLUME = 0.3;
+const VOLUME = 0.2;
 /** Seconds to go quiet or to be heard again (just enough to avoid a click). */
 const SWITCH = 0.12;
 
@@ -60,8 +60,8 @@ export class RailSound {
   }
 }
 
-/** Seconds of the recording's end blended into its beginning. */
-const BLEND = 0.2;
+/** Seconds of the recording's end blended into its beginning (just enough to hide the joint). */
+const BLEND = 0.04;
 /** Samples quieter than this at both ends count as the MP3's padding. */
 const SILENCE = 0.003;
 
