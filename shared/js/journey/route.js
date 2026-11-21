@@ -121,8 +121,8 @@ export class Route {
       const length = tripLength(seg.duration, CRUISE_SPEED, ACCELERATION);
       const limits = (seg.features || [])
         .filter(f => f.type === 'viaduct')
-        .map(f => ({ from: f.at * length - SLOW_BEFORE, to: f.at * length + f.length + SLOW_AFTER, speed: VIADUCT_SPEED }))
-        .concat((seg.slow || []).map(([from, to, speed]) => ({ from: from * length, to: to * length, speed })));
+        .map(f => ({ from: f.at * length - SLOW_BEFORE, to: f.at * length + f.length + SLOW_AFTER, speed: VIADUCT_SPEED, kind: /** @type {const} */ ('viaduct') }))
+        .concat((seg.slow || []).map(([from, to, speed]) => ({ from: from * length, to: to * length, speed, kind: /** @type {const} */ ('mission') })));
       const profile = new MotionPlan(length, CRUISE_SPEED, ACCELERATION, limits);
       from.distance = distance;
       this.segments.push({

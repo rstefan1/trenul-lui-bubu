@@ -195,6 +195,16 @@ export class MissionDirector extends Emitter {
     if (m) m.pointerUp(p);
   }
 
+  /**
+   * Are there travel missions still running or still to start on the current trip?
+   * @private
+   */
+  missionsLeftOnSegment() {
+    const j = this.ctx.journey;
+    if (this.active.some(x => x.window)) return true;
+    return this.plan.travel.some((t, i) => t.segment === j.segment.index && !this.started.has(i));
+  }
+
   /** True when a mission wants the pointer (the canvas then shows a hand cursor). */
   get wantsPointer() {
     return this.active.length > 0;
@@ -227,6 +237,9 @@ export class MissionDirector extends Emitter {
     m.dispose();
     this.ctx.state.awardStars(m.id, m.stars);
     this.ctx.hud.showResult(m.stars, m.resultText);
+    // a travel mission finished early: if nothing else is left on this trip,
+    // the train hurries to the next station instead of making the child wait
+    if (m.window && this.ctx.journey.state === 'running' && !this.missionsLeftOnSegment()) this.ctx.journey.hurry();
     if (!m.window && this.holding) {
       this.holding = false;
       this.readyIn = AFTER_RESULT;

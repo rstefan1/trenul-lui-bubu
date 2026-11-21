@@ -30,6 +30,7 @@ const CREEP = 12;
  * @property {number} from   start, distance from the beginning of the trip
  * @property {number} to     end
  * @property {number} speed  maximum speed on [from, to]
+ * @property {'viaduct' | 'mission'} [kind]  why the train slows down there
  */
 
 /**

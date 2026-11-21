@@ -32,6 +32,9 @@ import { clamp, lerp, progress } from '../core/math.js';
 import { MotionPlan } from './motion.js';
 import { ACCELERATION, CRUISE_SPEED } from './route.js';
 
+/** How much faster the train goes when it hurries to the next station. */
+const HURRY = 1.7;
+
 /** Speeds and accelerations while the child drives. */
 export const MANUAL = Object.freeze({ maxSpeed: 620, minSpeed: 90, accelerate: 230, brake: 260 });
 
@@ -80,11 +83,33 @@ export class Journey extends Emitter {
   releaseControl() {
     if (!this.controls) return;
     this.controls = null;
+    this.replan(CRUISE_SPEED, false);
+  }
+
+  /**
+   * The missions of this trip are done: the train hurries to the next
+   * station (faster, and without the slow stretches kept for the missions —
+   * it still slows down on the viaducts), so the child does not wait.
+   */
+  hurry() {
+    if (this.state !== 'running' || this.controls) return;
+    this.replan(CRUISE_SPEED * HURRY, true);
+  }
+
+  /**
+   * Plans the rest of the trip from the current position and speed.
+   * @private
+   * @param {number} cruise
+   * @param {boolean} skipMissionStretches
+   */
+  replan(cruise, skipMissionStretches) {
     const seg = this.segment;
     const offset = this.distance - seg.start;
     const remaining = seg.length - offset;
-    const limits = seg.limits.map(l => ({ from: l.from - offset, to: l.to - offset, speed: l.speed }));
-    this.leg = { plan: new MotionPlan(remaining, CRUISE_SPEED, ACCELERATION, limits, this.speed), start: this.distance, elapsed: 0 };
+    const limits = seg.limits
+      .filter(l => !(skipMissionStretches && l.kind === 'mission'))
+      .map(l => ({ from: l.from - offset, to: l.to - offset, speed: l.speed, kind: l.kind }));
+    this.leg = { plan: new MotionPlan(remaining, cruise, ACCELERATION * (cruise / CRUISE_SPEED), limits, this.speed), start: this.distance, elapsed: 0 };
   }
 
   /** @returns {import('./route.js').Station} */
