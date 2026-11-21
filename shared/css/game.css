@@ -845,3 +845,49 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 }
 .gear-btn__icon { font-size: 1.3em; }
 .gear-btn[aria-pressed="true"] { background: var(--gear); border-color: #fff; opacity: 1; transform: scale(1.06); }
+
+/* ---------- Program panel (Dej switches) ---------- */
+.program-panel { gap: 8px; }
+.program-title { margin: 0; font-size: clamp(15px, 2.3vmin, 19px); font-weight: 700; }
+.program {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.program-slot {
+  min-width: 108px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 12px 6px;
+  border: 3px solid var(--station-blue);
+  border-radius: 14px;
+  background: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--station-blue);
+  font-family: ui-monospace, 'Baloo 2', monospace;
+}
+.program-slot__n { font-size: 12px; font-weight: 700; color: #6b5a3a; font-family: var(--font); }
+.program-slot.is-empty { border-style: dashed; color: #b0a58e; }
+.program-slot.is-running { background: var(--gold); border-color: #c79400; transform: scale(1.06); }
+.program-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+.program-btn {
+  padding: 8px 18px;
+  border: 4px solid #fff;
+  border-radius: 999px;
+  background: var(--station-blue);
+  color: #fff;
+  font-size: clamp(18px, 2.8vmin, 24px);
+  font-weight: 800;
+  box-shadow: 0 5px 0 #133466;
+  touch-action: manipulation;
+}
+.program-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #133466; }
+.program-btn--erase { background: #8a6a50; box-shadow: 0 5px 0 #5a4535; }
+.program-run { padding: 8px 26px 10px; font-size: clamp(20px, 3vmin, 28px); }
+.program-run:disabled { filter: grayscale(.8); opacity: .5; cursor: not-allowed; }

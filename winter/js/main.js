@@ -36,6 +36,8 @@ import { LanternMission } from '../../shared/js/missions/lantern-mission.js';
 import { MazeMission } from '../../shared/js/missions/maze-mission.js';
 import { MissionDirector } from '../../shared/js/missions/director.js';
 import { RotatePuzzleMission } from '../../shared/js/missions/rotate-puzzle-mission.js';
+import { SequenceMission } from '../../shared/js/missions/sequence-mission.js';
+import { SwitchesMission } from '../../shared/js/missions/switches-mission.js';
 import { loadBubu } from '../../shared/js/train/bubu.js';
 import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
 import { Hud } from '../../shared/js/ui/hud.js';
@@ -56,6 +58,8 @@ const MISSION_TYPES = {
   lantern: LanternMission,
   maze: MazeMission,
   'rotate-puzzle': RotatePuzzleMission,
+  sequence: SequenceMission,
+  switches: SwitchesMission,
 };
 
 const params = new URLSearchParams(location.search);

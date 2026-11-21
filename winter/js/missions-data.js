@@ -51,6 +51,34 @@ export const WINTER_MISSIONS = {
         bells: 9,
       },
     },
+    {
+      segment: 3,
+      from: 0.08,
+      to: 0.9,
+      type: 'sequence',
+      config: {
+        id: 'lights-alba-cluj',
+        title: 'Beculețele în ordine',
+        text: 'Bubu vrea o ghirlandă de beculețe pentru tren! Uită-te în ce ordine se aprind beculețele, apoi atinge-le în aceeași ordine. La fiecare rundă reușită, pe tren se mai aprinde o bucată de ghirlandă.',
+        rounds: 4,
+        start: 3,
+      },
+    },
+    {
+      segment: 4,
+      from: 0.1,
+      to: 0.86,
+      type: 'delivery',
+      config: {
+        id: 'candles-cluj-dej',
+        title: 'Ferestrele cu lumânări',
+        text: 'E noapte și copiii așteaptă în casă, la fereastră, cu o lumânare aprinsă. Aruncă darul ca să cadă la ușa lor exact când lumânarea arde – dacă e stinsă, copilul nu-l vede!',
+        houses: 12,
+        empty: 3,
+        spare: 4,
+        mode: 'windows',
+      },
+    },
   ],
 
   moments: [
@@ -154,6 +182,18 @@ export const WINTER_MISSIONS = {
         text: 'Bradul cel mare din Piața Unirii nu se aprinde: s-au încurcat firele! Atinge piesele de pe panou ca să le rotești și du curentul de la generator ⚡ până la brad.',
         doneText: 'Bradul s-a aprins și toată piața strălucește!',
         fact: 'În Piața Unirii din Cluj-Napoca se află Biserica Sfântul Mihail, una dintre cele mai mari biserici gotice din România. De Crăciun, aici se ține un târg mare, cu un brad uriaș.',
+      },
+    },
+
+    dej: {
+      type: 'switches',
+      config: {
+        id: 'switches-dej',
+        title: 'Macazurile din Dej',
+        text: 'Dej este un nod de cale ferată, cu multe linii. O locomotivă mică trebuie să ducă vagonul cu daruri pe linia cerută. Scrie programul: pentru fiecare macaz, în ordine, alege SUS sau JOS, apoi apasă Pornește.',
+        levels: [2, 3, 3],
+        doneText: 'Toate vagoanele cu daruri au ajuns pe liniile bune!',
+        fact: 'La Dej se întâlnesc linii de cale ferată care vin din mai multe direcții. Macazul este o bucată de șină care se mută și alege pe unde merge trenul – exact ca o instrucțiune „dacă… atunci…” dintr-un program.',
       },
     },
   },

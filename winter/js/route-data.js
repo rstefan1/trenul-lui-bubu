@@ -74,17 +74,19 @@ export const WINTER_ROUTE = {
       snowfall: [[0, 0.5], [1, 0.35]],
       cover: [[0, 1]],
     },
-    // Alba Iulia → Cluj-Napoca (past Câmpia Turzii)
+    // Alba Iulia → Cluj-Napoca (past Câmpia Turzii); slower while the lights game is played
     {
       duration: 55,
+      slow: [[0.08, 0.9, 330]],
       biomes: [[0, 'city'], [0.1, 'hills'], [0.45, 'plain'], [0.6, 'hills'], [0.86, 'city']],
       features: [{ type: 'bridge', at: 0.4, length: 300, depth: 100 }],
       snowfall: [[0, 0.3], [1, 0.45]],
       cover: [[0, 1]],
     },
-    // Cluj-Napoca → Dej: along the Someș
+    // Cluj-Napoca → Dej: along the Someș; slower through the villages, for the gifts
     {
       duration: 45,
+      slow: [[0.1, 0.86, 250]],
       biomes: [[0, 'city'], [0.14, 'hills'], [0.86, 'city']],
       features: [{ type: 'bridge', at: 0.45, length: 360, depth: 120 }],
       snowfall: [[0, 0.45], [1, 0.35]],
