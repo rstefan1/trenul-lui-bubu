@@ -99,6 +99,7 @@ export class WhistleMission extends Mission {
   whistle() {
     if (this.phase !== 'running' || this.whistleT < 0.4) return;
     this.whistleT = 0;
+    this.ctx.audio?.play('whistle');
     const w = this.ctx.world;
     // a puff of steam from the locomotive's roof
     this.particles.burst(w.anchorX - 60, TRACK_Y - 290 - w.cameraY, ['#ffffff', '#e8eef8'], 14, 120);

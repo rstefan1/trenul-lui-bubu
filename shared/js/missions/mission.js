@@ -28,6 +28,7 @@
  * @property {import('../game/state.js').GameState} state
  * @property {import('../ui/mission-hud.js').MissionHud} hud
  * @property {HTMLElement} panel   container for the mission's HTML panels
+ * @property {import('../audio/audio.js').AudioEngine} [audio]  plays the recorded sounds
  */
 
 /**

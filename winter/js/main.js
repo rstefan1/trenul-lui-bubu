@@ -118,8 +118,17 @@ const world = new WorldView(stage, journey);
 const hud = new Hud(route, { month: 11, dayLabels: { 24: 'Ajunul Crăciunului', 25: 'Crăciunul' } });
 const missionHud = new MissionHud(state);
 world.flags = state.flags;
+// ------------------------------------------------------------ sound
+const audio = new AudioEngine();
+audio.register('train', '../shared/assets/sounds/train.mp3');
+audio.register('whistle', '../shared/assets/sounds/whistle.mp3');
+setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
+const railSound = new RailSound(audio, 'train');
+// a short whistle whenever the train leaves a station
+journey.on('depart', () => audio.play('whistle', 0.5));
+
 const director = new MissionDirector(
-  { stage, journey, world, state, hud: missionHud, panel: byId('missionPanel') },
+  { stage, journey, world, state, hud: missionHud, panel: byId('missionPanel'), audio },
   WINTER_MISSIONS,
   MISSION_TYPES,
 );
@@ -149,10 +158,6 @@ input.on('up', (/** @type {import('../../shared/js/core/input.js').PointerInfo} 
 
 setupFullscreen(/** @type {HTMLButtonElement} */ (byId('btnFullscreen')));
 
-// ------------------------------------------------------------ sound
-const audio = new AudioEngine();
-setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
-const railSound = new RailSound(audio);
 loadBubu('../shared/assets/bubu.webp');
 // texts painted on the train (car numbers) need the game font
 document.fonts?.ready.then(() => world.train.setLocoColor(state.locoColor));
@@ -165,8 +170,7 @@ const loop = new GameLoop(dt => {
   world.update(step);
   render();
   hud.update(journey);
-  railSound.update(journey.distance, journey.speed, world.train.axles, {
-    listener: world.train.bubuPosition.x,
+  railSound.update(journey.speed, {
     tunnel: world.features.tunnelState(journey.distance, world.train.length).any,
     paused: missionHud.paused,
   });

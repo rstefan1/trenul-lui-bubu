@@ -2,10 +2,10 @@
  * @file The game's sound engine: one Web Audio context, a master volume and
  * the "no sound" switch.
  *
- * All sounds are synthesised (no audio files): sound modules ask the engine
- * for its context and connect to its output. Browsers only allow sound after
- * the player has touched the page, so the context starts on the first touch,
- * click or key. Muting is remembered on the device.
+ * The sounds are recordings (see shared/assets/sounds): the engine loads
+ * them once, then plays them through a master volume. Browsers only allow
+ * sound after the player has touched the page, so the context starts on the
+ * first touch, click or key. Muting is remembered on the device.
  */
 
 const MUTE_KEY = 'trenul-lui-bubu/muted';
@@ -17,8 +17,10 @@ export class AudioEngine {
     /** @type {GainNode | null} */
     this.master = null;
     this.muted = readMuted();
-    /** @type {AudioBuffer | null} two seconds of white noise, shared by the sounds */
-    this.noise = null;
+    /** @type {Map<string, string>} name → file of every sound */
+    this.files = new Map();
+    /** @type {Map<string, AudioBuffer>} sounds ready to play */
+    this.buffers = new Map();
     const unlock = () => this.unlock();
     for (const type of ['pointerdown', 'keydown']) window.addEventListener(type, unlock, { capture: true });
     // stop everything while the page is hidden (another tab, phone locked)
@@ -43,9 +45,52 @@ export class AudioEngine {
       this.master = this.ctx.createGain();
       this.master.gain.value = this.muted ? 0 : 0.8;
       this.master.connect(this.ctx.destination);
-      this.noise = makeNoise(this.ctx);
+      for (const [name, url] of this.files) this.fetch(name, url);
     }
     if (this.ctx.state === 'suspended' && !this.muted) this.ctx.resume();
+  }
+
+  /**
+   * Declares a recorded sound; it is loaded as soon as sound is allowed.
+   * @param {string} name
+   * @param {string} url
+   */
+  register(name, url) {
+    this.files.set(name, url);
+    if (this.ctx) this.fetch(name, url);
+  }
+
+  /**
+   * @private
+   * @param {string} name
+   * @param {string} url
+   */
+  async fetch(name, url) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return;   // the file is missing: the game simply stays silent
+      const data = await res.arrayBuffer();
+      const ctx = /** @type {AudioContext} */ (this.ctx);
+      this.buffers.set(name, await ctx.decodeAudioData(data));
+    } catch {
+      // a broken file only means no sound
+    }
+  }
+
+  /**
+   * Plays a recorded sound once.
+   * @param {string} name
+   * @param {number} [volume=1]
+   */
+  play(name, volume = 1) {
+    const buffer = this.buffers.get(name);
+    if (!this.ready || !buffer || !this.ctx || !this.master) return;
+    const src = this.ctx.createBufferSource();
+    src.buffer = buffer;
+    const g = this.ctx.createGain();
+    g.gain.value = volume;
+    src.connect(g).connect(this.master);
+    src.start();
   }
 
   /**
@@ -71,17 +116,6 @@ function readMuted() {
   } catch {
     return false;
   }
-}
-
-/**
- * Two seconds of white noise.
- * @param {AudioContext} ctx
- */
-function makeNoise(ctx) {
-  const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-  return buffer;
 }
 
 /**

@@ -226,18 +226,6 @@ export class TrainRenderer {
   }
 
   /**
-   * x of every axle relative to the front of the train (for the sound of the
-   * wheels over the rail joints).
-   * @returns {number[]}
-   */
-  get axles() {
-    this.ensureBody();
-    const out = [];
-    for (const car of this.cars) for (const wx of car.geo.wheels) out.push(car.left + wx);
-    return out;
-  }
-
-  /**
    * Centres of the passenger windows (Bubu's excepted), back of the train
    * first, in train coordinates: where passengers a mission brings can sit.
    * @returns {Array<{x: number, y: number}>}
