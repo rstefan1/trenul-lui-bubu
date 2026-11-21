@@ -121,6 +121,20 @@ export class MissionHud {
   }
 
   /**
+   * Bottom edge of the heads-up display (clock, route, stars) in CSS pixels,
+   * so that things to touch are never placed under it.
+   * @returns {number}
+   */
+  get hudBottom() {
+    let bottom = 0;
+    for (const node of document.querySelectorAll('.hud > *')) {
+      const r = node.getBoundingClientRect();
+      if (r.width && r.top < window.innerHeight / 2) bottom = Math.max(bottom, r.bottom);
+    }
+    return bottom;
+  }
+
+  /**
    * Bottom edge of the announcement card in CSS pixels (0 when hidden), so
    * that a mission can keep important things below it.
    * @returns {number}

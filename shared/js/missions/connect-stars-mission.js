@@ -13,7 +13,7 @@
 import { clamp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillStar, glow } from '../gfx/shapes.js';
-import { WIRE_Y } from '../world/track.js';
+import { TRACK_Y } from '../world/track.js';
 import { Mission } from './mission.js';
 
 /**
@@ -66,14 +66,19 @@ export class ConnectStarsMission extends Mission {
     return SHAPES[this.config.shapes[this.shape]] ?? SHAPES.star;
   }
 
-  /** Where the drawing is: in the sky, between the card (or the HUD) and the wire. */
+  /**
+   * Where the drawing is: in the sky, below the heads-up display (with room
+   * for the numbers above the top stars) and above the train's roof.
+   */
   get box() {
     const stage = this.ctx.stage;
-    const cardBottom = this.ctx.hud.cardBottom;
-    const top = Math.max(stage.viewTop + 130, cardBottom ? stage.toStage(0, cardBottom + 16).y : 0);
-    const bottom = WIRE_Y - 40 - this.ctx.world.cameraY;
-    const size = clamp(bottom - top, 160, 420);
-    return { x: stage.width / 2 - size / 2, y: bottom - size, size };
+    const hud = this.ctx.hud;
+    const below = Math.max(hud.hudBottom, hud.cardBottom);
+    const top = Math.max(stage.viewTop + 60, stage.toStage(0, below).y + 60);
+    const bottom = TRACK_Y - 300 - this.ctx.world.cameraY;
+    const size = clamp(bottom - top, 180, 420);
+    const y = size <= bottom - top ? top + (bottom - top - size) / 2 : top;
+    return { x: stage.width / 2 - size / 2, y, size };
   }
 
   /**
