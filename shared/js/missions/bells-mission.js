@@ -33,7 +33,7 @@ const KMH = 0.2;
  * @type {Readonly<Record<'slow' | 'medium' | 'fast', {min: number, max: number, target: number, label: string, icon: string, color: string}>>}
  */
 const BANDS = Object.freeze({
-  slow: { min: MANUAL.minSpeed, max: 260, target: 170, label: 'ÎNCET', icon: '🐢', color: '#2f7fd8' },
+  slow: { min: 90, max: 260, target: 170, label: 'ÎNCET', icon: '🐢', color: '#2f7fd8' },
   medium: { min: 280, max: 430, target: 355, label: 'MEDIU', icon: '🚂', color: '#2e9d57' },
   fast: { min: 450, max: MANUAL.maxSpeed, target: 540, label: 'REPEDE', icon: '🐇', color: '#e0472e' },
 });
