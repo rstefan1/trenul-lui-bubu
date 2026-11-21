@@ -16,9 +16,10 @@
  *   empty    how many of them are dark and empty (decoys)
  *   spare    gifts in the sack beyond one per child
  *   where    where the villages are (for the result), e.g. "pe Valea Mureșului"
- *   pace     optional {near, far}: the mission drives the train itself, slowly
- *            (near) while a child waits on screen and faster (far) between
- *            the villages; without it the route's own speed is kept
+ *   pace     optional {far}: the mission drives the train itself — it stops
+ *            with every waiting child right under the golden circle and goes
+ *            on (at the speed `far`) once the child has the gift, so there is
+ *            no timing at all; without it the route's own speed is kept
  */
 
 import { TAU, clamp } from '../core/math.js';
@@ -62,8 +63,11 @@ const THROW_COOLDOWN = 0.4;
  */
 
 /**
- * @typedef {import('./mission.js').MissionConfig & {houses: number, empty: number, spare: number, where?: string, pace?: {near: number, far: number}}} DeliveryConfig
+ * @typedef {import('./mission.js').MissionConfig & {houses: number, empty: number, spare: number, where?: string, pace?: {far: number}}} DeliveryConfig
  */
+
+/** Braking rate used to stop by a waiting child (a little under the train's). */
+const PACE_BRAKE = 230;
 
 /** Where the front of the train stands during the mission (share of the screen's width). */
 const LOOK_AHEAD = 0.55;
@@ -127,16 +131,25 @@ export class DeliveryMission extends Mission {
   }
 
   /**
-   * Slow while a child waits on screen (or is about to appear), faster otherwise.
+   * Brakes so the next waiting child stops right under the golden circle,
+   * waits there until the child has the gift, then goes on.
    * @private
    */
   updatePace() {
     if (!this.controls || !this.config.pace) return;
-    const right = this.ctx.stage.viewRight;
-    const from = this.landingX - 250;
-    const waiting = this.houses.some(h => h.child && !h.served && this.childX(h) > from && this.childX(h) < right + 250);
-    const coming = this.spawned < this.config.houses && this.plan[this.spawned] && this.toScreen(this.nextWorldX) < right + 700;
-    this.controls.target = waiting || coming ? this.config.pace.near : this.config.pace.far;
+    const landing = this.landingX;
+    let gap = Infinity;
+    for (const h of this.houses) {
+      if (!h.child || h.served) continue;
+      const d = this.childX(h) - landing;
+      if (d > -60 && d < gap) gap = d;
+    }
+    // a child not on screen yet still counts: the train starts braking in time
+    if (gap === Infinity && this.spawned < this.config.houses && this.plan[this.spawned]) {
+      gap = this.toScreen(this.nextWorldX) + 190 - landing;
+    }
+    const far = this.config.pace.far;
+    this.controls.target = gap === Infinity ? far : Math.min(far, Math.sqrt(2 * PACE_BRAKE * Math.max(0, gap)));
   }
 
   /** @private Gives the train back to its timetable. */
