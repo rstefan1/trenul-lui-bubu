@@ -2,7 +2,7 @@
  * @file Travel mission "friends of the forest": the train stops at little
  * forest halts and the animals waiting there climb aboard.
  *
- * Long before a halt comes into view, a note on the left shows which
+ * Long before a halt comes into view, a note high up on the right shows which
  * animal is waiting ahead, and the big button starts to pulse. When the
  * child presses "Oprește trenul", the train brakes by itself and stops right
  * at the halt, so there is no timing to get right: pressing any time before
@@ -19,7 +19,6 @@
 import { clamp, easeInOut, lerp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillRoundRect, glow } from '../gfx/shapes.js';
-import { NEAR_GROUND_Y } from '../world/biomes/terrain.js';
 import { TRACK_Y } from '../world/track.js';
 import { el } from '../ui/dom.js';
 import { Mission } from './mission.js';
@@ -33,7 +32,7 @@ const ANNOUNCE_AHEAD = 4200;
 /** Where the front of the train stops, relative to the halt's sign. */
 const STOP_OFFSET = -170;
 /** Room the halt's sign needs beyond the stopped train's front. */
-const SIGN_ROOM = 290;
+const SIGN_ROOM = 360;
 /** Seconds of an animal's hop into the train. */
 const HOP_TIME = 1.3;
 const EMOJI_FONT = '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
@@ -189,6 +188,8 @@ export class ForestStopsMission extends Mission {
       } else if (h.state === 'boarding' && h.t >= HOP_TIME) {
         h.state = 'aboard';
         h.t = 0;
+        // from now on the animal rides with the train, and gets off at the next station
+        this.ctx.world.train.addPassenger(h.emoji, h.seat);
         const seat = this.seatAt(h);
         this.particles.burst(seat.x, seat.y, SPARKS, 16, 200);
         this.ctx.hud.setCounter('🚂', this.halts.filter(x => x.state === 'aboard').length, this.halts.length);
@@ -228,27 +229,37 @@ export class ForestStopsMission extends Mission {
   draw(c) {
     const stage = this.ctx.stage;
     const cam = this.ctx.world.cameraY;
+    // the halts, in front of the track where they are easy to see
+    c.save();
+    c.translate(0, -cam);
+    this.drawHalts(c);
+    c.restore();
     for (const h of this.halts) {
       const x = this.toScreen(h.worldX);
-      if (x > stage.viewLeft - 200 && x < stage.viewRight + 200) this.drawHalt(c, h, x, NEAR_GROUND_Y + 6 - cam);
       if (h.state === 'boarding') {
         const k = easeInOut(clamp(h.t / HOP_TIME, 0, 1));
         const seat = this.seatAt(h);
-        const from = { x: x + 10, y: NEAR_GROUND_Y - 20 - cam };
+        const from = { x: x + 10, y: TRACK_Y + 4 - cam };
         this.drawAnimal(c, h.emoji, lerp(from.x, seat.x, k), lerp(from.y, seat.y, k) - Math.sin(Math.PI * k) * 170, lerp(64, 44, k));
-      } else if (h.state === 'aboard') {
-        const seat = this.seatAt(h);
-        this.drawAnimal(c, h.emoji, seat.x, seat.y + Math.sin(this.time * 3 + h.seat) * 2, 44);
+      }
+      if (h.state === 'missed' && h.t < 2 && x > stage.viewLeft - 100) {
+        c.save();
+        c.globalAlpha = 1 - h.t / 2;
+        c.fillStyle = '#ffffff';
+        c.font = '700 20px "Baloo 2", system-ui, sans-serif';
+        c.textAlign = 'center';
+        c.fillText('Pa! Altă dată!', x + 10, TRACK_Y - 160 - cam);
+        c.restore();
       }
     }
-    // a note on the left (never in front of the train): who waits at the next halt
+    // a note high up on the right, well above the line: who waits at the next halt
     const next = this.nextHalt;
     if (next) {
       const sx = this.toScreen(next.worldX);
       const gap = next.worldX - this.ctx.journey.distance;
       if (sx > stage.viewRight - 40 && gap < ANNOUNCE_AHEAD) {
-        const bx = stage.viewLeft + 126;
-        const by = stage.toStage(0, this.ctx.hud.hudBottom + 80).y + 64;
+        const bx = stage.viewRight - 126;
+        const by = stage.toStage(0, this.ctx.hud.hudBottom).y + 70;
         const bob = Math.sin(this.time * 4) * 3;
         glow(c, bx, by + bob, 90, 'rgba(255,230,140,0.45)', 'rgba(255,230,140,0)');
         fillRoundRect(c, bx - 100, by - 46 + bob, 200, 92, 22, '#fffaf0');
@@ -265,37 +276,66 @@ export class ForestStopsMission extends Mission {
   }
 
   /**
-   * A little forest halt beside the track (just ahead of the stopped train):
-   * a wooden sign with the name and, while it waits, the animal under it.
+   * The halts on screen (world units, no camera offset).
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   */
+  drawHalts(c) {
+    const stage = this.ctx.stage;
+    for (const h of this.halts) {
+      const x = this.toScreen(h.worldX);
+      if (x > stage.viewLeft - 260 && x < stage.viewRight + 260) this.drawHalt(c, h, x);
+    }
+  }
+
+  /**
+   * A little forest halt in front of the track: a snowy wooden platform with
+   * a lamp, a sign on two posts and, while it waits, the animal on it.
    * @private
    * @param {CanvasRenderingContext2D} c
    * @param {Halt} h
-   * @param {number} x
-   * @param {number} y  ground behind the rails
+   * @param {number} x  where the sign stands
    */
-  drawHalt(c, h, x, y) {
+  drawHalt(c, h, x) {
+    const top = TRACK_Y + 34;           // the platform's surface, just in front of the rails
+    const front = TRACK_Y + 70;         // its front edge
+    const x0 = x - 170;
+    const x1 = x + 130;
+    // the platform: planks with a stone edge and snow on top
+    c.fillStyle = '#8d6e63';
+    c.fillRect(x0, top, x1 - x0, front - top);
+    c.fillStyle = '#9e9e9e';
+    c.fillRect(x0, front - 8, x1 - x0, 8);
+    c.strokeStyle = 'rgba(62,39,35,0.35)';
+    c.lineWidth = 2;
+    c.beginPath();
+    for (let px = x0 + 30; px < x1; px += 30) {
+      c.moveTo(px, top + 4);
+      c.lineTo(px, front - 8);
+    }
+    c.stroke();
+    c.fillStyle = '#f4f8ff';
+    fillRoundRect(c, x0 - 4, top - 6, x1 - x0 + 8, 10, 5, '#f4f8ff');
+    // a lamp at the end of the platform
+    c.fillStyle = '#4a5568';
+    c.fillRect(x1 - 30, top - 170, 6, 170);
+    glow(c, x1 - 27, top - 172, 50, 'rgba(255,220,130,0.5)', 'rgba(255,220,130,0)');
+    fillRoundRect(c, x1 - 38, top - 182, 22, 12, 4, '#fff3c0');
+    // the sign on two posts standing on the platform
     c.fillStyle = '#6d4c41';
-    c.fillRect(x - 64, y - 110, 8, 110);
-    c.fillRect(x + 56, y - 110, 8, 110);
-    fillRoundRect(c, x - 90, y - 150, 180, 52, 10, '#8d6e63');
-    fillRoundRect(c, x - 84, y - 144, 168, 40, 8, '#fff3d6');
-    c.fillStyle = 'rgba(244,248,255,0.95)';
-    fillRoundRect(c, x - 94, y - 156, 188, 12, 6, c.fillStyle);
+    c.fillRect(x - 64, top - 120, 8, 120);
+    c.fillRect(x + 56, top - 120, 8, 120);
+    fillRoundRect(c, x - 90, top - 160, 180, 52, 10, '#8d6e63');
+    fillRoundRect(c, x - 84, top - 154, 168, 40, 8, '#fff3d6');
+    fillRoundRect(c, x - 94, top - 166, 188, 12, 6, 'rgba(244,248,255,0.95)');
     c.fillStyle = '#4e342e';
     c.font = '800 19px "Baloo 2", system-ui, sans-serif';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText(h.stop, x, y - 123);
+    c.fillText(h.stop, x, top - 133);
     if (h.state === 'waiting' || h.state === 'missed') {
       const hop = h.state === 'waiting' ? Math.abs(Math.sin(this.time * 3)) * 8 : 0;
-      this.drawAnimal(c, h.emoji, x + 10, y - 26 - hop, 64);
-      if (h.state === 'missed' && h.t < 2) {
-        c.globalAlpha = 1 - h.t / 2;
-        c.fillStyle = '#ffffff';
-        c.font = '700 20px "Baloo 2", system-ui, sans-serif';
-        c.fillText('Pa! Altă dată!', x + 10, y - 180);
-        c.globalAlpha = 1;
-      }
+      this.drawAnimal(c, h.emoji, x + 10, top - 30 - hop, 64);
     }
   }
 
