@@ -737,3 +737,8 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 @media (max-width: 640px) {
   .puzzle { flex-direction: column-reverse; align-items: center; }
 }
+
+/* ---------- Panel at the bottom (the scene above stays visible) ---------- */
+.mission-panel.is-bottom { align-items: end; pointer-events: none; }
+.mission-panel.is-bottom > * { pointer-events: auto; }
+.panel--bottom { width: min(720px, 100%); gap: 6px; padding: 14px 20px 18px; }

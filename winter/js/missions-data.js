@@ -107,5 +107,18 @@ export const WINTER_MISSIONS = {
         fact: 'Primăria din Arad se numește Palatul Administrativ și are în mijloc un turn înalt, cu ceas, care se vede de departe.',
       },
     },
+
+    deva: {
+      type: 'lantern',
+      config: {
+        id: 'lanterns-deva',
+        title: 'Felinarele Cetății Deva',
+        text: 'Deasupra orașului, pe un deal, stă Cetatea Devei. Bubu urcă până acolo cu liftul înclinat…',
+        lightText: 'Pe ziduri s-au stins felinarele! Plimbă lanterna lui Bubu (cu mouse-ul sau cu degetul) și ține-o pe fiecare felinar până se aprinde.',
+        windText: 'Uf! O pală de vânt a stins un felinar. Mai aprinde-l o dată!',
+        doneText: 'Toate felinarele ard! Cetatea se vede acum din tren, de departe.',
+        fact: 'Cetatea Deva a fost ridicată pe un deal care, cu milioane de ani în urmă, a fost un vulcan. Este pomenită în documente încă din anul 1269.',
+      },
+    },
   },
 };
