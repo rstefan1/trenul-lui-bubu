@@ -82,15 +82,16 @@ export class SceneMission extends Mission {
   }
 
   /**
-   * Shows a panel at the bottom of the screen (or removes it).
+   * Shows a panel (or removes it).
    * @protected
    * @param {HTMLElement | null} node
+   * @param {boolean} [bottom=true]  at the bottom (the scene stays visible) or in the middle
    */
-  setPanel(node) {
+  setPanel(node, bottom = true) {
     const root = this.ctx.panel;
     root.replaceChildren();
     root.hidden = !node;
-    root.classList.toggle('is-bottom', !!node);
+    root.classList.toggle('is-bottom', !!node && bottom);
     if (node) root.append(node);
   }
 
