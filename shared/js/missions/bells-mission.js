@@ -4,9 +4,9 @@
  * Bells hang from the overhead wire. Each has a sign saying how fast the
  * train must pass under it for the pantograph to ring it: slowly, medium or
  * fast. The child chooses the speed with three big buttons (slow, medium,
- * fast); the train reaches it smoothly and keeps it. The dashboard shows the
- * speedometer and the next three bells, so the child knows in advance which
- * speed will be needed. A bell passed at the right speed rings (it swings
+ * fast); the train reaches it smoothly and keeps it. A box in the middle of
+ * the screen, above the train, shows the next bells, so the child knows in
+ * advance which speed will be needed; a small speedometer shows the speed. A bell passed at the right speed rings (it swings
  * and sends up golden notes); otherwise it only goes "clonk".
  *
  * The mission takes the controls of the train (Journey#takeControl) and
@@ -217,6 +217,7 @@ export class BellsMission extends Mission {
     c.restore();
     this.particles.draw(c);
     this.drawDashboard(c);
+    this.drawNextBells(c);
   }
 
   /**
@@ -296,11 +297,11 @@ export class BellsMission extends Mission {
     const cy = stage.viewBottom - 70;
     const R = 105;
     // panel
-    fillRoundRect(c, cx - 135, cy - 125, 270 + 230, 150, 26, 'rgba(19,41,90,0.85)');
+    fillRoundRect(c, cx - 135, cy - 125, 270, 150, 26, 'rgba(19,41,90,0.85)');
     c.strokeStyle = 'rgba(255,255,255,0.85)';
     c.lineWidth = 3;
     c.beginPath();
-    roundRectPath(c, cx - 135, cy - 125, 270 + 230, 150, 26);
+    roundRectPath(c, cx - 135, cy - 125, 270, 150, 26);
     c.stroke();
     // coloured bands on the dial
     const ang = (/** @type {number} */ v) => Math.PI + (clamp(v, 0, MANUAL.maxSpeed) / MANUAL.maxSpeed) * Math.PI;
@@ -329,33 +330,64 @@ export class BellsMission extends Mission {
     c.font = '700 15px "Baloo 2", system-ui, sans-serif';
     c.fillText('km/h', cx, cy - 12);
 
-    // the next bells: the first one large, with how far it is; two more after it
-    const nx = cx + 150;
-    c.textAlign = 'left';
-    c.font = '700 18px "Baloo 2", system-ui, sans-serif';
-    c.fillStyle = 'rgba(255,255,255,0.85)';
-    c.fillText('Urmează:', nx, cy - 84);
+  }
+
+  /**
+   * The next bells, in the middle of the screen above the train: the first
+   * one large, with how far it is and whether the chosen speed is right,
+   * and the two after it as small coloured chips.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   */
+  drawNextBells(c) {
+    const stage = this.ctx.stage;
+    const j = this.ctx.journey;
     const upcoming = this.bells.filter(b => b.state === 'waiting').slice(0, 3);
-    if (upcoming.length) {
-      const next = upcoming[0];
-      const band = BANDS[next.band];
-      fillRoundRect(c, nx, cy - 72, 130, 46, 12, band.color);
-      c.fillStyle = '#ffffff';
-      c.font = '800 24px "Baloo 2", system-ui, sans-serif';
-      c.fillText(band.label, nx + 12, cy - 40);
-      upcoming.slice(1).forEach((b, i) => {
-        const bb = BANDS[b.band];
-        fillRoundRect(c, nx + 140 + i * 34, cy - 64, 28, 30, 8, bb.color);
-      });
-      const dist = next.worldX - (j.distance + PANTOGRAPH_X);
-      const k = clamp(1 - dist / 3200, 0, 1);
-      fillRoundRect(c, nx, cy - 14, 200, 12, 6, 'rgba(255,255,255,0.25)');
-      fillRoundRect(c, nx, cy - 14, Math.max(12, 200 * k), 12, 6, '#ffd23f');
-      const ok = this.gear === next.band;
-      c.font = '700 17px "Baloo 2", system-ui, sans-serif';
-      c.fillStyle = ok ? '#b9f6ca' : '#ffe082';
-      c.fillText(ok ? '✔ viteza aleasă e bună' : `Alege viteza ${band.label}!`, nx, cy + 14);
-    }
+    if (!upcoming.length) return;
+    const next = upcoming[0];
+    const band = BANDS[next.band];
+    const ok = this.gear === next.band;
+    const cardBottom = this.ctx.hud.cardBottom;
+    const w = 460;
+    const h = 150;
+    const x = stage.width / 2 - w / 2;
+    // below the instructions card while it is shown, otherwise just above the bells' signs
+    const y = Math.max(cardBottom ? stage.toStage(0, cardBottom + 12).y : 0, WIRE_Y - 110 - h - this.ctx.world.cameraY);
+
+    fillRoundRect(c, x, y, w, h, 24, 'rgba(19,41,90,0.88)');
+    c.strokeStyle = ok ? '#b9f6ca' : '#ffffff';
+    c.lineWidth = ok ? 5 : 3;
+    c.beginPath();
+    roundRectPath(c, x, y, w, h, 24);
+    c.stroke();
+    c.textAlign = 'center';
+    c.textBaseline = 'alphabetic';
+    c.fillStyle = 'rgba(255,255,255,0.9)';
+    c.font = '700 20px "Baloo 2", system-ui, sans-serif';
+    c.fillText('Următorul clopoțel vrea viteza:', x + w / 2, y + 30);
+    // the big label
+    const pulse = ok ? 1 : 1 + 0.04 * Math.sin(this.time * 8);
+    c.save();
+    c.translate(x + w / 2 - 30, y + 70);
+    c.scale(pulse, pulse);
+    fillRoundRect(c, -110, -26, 220, 52, 14, band.color);
+    c.fillStyle = '#ffffff';
+    c.font = '800 32px "Baloo 2", system-ui, sans-serif';
+    c.fillText(`${band.icon} ${band.label}`, 0, 12);
+    c.restore();
+    // the two after it
+    c.font = '700 14px "Baloo 2", system-ui, sans-serif';
+    c.fillStyle = 'rgba(255,255,255,0.7)';
+    c.fillText('apoi', x + w - 80, y + 52);
+    upcoming.slice(1).forEach((b, i) => fillRoundRect(c, x + w - 112 + i * 36, y + 60, 28, 26, 7, BANDS[b.band].color));
+    // how far it is, and a hint
+    const dist = next.worldX - (j.distance + PANTOGRAPH_X);
+    const k = clamp(1 - dist / 3200, 0, 1);
+    fillRoundRect(c, x + 24, y + 104, w - 48, 10, 5, 'rgba(255,255,255,0.25)');
+    fillRoundRect(c, x + 24, y + 104, Math.max(10, (w - 48) * k), 10, 5, '#ffd23f');
+    c.font = '700 18px "Baloo 2", system-ui, sans-serif';
+    c.fillStyle = ok ? '#b9f6ca' : '#ffe082';
+    c.fillText(ok ? '✔ viteza aleasă e bună' : `Apasă pe ${band.label}!`, x + w / 2, y + 138);
   }
 
   dispose() {
