@@ -1,15 +1,15 @@
 /**
  * @file A night mountain landscape for full-screen scenes (the sleigh ride
  * and the fair at Vatra Dornei): snowy peaks far away, forested mountains,
- * a valley with a village and its lit windows, hills covered in firs and a
- * snowy slope in front.
+ * a snowy valley with groves of firs, hills covered in firs and a snowy
+ * slope in front. Only nature: Bubu's ride goes through the mountains.
  *
  * Every layer scrolls at its own speed (parallax), so a moving scene feels
  * deep. Everything is placed from fixed positions along each layer (not
  * from the screen), so nothing shimmers while it scrolls.
  */
 
-import { drawFir, fillCircle } from '../shapes.js';
+import { drawFir } from '../shapes.js';
 
 /**
  * @typedef {object} ValleyView
@@ -118,7 +118,7 @@ function drawForestBand(c, v, offset, line, size, color, shade, seed) {
 }
 
 /**
- * The valley floor with a little village: snowy roofs, lit windows, smoke.
+ * The snowy valley floor with groves of firs of different sizes.
  * @param {CanvasRenderingContext2D} c
  * @param {ValleyView} v
  * @param {number} offset
@@ -128,45 +128,16 @@ function drawForestBand(c, v, offset, line, size, color, shade, seed) {
 function drawValley(c, v, offset, line, h) {
   c.fillStyle = '#8193bf';
   c.fillRect(v.left, line, v.right - v.left, v.bottom - line);
-  const spacing = 190;
+  const spacing = 64;
   const first = Math.floor((v.left + offset) / spacing) - 1;
   const last = Math.ceil((v.right + offset) / spacing) + 1;
-  const size = Math.max(26, h * 0.04);
+  const size = Math.max(40, h * 0.065);
   for (let i = first; i <= last; i++) {
-    const r = hash(i * 17 + 4);
-    const x = i * spacing - offset + r * spacing * 0.5;
-    const yy = line + 10 + hash(i * 23 + 4) * h * 0.04;
-    if (r < 0.62) drawCottage(c, x, yy, size * (0.8 + 0.4 * hash(i)), r < 0.31);
-    else drawFir(c, x, yy + 4, size * 1.6, { color: '#24504a', shade: '#1d433e', snowy: true });
+    if (hash(i * 41 + 4) < 0.3) continue;   // clearings between the groves
+    const x = i * spacing - offset + (hash(i * 17 + 4) - 0.5) * spacing * 0.8;
+    const yy = line + 8 + hash(i * 23 + 4) * h * 0.04;
+    drawFir(c, x, yy, size * (0.7 + 0.6 * hash(i * 7 + 4)), { color: '#24504a', shade: '#1d433e', snowy: true });
   }
-}
-
-/**
- * A small cottage with a snowy roof and warm windows.
- * @param {CanvasRenderingContext2D} c
- * @param {number} x
- * @param {number} ground
- * @param {number} s
- * @param {boolean} red  colour of the walls
- */
-function drawCottage(c, x, ground, s, red) {
-  c.fillStyle = red ? '#9c5b4a' : '#7d6a8c';
-  c.fillRect(x - s * 0.6, ground - s, s * 1.2, s);
-  c.fillStyle = '#5a4a5f';
-  c.fillRect(x + s * 0.22, ground - s * 1.5, s * 0.16, s * 0.4);
-  c.fillStyle = '#eef3fb';
-  c.beginPath();
-  c.moveTo(x - s * 0.8, ground - s * 0.95);
-  c.lineTo(x, ground - s * 1.55);
-  c.lineTo(x + s * 0.8, ground - s * 0.95);
-  c.closePath();
-  c.fill();
-  c.fillStyle = '#ffd36b';
-  c.fillRect(x - s * 0.38, ground - s * 0.7, s * 0.26, s * 0.26);
-  c.fillRect(x + s * 0.12, ground - s * 0.7, s * 0.26, s * 0.26);
-  c.fillStyle = 'rgba(220,228,245,0.35)';
-  fillCircle(c, x + s * 0.32, ground - s * 1.75, s * 0.14);
-  fillCircle(c, x + s * 0.4, ground - s * 2, s * 0.18);
 }
 
 /**

@@ -131,6 +131,8 @@ export class FairMission extends SceneMission {
   setAct(act) {
     this.act = act;
     this.actTime = 0;
+    // the coins and lanterns not caught stay behind on the hill
+    this.items = [];
     if (act === 'fair') {
       // never leave Bubu without enough coins for a tree that fits
       const cheapest = Math.min(...this.config.trees.filter(t => t.height <= this.config.maxHeight).map(t => t.price));
