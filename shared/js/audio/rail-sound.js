@@ -6,7 +6,7 @@
  * It swells in gently when the train sets off and fades out gently on the
  * last stretch before it stops — at a station, at a forest halt, by a child
  * waiting for a gift or in front of a snowdrift — while the brakes squeal
- * until the train stands still. It also goes quiet while the game waits for
+ * until the train stands still, and the air brakes hiss once it does. It also goes quiet while the game waits for
  * the player.
  *
  * So that the loop never hitches, the recording is prepared once: the bits
@@ -103,11 +103,14 @@ export class RailSound {
   startSqueal() {
     const e = this.engine;
     const ctx = /** @type {AudioContext} */ (e.ctx);
+    const master = /** @type {GainNode} */ (e.master);
     const now = ctx.currentTime;
     const out = ctx.createGain();
     out.gain.setValueAtTime(0.0001, now);
     out.gain.exponentialRampToValueAtTime(SQUEAL_VOLUME, now + 0.4);
-    out.connect(/** @type {GainNode} */ (e.master));
+    // heard directly and with a short echo, as between station buildings
+    out.connect(master);
+    out.connect(echo(ctx, master));
     /** @type {AudioScheduledSourceNode[]} */
     const sources = [];
     const recorded = e.buffers.get(this.brakes);
@@ -128,6 +131,7 @@ export class RailSound {
         out.gain.setValueAtTime(Math.max(0.0001, out.gain.value), t);
         out.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
         for (const s of sources) s.stop(t + 1.25);
+        if (!recorded) airHiss(ctx, master, t + 0.35);
       },
     };
   }
@@ -137,11 +141,31 @@ export class RailSound {
 const SQUEAL_LENGTH = 6;
 
 /**
+ * A slowly wandering value around 1, as a curve for an AudioParam.
+ * @param {number} depth  how far it strays (0.1 = ±10%)
+ * @param {number} speed  how restless it is
+ * @param {number} [n=64] points
+ */
+function wander(depth, speed, n = 64) {
+  const curve = new Float32Array(n);
+  let v = 0;
+  let drift = 0;
+  for (let i = 0; i < n; i++) {
+    drift = drift * 0.8 + (Math.random() - 0.5) * speed;
+    v = Math.max(-1, Math.min(1, v * 0.92 + drift));
+    curve[i] = 1 + v * depth;
+  }
+  return curve;
+}
+
+/**
  * A squeal of steel brakes on steel wheels, made the way the real one
- * sounds: noise "singing" through a few narrow resonances (the wheel rings
- * like a bell), whose pitch slides and wavers irregularly, whose loudness
- * flutters (the brake shoe sticks and slips), over a duller grinding.
- * Every squeal is a little different.
+ * sounds: two wheels (one a little to the left, one to the right, each with
+ * its own pitch) whose rims ring through a few narrow resonances. The pitch
+ * slides and wavers irregularly and rises a little as the train slows; the
+ * loudness flutters as the brake shoe sticks and slips; now and then the
+ * ringing "locks" into a piercing tone, then falls back into a rasp. A dull
+ * grinding of the shoes runs underneath. Every squeal is a little different.
  * @param {AudioContext} ctx
  * @param {AudioNode} out
  * @param {number} t  start time
@@ -151,38 +175,40 @@ function synthSqueal(ctx, out, t) {
   const noise = whiteNoise(ctx);
   /** @type {AudioScheduledSourceNode[]} */
   const sources = [];
-  /** A slowly wandering value around 1 (for pitch and loudness), as a curve. */
-  const wander = (/** @type {number} */ depth, /** @type {number} */ speed) => {
-    const n = 64;
-    const curve = new Float32Array(n);
-    let v = 0;
-    let drift = 0;
-    for (let i = 0; i < n; i++) {
-      drift = drift * 0.8 + (Math.random() - 0.5) * speed;
-      v = Math.max(-1, Math.min(1, v * 0.92 + drift));
-      curve[i] = 1 + v * depth;
+  const base = 2300 + Math.random() * 500;
+  for (const [detune, pan, level] of [[1, -0.45, 1], [1.07 + Math.random() * 0.05, 0.45, 0.7]]) {
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = pan;
+    panner.connect(out);
+    const pitch = wander(0.035, 0.5).map((k, i, arr) => base * detune * k * (1 + 0.05 * (i / arr.length)));
+    // the ringing rim: noise through narrow resonances (main tone and overtones)
+    for (const [ratio, q, amount] of [[1, 42, 1], [1.61, 55, 0.45], [2.43, 60, 0.22]]) {
+      const src = ctx.createBufferSource();
+      src.buffer = noise;
+      src.loop = true;
+      const f = ctx.createBiquadFilter();
+      f.type = 'bandpass';
+      f.Q.value = q;
+      f.frequency.setValueCurveAtTime(pitch.map(p => p * ratio), t, SQUEAL_LENGTH);
+      const g = ctx.createGain();
+      g.gain.setValueCurveAtTime(wander(0.45, 0.9).map(k => Math.max(0.05, k) * amount * level * 6), t, SQUEAL_LENGTH);
+      src.connect(f).connect(g).connect(panner);
+      src.start(t, Math.random());
+      sources.push(src);
     }
-    return curve;
-  };
-  const base = 2350 + Math.random() * 500;
-  const pitch = wander(0.035, 0.5);
-  // the singing resonances of the wheel (a main one and two overtones)
-  for (const [ratio, q, level] of [[1, 42, 1], [1.61, 55, 0.45], [2.43, 60, 0.22]]) {
-    const src = ctx.createBufferSource();
-    src.buffer = noise;
-    src.loop = true;
-    const f = ctx.createBiquadFilter();
-    f.type = 'bandpass';
-    f.Q.value = q;
-    const curve = pitch.map(k => base * ratio * k);
-    // the squeal rises a little as the train slows down
-    for (let i = 0; i < curve.length; i++) curve[i] *= 1 + 0.05 * (i / curve.length);
-    f.frequency.setValueCurveAtTime(curve, t, SQUEAL_LENGTH);
-    const g = ctx.createGain();
-    g.gain.setValueCurveAtTime(wander(0.45, 0.9).map(k => Math.max(0.05, k) * level * 6), t, SQUEAL_LENGTH);
-    src.connect(f).connect(g).connect(out);
-    src.start(t, Math.random());
-    sources.push(src);
+    // moments when the ringing locks into a piercing tone
+    const tone = ctx.createOscillator();
+    tone.type = 'sawtooth';
+    tone.frequency.setValueCurveAtTime(pitch, t, SQUEAL_LENGTH);
+    const shape = ctx.createBiquadFilter();
+    shape.type = 'bandpass';
+    shape.frequency.setValueCurveAtTime(pitch, t, SQUEAL_LENGTH);
+    shape.Q.value = 6;
+    const lock = ctx.createGain();
+    lock.gain.setValueCurveAtTime(wander(1, 1.2, 96).map(k => Math.max(0, k - 1.15) * 0.5 * level), t, SQUEAL_LENGTH);
+    tone.connect(shape).connect(lock).connect(panner);
+    tone.start(t);
+    sources.push(tone);
   }
   // the duller grinding of the brake shoes underneath
   const grind = ctx.createBufferSource();
@@ -193,11 +219,65 @@ function synthSqueal(ctx, out, t) {
   gf.frequency.value = 1100;
   gf.Q.value = 0.8;
   const gg = ctx.createGain();
-  gg.gain.value = 0.12;
+  gg.gain.setValueCurveAtTime(wander(0.4, 0.8).map(k => 0.12 * k), t, SQUEAL_LENGTH);
   grind.connect(gf).connect(gg).connect(out);
   grind.start(t, Math.random());
   sources.push(grind);
   return sources;
+}
+
+/**
+ * The hiss of the air brakes after the train has stopped ("pshhh").
+ * @param {AudioContext} ctx
+ * @param {AudioNode} out
+ * @param {number} t
+ */
+function airHiss(ctx, out, t) {
+  const src = ctx.createBufferSource();
+  src.buffer = whiteNoise(ctx);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 2200;
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(9000, t);
+  lp.frequency.exponentialRampToValueAtTime(3500, t + 1.6);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.12, t + 0.08);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 1.7);
+  src.connect(hp).connect(lp).connect(g).connect(out);
+  src.start(t, Math.random() * 0.2, 1.8);
+}
+
+/** @type {WeakMap<BaseAudioContext, ConvolverNode>} */
+const echoCache = new WeakMap();
+
+/**
+ * A short echo, as between the buildings and under the roof of a station
+ * (a decaying burst of noise used as the room's response). It is made once
+ * and feeds the output once; every squeal just connects to it.
+ * @param {AudioContext} ctx
+ * @param {AudioNode} master
+ * @returns {AudioNode} where to send the sound to be echoed
+ */
+function echo(ctx, master) {
+  let node = echoCache.get(ctx);
+  if (!node) {
+    const seconds = 1.3;
+    const ir = ctx.createBuffer(2, Math.round(ctx.sampleRate * seconds), ctx.sampleRate);
+    for (let c = 0; c < 2; c++) {
+      const d = ir.getChannelData(c);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) ** 3;
+    }
+    node = ctx.createConvolver();
+    node.buffer = ir;
+    const wet = ctx.createGain();
+    wet.gain.value = 0.35;
+    node.connect(wet).connect(master);
+    echoCache.set(ctx, node);
+  }
+  return node;
 }
 
 /** @type {WeakMap<BaseAudioContext, AudioBuffer>} */
