@@ -8,7 +8,7 @@
  * geometry to draw the moving and glowing parts every frame.
  */
 
-import { fillCircle, fillRoundRect, roundRectPath } from '../gfx/shapes.js';
+import { drawFir, fillCircle, fillRoundRect, roundRectPath } from '../gfx/shapes.js';
 import { TRACK_Y, WIRE_Y } from '../world/track.js';
 
 /** Radius of a wheel. */
@@ -375,10 +375,43 @@ function railcar(c, car, pos, noseRight) {
   };
 }
 
+/** @type {CarPainter} A flat wagon carrying Bubu's Christmas tree, tied with ropes. */
+function flatcar(c, car, pos) {
+  const L = car.length;
+  const wheels = [L * 0.2, L * 0.2 + 46, L * 0.8 - 46, L * 0.8];
+  drawBogies(c, wheels);
+  drawBuffers(c, L, 1);
+  drawBuffers(c, 0, -1);
+  fillRoundRect(c, 0, -52, L, 22, 4, car.colors.body);
+  c.fillStyle = car.colors.band;
+  c.fillRect(0, -52, L, 6);
+  // stakes along the sides
+  c.fillStyle = '#4e342e';
+  for (let x = 14; x < L; x += 44) c.fillRect(x, -82, 6, 32);
+  // the tree, lying a little tilted, with a red bow
+  c.save();
+  c.translate(L * 0.5, -52);
+  c.rotate(-Math.PI / 2 + 0.08);
+  drawFir(c, 0, 90, 190, { snowy: true });
+  c.restore();
+  c.strokeStyle = '#d32f2f';
+  c.lineWidth = 4;
+  for (const x of [L * 0.3, L * 0.68]) {
+    c.beginPath();
+    c.moveTo(x, -52);
+    c.lineTo(x, -112);
+    c.stroke();
+  }
+  c.fillStyle = '#d32f2f';
+  fillCircle(c, L * 0.68, -114, 7);
+  return { windows: [], bubuWindow: null, wheels, headlight: null, taillight: pos.trailing ? { x: 4, y: -44 } : null, roofY: -60 };
+}
+
 /** @type {Readonly<Record<import('./specs.js').CarSpec['kind'], CarPainter>>} */
 export const CAR_PAINTERS = Object.freeze({
   electricLoco,
   coach,
   railcarFront: (c, car, pos) => railcar(c, car, pos, true),
   railcarRear: (c, car, pos) => railcar(c, car, pos, false),
+  flatcar,
 });

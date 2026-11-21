@@ -24,6 +24,7 @@ import { drawBauble, drawGarland } from '../gfx/ornaments.js';
 import { fillCircle, glow } from '../gfx/shapes.js';
 import { drawBubu } from './bubu.js';
 import { CAR_PAINTERS, WHEEL_R } from './cars.js';
+import { TREE_WAGON } from './specs.js';
 
 /** Vertical extent of the painted train, relative to the rail. */
 const TOP = -262;
@@ -70,6 +71,8 @@ export class TrainRenderer {
     this.baubles = [];
     /** How much of the string of lights is lit (0..1). */
     this.lightBulbs = 0;
+    /** The train pulls the flat wagon with the Christmas tree (after Vatra Dornei). */
+    this.treeWagon = false;
     /** How far Bubu has appeared at her window (0 = not on the train yet). */
     this.bubuShown = 1;
     this.bubuTarget = 1;
@@ -86,7 +89,8 @@ export class TrainRenderer {
     /** @type {LaidOutCar[]} */
     this.cars = [];
     let cursor = 0;
-    spec.cars.forEach((car, i) => {
+    const cars = this.treeWagon ? [...spec.cars, TREE_WAGON] : spec.cars;
+    cars.forEach((car) => {
       const left = cursor - car.length;
       this.cars.push({ spec: car, left, geo: /** @type {any} */ (null) });
       cursor = left - spec.gap;
@@ -94,6 +98,16 @@ export class TrainRenderer {
     /** Train x of the rear end. */
     this.rearX = cursor + spec.gap;
     this.body = null;
+  }
+
+  /**
+   * Adds (or removes) the flat wagon with the Christmas tree at the back.
+   * @param {boolean} on
+   */
+  setTreeWagon(on) {
+    if (on === this.treeWagon) return;
+    this.treeWagon = on;
+    this.setSpec(this.spec);
   }
 
   /**

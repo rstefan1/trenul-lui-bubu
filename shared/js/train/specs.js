@@ -19,7 +19,7 @@
 
 /**
  * @typedef {object} CarSpec
- * @property {'electricLoco' | 'coach' | 'railcarFront' | 'railcarRear'} kind
+ * @property {'electricLoco' | 'coach' | 'railcarFront' | 'railcarRear' | 'flatcar'} kind
  * @property {number} length
  * @property {CarColors} colors
  * @property {number} [bubuWindow]  index of the window where Bubu sits (from the front)
@@ -60,6 +60,9 @@ export const REGIONAL_TRAIN = Object.freeze({
     { kind: 'railcarRear', length: 330, colors: { body: '#f4f6f8', band: '#2e9d57', roof: '#9aa4b1', accent: '#e53935' } },
   ],
 });
+
+/** The flat wagon that carries the Christmas tree bought in Vatra Dornei (added at the back). */
+export const TREE_WAGON = Object.freeze({ kind: 'flatcar', length: 250, colors: { body: '#6d4c41', band: '#8d6e63', roof: '#5d4037' } });
 
 /** @type {Readonly<Record<string, TrainSpec>>} */
 export const TRAINS = Object.freeze({ night: NIGHT_TRAIN, regional: REGIONAL_TRAIN });
