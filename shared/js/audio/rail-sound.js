@@ -23,11 +23,11 @@ const FADE_IN = 6;
 /** Distance before a stop over which the sound fades out (stage units). */
 const FADE_OUT = 2800;
 /** The brakes start squealing this far from the stop (stage units). */
-const SQUEAL_AT = 520;
+const SQUEAL_AT = 950;
 /** Seconds over which the sound settles to a new level (a gentle, never abrupt change). */
 const SMOOTH = 0.6;
 /** Volume of the squeal (soft, in the background too). */
-const SQUEAL_VOLUME = 0.18;
+const SQUEAL_VOLUME = 0.55;
 
 export class RailSound {
   /**
@@ -106,7 +106,7 @@ export class RailSound {
     const now = ctx.currentTime;
     const out = ctx.createGain();
     out.gain.setValueAtTime(0.0001, now);
-    out.gain.exponentialRampToValueAtTime(SQUEAL_VOLUME, now + 0.6);
+    out.gain.exponentialRampToValueAtTime(SQUEAL_VOLUME, now + 0.4);
     out.connect(/** @type {GainNode} */ (e.master));
     /** @type {AudioScheduledSourceNode[]} */
     const sources = [];
@@ -119,11 +119,11 @@ export class RailSound {
       src.start(now);
       sources.push(src);
     } else {
-      for (const [freq, level] of [[2950, 1], [3720, 0.6], [5150, 0.25]]) {
+      for (const [freq, level] of [[2150, 1], [2740, 0.7], [3900, 0.3]]) {
         const osc = ctx.createOscillator();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, now);
-        osc.frequency.linearRampToValueAtTime(freq * 0.94, now + 3);
+        osc.frequency.linearRampToValueAtTime(freq * 0.92, now + 3.5);
         // the wobble of the wheel on the rail
         const lfo = ctx.createOscillator();
         lfo.frequency.value = 5 + Math.random() * 3;
@@ -143,8 +143,8 @@ export class RailSound {
         const t = ctx.currentTime;
         out.gain.cancelScheduledValues(t);
         out.gain.setValueAtTime(Math.max(0.0001, out.gain.value), t);
-        out.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
-        for (const s of sources) s.stop(t + 0.55);
+        out.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+        for (const s of sources) s.stop(t + 1.25);
       },
     };
   }

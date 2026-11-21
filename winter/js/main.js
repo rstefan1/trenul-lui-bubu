@@ -215,7 +215,7 @@ function fastForward(seconds) {
   }
 }
 
-if (params.has('debug')) Object.assign(window, { trenulDebug: { stage, journey, world, state, director } });
+if (params.has('debug')) Object.assign(window, { trenulDebug: { stage, journey, world, state, director, audio } });
 
 loop.start();
 if (testMode) {
