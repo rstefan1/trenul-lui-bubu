@@ -9,9 +9,8 @@
  *   back   — in the near layer, behind the train: station buildings, the
  *            valleys and arches under viaducts and bridges, the hill a
  *            tunnel goes through;
- *   front  — in front of the train: the part of a tunnel's hill that hides
- *            the train, with the dark tube in which only the train's
- *            lights are visible;
+ *   front  — in front of the train: the part of a tunnel's mountain that
+ *            hides the train, and the near side of a bridge's truss;
  *   lights — untinted glow at night: station lamps and windows.
  *
  * Viaducts and bridges also cut a hole in the near layer above the valley
@@ -172,6 +171,7 @@ export class TrackFeatures {
   drawFront(c, v) {
     for (const f of this.visible(v)) {
       if (f.type === 'tunnel') drawTunnelFront(c, v, f);
+      else if (f.type === 'bridge') drawTruss(c, screenX(v, f.x0), screenX(v, f.x1), true);
     }
   }
 
@@ -276,7 +276,10 @@ function drawValley(c, v, f, kind) {
     c.fill();
   }
 
-  if (kind === 'bridge') drawGirder(c, x0, x1);
+  if (kind === 'bridge') {
+    drawGirder(c, x0, x1);
+    drawTruss(c, x0, x1, false);
+  }
 
   // 5. firs on the near slopes
   for (const side of [0, 1]) {
@@ -355,29 +358,57 @@ function drawAbutments(c, x0, x1, depth) {
 }
 
 /**
- * A steel girder under the track.
+ * The deck of a bridge: a steel beam under the rails.
  * @param {CanvasRenderingContext2D} c
  * @param {number} x0
  * @param {number} x1
  */
 function drawGirder(c, x0, x1) {
-  const top = TRACK_Y + 8;
-  const h = 46;
-  c.strokeStyle = '#3f5b5a';
   c.fillStyle = '#3f5b5a';
-  c.fillRect(x0, top, x1 - x0, 8);
-  c.fillRect(x0, top + h, x1 - x0, 8);
-  c.lineWidth = 5;
+  c.fillRect(x0, TRACK_Y + 8, x1 - x0, 22);
+  c.fillStyle = '#4f6d6b';
+  c.fillRect(x0, TRACK_Y + 8, x1 - x0, 5);
+}
+
+/** Height of a bridge's truss above the rails. */
+const TRUSS_H = 205;
+
+/**
+ * The steel truss of a bridge, above the rails (the train runs inside it).
+ * Drawn twice: the far side behind the train, darker; the near side in front
+ * of it with thin bars, so the train is still seen between them.
+ * @param {CanvasRenderingContext2D} c
+ * @param {number} x0
+ * @param {number} x1
+ * @param {boolean} near
+ */
+function drawTruss(c, x0, x1, near) {
+  const bottom = TRACK_Y - 4;
+  const top = TRACK_Y - TRUSS_H;
+  const end = 60;                                    // the sloping end posts
+  c.strokeStyle = near ? '#4f6d6b' : '#2f4544';
+  c.lineWidth = near ? 6 : 8;
+  c.lineJoin = 'round';
   c.beginPath();
-  const n = Math.max(4, Math.round((x1 - x0) / 60));
+  // chords and end posts
+  c.moveTo(x0, bottom);
+  c.lineTo(x0 + end, top);
+  c.lineTo(x1 - end, top);
+  c.lineTo(x1, bottom);
+  // zig-zag between the chords
+  const n = Math.max(3, Math.round((x1 - x0 - 2 * end) / 70));
+  const step = (x1 - x0 - 2 * end) / n;
   for (let i = 0; i < n; i++) {
-    const a = x0 + ((x1 - x0) * i) / n;
-    const b = x0 + ((x1 - x0) * (i + 1)) / n;
-    c.moveTo(a, top + h + 4);
-    c.lineTo((a + b) / 2, top + 4);
-    c.lineTo(b, top + h + 4);
+    const a = x0 + end + i * step;
+    c.moveTo(a, top);
+    c.lineTo(a + step / 2, bottom);
+    c.lineTo(a + step, top);
   }
   c.stroke();
+  if (!near) {
+    c.fillStyle = '#2f4544';
+    c.fillRect(x0, bottom - 4, x1 - x0, 8);
+  }
 }
 
 // ------------------------------------------------------------------ tunnels
