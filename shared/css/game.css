@@ -811,30 +811,37 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .chapter-end-buttons { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 16px; }
 @media (prefers-reduced-motion: reduce) { .menu-bubu { animation: none; } }
 
-/* ---------- Accelerator (driving missions) ---------- */
-.drive-btn {
+/* ---------- Gearbox (driving missions) ---------- */
+.gearbox {
   position: fixed;
-  right: max(18px, env(safe-area-inset-right));
-  bottom: max(18px, env(safe-area-inset-bottom));
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
   z-index: 18;
-  width: clamp(120px, 20vmin, 170px);
-  height: clamp(120px, 20vmin, 170px);
-  border-radius: 50%;
-  border: 6px solid #fff;
-  background: radial-gradient(circle at 35% 30%, #ffb74d, #f57c00 60%, #b35400);
-  color: #fff;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.05;
-  box-shadow: 0 8px 0 #8a4100, 0 14px 30px rgba(0, 0, 0, .35);
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(19, 41, 90, .85);
+  border: 3px solid rgba(255, 255, 255, .85);
+  border-radius: 22px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, .25);
 }
-.drive-btn.is-pressed { transform: translateY(6px); box-shadow: 0 2px 0 #8a4100, 0 8px 20px rgba(0, 0, 0, .3); }
-.drive-btn__icon { font-size: clamp(30px, 5vmin, 44px); }
-.drive-btn__label { font-size: clamp(16px, 2.6vmin, 22px); font-weight: 800; }
-.drive-btn__hint { font-size: clamp(11px, 1.8vmin, 14px); font-weight: 600; opacity: .9; }
+.gearbox__title { text-align: center; font-size: 15px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.gear-btn {
+  min-width: clamp(130px, 18vmin, 170px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 4px solid transparent;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--gear) 45%, #13295a);
+  color: #fff;
+  font-size: clamp(17px, 2.6vmin, 22px);
+  font-weight: 800;
+  opacity: .8;
+  touch-action: manipulation;
+  transition: transform .12s, opacity .12s;
+}
+.gear-btn__icon { font-size: 1.3em; }
+.gear-btn[aria-pressed="true"] { background: var(--gear); border-color: #fff; opacity: 1; transform: scale(1.06); }

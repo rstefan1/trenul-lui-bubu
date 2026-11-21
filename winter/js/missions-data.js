@@ -47,7 +47,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'bells-deva-alba',
         title: 'Clopoțeii de pe linie',
-        text: 'Acum conduci tu trenul! Pe firul electric atârnă clopoței. Ține apăsat butonul ca să accelerezi și dă-i drumul ca să încetinești: fiecare clopoțel sună doar dacă treci pe sub el cu viteza scrisă pe tăbliță.',
+        text: 'Acum conduci tu trenul! Pe firul electric atârnă clopoței, iar fiecare sună doar dacă treci pe sub el cu viteza scrisă pe tăbliță. Alege viteza cu butoanele din dreapta: ÎNCET, MEDIU sau REPEDE. Jos vezi ce clopoței urmează.',
         bells: 9,
       },
     },

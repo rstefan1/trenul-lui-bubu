@@ -3,10 +3,11 @@
  *
  * Bells hang from the overhead wire. Each has a sign saying how fast the
  * train must pass under it for the pantograph to ring it: slowly, medium or
- * fast. The child holds a big button to accelerate and lets go to slow
- * down, watching the speedometer and the "next bell" indicator. A bell
- * passed at the right speed rings (it swings and sends up golden notes);
- * otherwise it only goes "clonk".
+ * fast. The child chooses the speed with three big buttons (slow, medium,
+ * fast); the train reaches it smoothly and keeps it. The dashboard shows the
+ * speedometer and the next three bells, so the child knows in advance which
+ * speed will be needed. A bell passed at the right speed rings (it swings
+ * and sends up golden notes); otherwise it only goes "clonk".
  *
  * The mission takes the controls of the train (Journey#takeControl) and
  * gives them back when it ends, after which the train continues normally to
@@ -29,12 +30,12 @@ const KMH = 0.2;
 
 /**
  * The three speed bands, in world units per second.
- * @type {Readonly<Record<'slow' | 'medium' | 'fast', {min: number, max: number, label: string, icon: string, color: string}>>}
+ * @type {Readonly<Record<'slow' | 'medium' | 'fast', {min: number, max: number, target: number, label: string, icon: string, color: string}>>}
  */
 const BANDS = Object.freeze({
-  slow: { min: MANUAL.minSpeed, max: 260, label: 'ÎNCET', icon: '🐢', color: '#2f7fd8' },
-  medium: { min: 280, max: 430, label: 'MEDIU', icon: '🚂', color: '#2e9d57' },
-  fast: { min: 450, max: MANUAL.maxSpeed, label: 'REPEDE', icon: '🐇', color: '#e0472e' },
+  slow: { min: MANUAL.minSpeed, max: 260, target: 170, label: 'ÎNCET', icon: '🐢', color: '#2f7fd8' },
+  medium: { min: 280, max: 430, target: 355, label: 'MEDIU', icon: '🚂', color: '#2e9d57' },
+  fast: { min: 450, max: MANUAL.maxSpeed, target: 540, label: 'REPEDE', icon: '🐇', color: '#e0472e' },
 });
 
 /** The pantograph is this far behind the front of the train (train units). */
@@ -67,13 +68,18 @@ export class BellsMission extends Mission {
     this.particles = new Particles();
     /** @type {import('../journey/journey.js').Controls | null} */
     this.controls = null;
-    /** @type {HTMLElement | null} */
-    this.button = null;
+    /** @type {HTMLElement | null} the three speed buttons */
+    this.gearbox = null;
+    /** @type {'slow' | 'medium' | 'fast'} */
+    this.gear = 'fast';
     /** @type {(e: KeyboardEvent) => void} */
     this.onKey = e => {
-      if (e.code !== 'Space' && e.code !== 'ArrowUp' && e.code !== 'ArrowRight') return;
+      const order = /** @type {const} */ (['slow', 'medium', 'fast']);
+      const i = order.indexOf(this.gear);
+      const pick = { Digit1: 0, Digit2: 1, Digit3: 2, ArrowDown: Math.max(0, i - 1), ArrowUp: Math.min(2, i + 1) }[e.code];
+      if (pick === undefined) return;
       e.preventDefault();
-      this.setThrottle(e.type === 'keydown');
+      this.setGear(order[pick]);
     };
   }
 
@@ -86,46 +92,49 @@ export class BellsMission extends Mission {
     // bells along the window, starting a little ahead (time to look and react)
     const seg = j.segment;
     const end = seg.start + (hints.window ? hints.window.to : 0.85) * seg.length - 900;
-    const first = j.distance + 2600;
+    const first = j.distance + 3200;
     const n = this.config.bells;
-    const spacing = Math.max(1800, (end - first) / Math.max(1, n - 1));
+    const spacing = Math.max(2200, (end - first) / Math.max(1, n - 1));
     /** @type {Array<'slow' | 'medium' | 'fast'>} */
     const pattern = ['slow', 'fast', 'medium', 'slow', 'medium', 'fast', 'slow', 'fast', 'medium', 'slow', 'fast', 'medium'];
     for (let i = 0; i < n; i++) {
       this.bells.push({ worldX: first + i * spacing, band: pattern[i % pattern.length], state: 'waiting', t: 0 });
     }
 
-    // the accelerator: a big button (and the space bar)
-    const button = el('button', { class: 'drive-btn', type: 'button', 'aria-label': 'Accelerează (ține apăsat)' }, [
-      el('span', { class: 'drive-btn__icon', 'aria-hidden': 'true' }, ['⚡']),
-      el('span', { class: 'drive-btn__label' }, ['Accelerează']),
-      el('span', { class: 'drive-btn__hint' }, ['ține apăsat']),
+    // the gearbox: three big buttons (and the keys 1, 2, 3 or the arrows)
+    const buttons = /** @type {const} */ (['fast', 'medium', 'slow']).map(gear => {
+      const band = BANDS[gear];
+      const b = el('button', {
+        class: `gear-btn gear-btn--${gear}`, type: 'button', 'aria-pressed': 'false',
+        style: `--gear:${band.color}`, 'aria-label': `Viteză ${band.label.toLowerCase()}`,
+      }, [el('span', { class: 'gear-btn__icon', 'aria-hidden': 'true' }, [band.icon]), el('span', {}, [band.label])]);
+      b.dataset.gear = gear;
+      b.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        this.setGear(gear);
+      });
+      b.addEventListener('click', e => { if (e.detail === 0) this.setGear(gear); });
+      return b;
+    });
+    this.gearbox = el('div', { class: 'gearbox', role: 'group', 'aria-label': 'Viteza trenului' }, [
+      el('span', { class: 'gearbox__title' }, ['Viteza']), ...buttons,
     ]);
-    const on = (/** @type {PointerEvent} */ e) => {
-      e.preventDefault();
-      button.setPointerCapture(e.pointerId);
-      this.setThrottle(true);
-    };
-    const off = () => this.setThrottle(false);
-    button.addEventListener('pointerdown', on);
-    button.addEventListener('pointerup', off);
-    button.addEventListener('pointercancel', off);
-    button.addEventListener('lostpointercapture', off);
-    button.addEventListener('contextmenu', e => e.preventDefault());
-    document.body.append(button);
-    this.button = button;
+    document.body.append(this.gearbox);
+    this.setGear('fast');
     window.addEventListener('keydown', this.onKey);
-    window.addEventListener('keyup', this.onKey);
     this.updateCounter();
   }
 
   /**
-   * @private
-   * @param {boolean} on
+   * Chooses the speed of the train.
+   * @param {'slow' | 'medium' | 'fast'} gear
    */
-  setThrottle(on) {
-    if (this.controls) this.controls.throttle = on;
-    this.button?.classList.toggle('is-pressed', on);
+  setGear(gear) {
+    this.gear = gear;
+    if (this.controls) this.controls.target = BANDS[gear].target;
+    for (const b of this.gearbox?.querySelectorAll('button') ?? []) {
+      b.setAttribute('aria-pressed', String(/** @type {HTMLElement} */ (b).dataset.gear === gear));
+    }
   }
 
   /** @private */
@@ -320,34 +329,38 @@ export class BellsMission extends Mission {
     c.font = '700 15px "Baloo 2", system-ui, sans-serif';
     c.fillText('km/h', cx, cy - 12);
 
-    // next bell: its band and how far it is
-    const next = this.nextBell;
+    // the next bells: the first one large, with how far it is; two more after it
     const nx = cx + 150;
     c.textAlign = 'left';
     c.font = '700 18px "Baloo 2", system-ui, sans-serif';
     c.fillStyle = 'rgba(255,255,255,0.85)';
-    c.fillText('Următorul clopoțel:', nx, cy - 84);
-    if (next) {
+    c.fillText('Urmează:', nx, cy - 84);
+    const upcoming = this.bells.filter(b => b.state === 'waiting').slice(0, 3);
+    if (upcoming.length) {
+      const next = upcoming[0];
       const band = BANDS[next.band];
-      fillRoundRect(c, nx, cy - 72, 200, 46, 12, band.color);
+      fillRoundRect(c, nx, cy - 72, 130, 46, 12, band.color);
       c.fillStyle = '#ffffff';
-      c.font = '800 26px "Baloo 2", system-ui, sans-serif';
-      c.fillText(band.label, nx + 14, cy - 40);
+      c.font = '800 24px "Baloo 2", system-ui, sans-serif';
+      c.fillText(band.label, nx + 12, cy - 40);
+      upcoming.slice(1).forEach((b, i) => {
+        const bb = BANDS[b.band];
+        fillRoundRect(c, nx + 140 + i * 34, cy - 64, 28, 30, 8, bb.color);
+      });
       const dist = next.worldX - (j.distance + PANTOGRAPH_X);
-      const k = clamp(1 - dist / 2600, 0, 1);
+      const k = clamp(1 - dist / 3200, 0, 1);
       fillRoundRect(c, nx, cy - 14, 200, 12, 6, 'rgba(255,255,255,0.25)');
       fillRoundRect(c, nx, cy - 14, Math.max(12, 200 * k), 12, 6, '#ffd23f');
-      const ok = j.speed >= band.min - 10 && j.speed <= band.max + 10;
+      const ok = this.gear === next.band;
       c.font = '700 17px "Baloo 2", system-ui, sans-serif';
-      c.fillStyle = ok ? '#b9f6ca' : '#ffccbc';
-      c.fillText(ok ? '✔ viteza e bună' : (j.speed < band.min ? '↑ mai repede!' : '↓ mai încet!'), nx, cy + 14);
+      c.fillStyle = ok ? '#b9f6ca' : '#ffe082';
+      c.fillText(ok ? '✔ viteza aleasă e bună' : `Alege viteza ${band.label}!`, nx, cy + 14);
     }
   }
 
   dispose() {
     this.releaseControls();
-    this.button?.remove();
+    this.gearbox?.remove();
     window.removeEventListener('keydown', this.onKey);
-    window.removeEventListener('keyup', this.onKey);
   }
 }

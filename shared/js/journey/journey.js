@@ -21,8 +21,8 @@
  *
  * Driving. Normally the train follows the planned motion of the segment. A
  * mission may take the controls ({@link Journey#takeControl}): the child
- * then accelerates by holding a button and the train slows down when it is
- * released. When the mission gives the controls back, the rest of the trip
+ * then chooses a speed and the train smoothly reaches it and keeps it. When
+ * the mission gives the controls back, the rest of the trip
  * is planned again from the current position and speed, so the train still
  * stops exactly at the next station.
  */
@@ -33,11 +33,11 @@ import { MotionPlan } from './motion.js';
 import { ACCELERATION, CRUISE_SPEED } from './route.js';
 
 /** Speeds and accelerations while the child drives. */
-export const MANUAL = Object.freeze({ maxSpeed: 620, minSpeed: 90, throttle: 170, coast: 120 });
+export const MANUAL = Object.freeze({ maxSpeed: 620, minSpeed: 90, accelerate: 230, brake: 260 });
 
 /**
  * @typedef {object} Controls
- * @property {boolean} throttle   true while the child holds the button
+ * @property {number} target   the speed chosen by the child
  */
 
 /** Play seconds a normal stop is expected to last (for the clock). */
@@ -72,7 +72,7 @@ export class Journey extends Emitter {
    */
   takeControl() {
     if (this.state !== 'running') return null;
-    this.controls = { throttle: false };
+    this.controls = { target: this.speed };
     return this.controls;
   }
 
@@ -168,7 +168,10 @@ export class Journey extends Emitter {
     let arrived = false;
     if (this.controls) {
       const c = MANUAL;
-      this.speed = clamp(this.speed + (this.controls.throttle ? c.throttle : -c.coast) * dt, c.minSpeed, c.maxSpeed);
+      const target = clamp(this.controls.target, c.minSpeed, c.maxSpeed);
+      const rate = target > this.speed ? c.accelerate : c.brake;
+      const delta = clamp(target - this.speed, -rate * dt, rate * dt);
+      this.speed += delta;
       this.distance += this.speed * dt;
       // safety: never let a mission drive the train into the station
       const brake = (this.speed * this.speed) / (2 * ACCELERATION);
