@@ -66,10 +66,11 @@ export class SnowflakeMission extends Mission {
     return { top, bottom: TRACK_Y - 300 - this.ctx.world.cameraY, left: stage.viewLeft, right: stage.viewRight };
   }
 
-  /** The frame with the model snowflake (top left of the sky, out of the way). */
+  /** The frame with the model snowflake (on the left under the counter, out of the train's way). */
   get frame() {
     const s = this.sky;
-    return { x: s.left + 120, y: s.top + 74, r: 58 };
+    const top = this.ctx.stage.toStage(0, this.ctx.hud.hudBottom + 80).y;
+    return { x: s.left + 120, y: Math.max(s.top + 74, top + 70), r: 58 };
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */

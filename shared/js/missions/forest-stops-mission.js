@@ -2,7 +2,7 @@
  * @file Travel mission "friends of the forest": the train stops at little
  * forest halts and the animals waiting there climb aboard.
  *
- * Long before a halt comes into view, a bubble at the right edge shows which
+ * Long before a halt comes into view, a note on the left shows which
  * animal is waiting ahead, and the big button starts to pulse. When the
  * child presses "Oprește trenul", the train brakes by itself and stops right
  * at the halt, so there is no timing to get right: pressing any time before
@@ -28,7 +28,7 @@ import { Mission } from './mission.js';
 const DRIVE_SPEED = 400;
 /** Braking rate the automatic stop plans with (a little under the train's). */
 const BRAKE = 240;
-/** The bubble announcing a halt appears this far ahead of the train. */
+/** The note announcing a halt appears this far ahead of the train. */
 const ANNOUNCE_AHEAD = 4200;
 /** Where the front of the train stops, relative to the halt's sign. */
 const STOP_OFFSET = -170;
@@ -241,30 +241,24 @@ export class ForestStopsMission extends Mission {
         this.drawAnimal(c, h.emoji, seat.x, seat.y + Math.sin(this.time * 3 + h.seat) * 2, 44);
       }
     }
-    // the bubble at the right edge: who is waiting at the next halt
+    // a note on the left (never in front of the train): who waits at the next halt
     const next = this.nextHalt;
     if (next) {
       const sx = this.toScreen(next.worldX);
       const gap = next.worldX - this.ctx.journey.distance;
       if (sx > stage.viewRight - 40 && gap < ANNOUNCE_AHEAD) {
-        const bx = stage.viewRight - 120;
-        const by = TRACK_Y - 330 - cam;
-        const bob = Math.sin(this.time * 4) * 4;
+        const bx = stage.viewLeft + 126;
+        const by = stage.toStage(0, this.ctx.hud.hudBottom + 80).y + 64;
+        const bob = Math.sin(this.time * 4) * 3;
         glow(c, bx, by + bob, 90, 'rgba(255,230,140,0.45)', 'rgba(255,230,140,0)');
-        fillRoundRect(c, bx - 96, by - 50 + bob, 192, 100, 22, '#fffaf0');
-        c.fillStyle = '#fffaf0';
-        c.beginPath();
-        c.moveTo(bx + 96, by - 16 + bob);
-        c.lineTo(bx + 120, by + bob);
-        c.lineTo(bx + 96, by + 16 + bob);
-        c.fill();
-        this.drawAnimal(c, next.emoji, bx - 46, by + bob, 50);
+        fillRoundRect(c, bx - 100, by - 46 + bob, 200, 92, 22, '#fffaf0');
+        this.drawAnimal(c, next.emoji, bx - 52, by + bob, 50);
         c.fillStyle = '#1b2440';
         c.font = '800 18px "Baloo 2", system-ui, sans-serif';
         c.textAlign = 'center';
         c.textBaseline = 'middle';
-        c.fillText('te așteaptă', bx + 30, by - 12 + bob);
-        c.fillText(`${Math.max(1, Math.round(gap / 100)) * 10} m ▶`, bx + 30, by + 14 + bob);
+        c.fillText('te așteaptă', bx + 32, by - 12 + bob);
+        c.fillText(`peste ${Math.max(1, Math.round(gap / 100)) * 10} m`, bx + 32, by + 14 + bob);
       }
     }
     this.particles.draw(c);

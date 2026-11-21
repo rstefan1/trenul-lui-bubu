@@ -404,9 +404,11 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 }
 
 /* ---------- Progress counter ---------- */
+/* On the left, next to the "?" button: the right side of the screen is where
+   the train is heading, and nothing may hide what comes towards it. */
 .mission-counter {
   position: fixed;
-  right: max(var(--gap), env(safe-area-inset-right));
+  left: calc(max(var(--gap), env(safe-area-inset-left)) + 72px);
   top: calc(max(var(--gap), env(safe-area-inset-top)) + 96px);
   z-index: 16;
   padding: 6px 18px;
@@ -818,7 +820,7 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 /* ---------- Gearbox (driving missions) ---------- */
 .gearbox {
   position: fixed;
-  right: max(14px, env(safe-area-inset-right));
+  left: max(14px, env(safe-area-inset-left));
   bottom: max(14px, env(safe-area-inset-bottom));
   z-index: 18;
   display: flex;
@@ -859,7 +861,7 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 /* ---------- Brake button (animals crossing) ---------- */
 .brake-btn {
   position: fixed;
-  right: max(18px, env(safe-area-inset-right));
+  left: max(18px, env(safe-area-inset-left));
   bottom: max(18px, env(safe-area-inset-bottom));
   z-index: 18;
   min-width: clamp(190px, 26vmin, 260px);
