@@ -1,11 +1,12 @@
 /**
- * @file The open stalls of the Christmas fair (Vatra Dornei), full of life:
- * each stall has its striped awning, string of lights, a sign, its goods on
- * the counter and a seller behind it — some are animals (a hare with
- * gingerbread, a fox with hot tea, a bear with honey), some are people
- * (a toy maker, a woman roasting chestnuts, a grandmother with woollen
- * socks). Steam rises from the tea and the chestnuts, the sellers bob and
- * wave, and a few visitors stroll by in front of the stalls.
+ * @file The open stalls of the enchanted Christmas fair (Vatra Dornei): in
+ * the middle of the night all the people are asleep, and the animals of the
+ * forest run the fair. Each stall has its striped awning, string of lights,
+ * a sign, its goods on the counter and an animal seller behind it (a hare
+ * with gingerbread, a beaver with wooden toys, a fox with hot tea, a
+ * squirrel roasting chestnuts, a bear with honey, a sheep with woollen
+ * socks). Steam rises from the tea and the chestnuts, the sellers bob, and a
+ * few animal visitors stroll by in front of the stalls.
  */
 
 import { TAU, clamp } from '../../core/math.js';
@@ -14,24 +15,24 @@ import { fillCircle, fillRoundRect, glow } from '../shapes.js';
 const EMOJI_FONT = '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
 
 /**
- * @typedef {{emoji?: string, coat?: string, hat?: string, scarf?: string}} Seller
+ * @typedef {{emoji: string}} Seller
  * @typedef {{name: string, seller: Seller, stripe: string, goods: string, steam?: boolean}} StallKind
  */
 
-/** The stalls, in the order they stand (animals and people taking turns). @type {StallKind[]} */
+/** The stalls, in the order they stand. @type {StallKind[]} */
 const STALLS = [
   { name: 'Turtă dulce', seller: { emoji: '🐰' }, stripe: '#c62828', goods: 'hearts' },
-  { name: 'Jucării de lemn', seller: { coat: '#1565c0', hat: '#3e2723' }, stripe: '#1565c0', goods: 'toys' },
+  { name: 'Jucării de lemn', seller: { emoji: '🦫' }, stripe: '#1565c0', goods: 'toys' },
   { name: 'Ceai fierbinte', seller: { emoji: '🦊' }, stripe: '#2e7d32', goods: 'cups', steam: true },
-  { name: 'Castane coapte', seller: { coat: '#8e2424', hat: '#2b2b2b' }, stripe: '#6d4c41', goods: 'chestnuts', steam: true },
+  { name: 'Castane coapte', seller: { emoji: '🐿️' }, stripe: '#6d4c41', goods: 'chestnuts', steam: true },
   { name: 'Miere', seller: { emoji: '🐻' }, stripe: '#f9a825', goods: 'honey' },
-  { name: 'Ciorapi de lână', seller: { coat: '#6a1b9a', scarf: '#c62828' }, stripe: '#6a1b9a', goods: 'socks' },
+  { name: 'Ciorapi de lână', seller: { emoji: '🐑' }, stripe: '#6a1b9a', goods: 'socks' },
 ];
 
 /** Visitors strolling in front of the stalls. */
 const VISITORS = [
   { emoji: '🦌', speed: 34, offset: 0, dir: 1 },
-  { person: { coat: '#2e7d32', hat: '#c62828' }, speed: 28, offset: 0.45, dir: -1 },
+  { emoji: '🐇', speed: 28, offset: 0.45, dir: -1 },
   { emoji: '🦔', speed: 22, offset: 0.7, dir: 1 },
 ];
 
@@ -65,8 +66,6 @@ export function drawFairStalls(c, v, time) {
       c.textBaseline = 'bottom';
       c.fillText(vis.emoji, 0, 0);
       c.restore();
-    } else if (vis.person) {
-      drawPerson(c, x, v.ground - step, h * 0.42, vis.person, time, false);
     }
   }
 }
@@ -162,7 +161,7 @@ function drawStall(c, x, g, w, h, kind, t) {
 }
 
 /**
- * The seller behind the counter: an animal (emoji) or a person.
+ * The animal selling behind the counter.
  * @param {CanvasRenderingContext2D} c
  * @param {number} x
  * @param {number} counterTop
@@ -172,80 +171,10 @@ function drawStall(c, x, g, w, h, kind, t) {
  */
 function drawSeller(c, x, counterTop, h, s, t) {
   const bob = Math.sin(t * 2.2) * 3;
-  if (s.emoji) {
-    c.font = `${Math.round(h * 0.36)}px ${EMOJI_FONT}`;
-    c.textAlign = 'center';
-    c.textBaseline = 'bottom';
-    c.fillText(s.emoji, x, counterTop + h * 0.08 + bob);
-    return;
-  }
-  drawPerson(c, x, counterTop + h * 0.3 + bob, h * 0.5, s, t, true);
-}
-
-/**
- * A person in a winter coat (seen from the waist up behind a counter, or whole).
- * @param {CanvasRenderingContext2D} c
- * @param {number} x
- * @param {number} feet  where the feet are
- * @param {number} s     height
- * @param {Seller} p
- * @param {number} t
- * @param {boolean} waving  one arm waves
- */
-function drawPerson(c, x, feet, s, p, t, waving) {
-  const coat = p.coat ?? '#5d4037';
-  // body
-  c.fillStyle = coat;
-  c.beginPath();
-  c.moveTo(x - s * 0.22, feet);
-  c.lineTo(x - s * 0.16, feet - s * 0.62);
-  c.lineTo(x + s * 0.16, feet - s * 0.62);
-  c.lineTo(x + s * 0.22, feet);
-  c.closePath();
-  c.fill();
-  // waving arm
-  if (waving) {
-    const a = -1.2 + Math.sin(t * 4) * 0.35;
-    c.strokeStyle = coat;
-    c.lineWidth = s * 0.08;
-    c.lineCap = 'round';
-    c.beginPath();
-    c.moveTo(x + s * 0.14, feet - s * 0.55);
-    c.lineTo(x + s * 0.14 + Math.cos(a) * s * 0.3, feet - s * 0.55 + Math.sin(a) * s * 0.3);
-    c.stroke();
-    c.fillStyle = '#f6d1b3';
-    fillCircle(c, x + s * 0.14 + Math.cos(a) * s * 0.32, feet - s * 0.55 + Math.sin(a) * s * 0.32, s * 0.05);
-  }
-  if (p.scarf) {
-    c.fillStyle = p.scarf;
-    c.fillRect(x - s * 0.17, feet - s * 0.66, s * 0.34, s * 0.08);
-  }
-  // head and face
-  c.fillStyle = '#f6d1b3';
-  fillCircle(c, x, feet - s * 0.78, s * 0.16);
-  c.fillStyle = '#3b4250';
-  fillCircle(c, x - s * 0.055, feet - s * 0.79, s * 0.02);
-  fillCircle(c, x + s * 0.055, feet - s * 0.79, s * 0.02);
-  c.strokeStyle = '#b23b3b';
-  c.lineWidth = s * 0.02;
-  c.beginPath();
-  c.arc(x, feet - s * 0.74, s * 0.05, 0.2, Math.PI - 0.2);
-  c.stroke();
-  // a cap or a headscarf
-  if (p.hat) {
-    c.fillStyle = p.hat;
-    c.beginPath();
-    c.ellipse(x, feet - s * 0.9, s * 0.18, s * 0.09, 0, Math.PI, 0);
-    c.fill();
-    c.fillRect(x - s * 0.19, feet - s * 0.91, s * 0.38, s * 0.035);
-  } else {
-    c.fillStyle = p.scarf ?? '#c62828';
-    c.beginPath();
-    c.moveTo(x - s * 0.2, feet - s * 0.7);
-    c.quadraticCurveTo(x, feet - s * 1.08, x + s * 0.2, feet - s * 0.7);
-    c.quadraticCurveTo(x, feet - s * 0.9, x - s * 0.2, feet - s * 0.7);
-    c.fill();
-  }
+  c.font = `${Math.round(h * 0.36)}px ${EMOJI_FONT}`;
+  c.textAlign = 'center';
+  c.textBaseline = 'bottom';
+  c.fillText(s.emoji, x, counterTop + h * 0.08 + bob);
 }
 
 /**

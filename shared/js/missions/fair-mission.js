@@ -6,7 +6,7 @@
  *   1. up the hill — Bubu rides the reindeer sleigh up to the fair; the
  *      sleigh follows the mouse or the finger up and down, and catches the
  *      coins floating in the night;
- *   2. the fair — among open stalls with animal and human sellers, four
+ *   2. the enchanted fair — among stalls run by forest animals, four
  *      trees are for sale, each with its height and price.
  *      Bubu must choose one that fits on the train's flat wagon (at most
  *      1,80 m) and that she can pay for with the coins she caught. A wrong

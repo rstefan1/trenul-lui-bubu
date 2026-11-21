@@ -342,9 +342,9 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'fair-vatra-dornei',
         title: 'Târgul fermecat',
-        text: 'Trenul stă mai mult la Vatra Dornei. Bubu urcă pe deal cu sania cu reni, la târgul fermecat de Crăciun.',
+        text: 'Trenul stă mai mult la Vatra Dornei. Acum, în miezul nopții, oamenii dorm, dar pe deal s-a deschis târgul fermecat de Crăciun, unde vând și cumpără doar animalele pădurii! Bubu urcă până acolo cu sania cu reni.',
         climbText: 'Mișcă sania în sus și în jos (cu mouse-ul sau cu degetul) și prinde bănuții 🪙 de pe drum. Cu bănuții vei cumpăra bradul!',
-        fairText: 'Alege un brad pentru bunici. Atenție: pe vagonul trenului încape un brad de cel mult 1,80 m, iar Bubu trebuie să aibă destui bănuți!',
+        fairText: 'Ai ajuns la târgul fermecat al animalelor! Alege un brad pentru bunici. Atenție: pe vagonul trenului încape un brad de cel mult 1,80 m, iar Bubu trebuie să aibă destui bănuți!',
         trees: [{ height: 1.2, price: 5 }, { height: 1.6, price: 8 }, { height: 2.1, price: 6 }, { height: 2.6, price: 9 }],
         maxHeight: 1.8,
         flag: 'tree-bought',
