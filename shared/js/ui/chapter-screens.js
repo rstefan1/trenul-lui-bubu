@@ -154,8 +154,15 @@ export class ChapterScreens {
     return showOverlay(byId('intro'), byId('btnStart'));
   }
 
-  /** The end of the whole journey. */
-  finale() {
+  /**
+   * The end of the whole journey, with all the stars gathered.
+   * @param {number} [stars]
+   * @param {number} [max]
+   */
+  finale(stars, max) {
+    const line = byId('finaleStars');
+    line.hidden = stars === undefined;
+    line.textContent = stars === undefined ? '' : `Ai adunat ${stars} stele din ${max} în toată călătoria!`;
     return showOverlay(byId('finale'), byId('btnAgain'));
   }
 }

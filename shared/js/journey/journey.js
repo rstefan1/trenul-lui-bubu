@@ -67,6 +67,8 @@ export class Journey extends Emitter {
     this.leg = null;
     /** @type {Controls | null} set while a mission drives the train */
     this.controls = null;
+    /** @type {string | null} train already boarded at this station (a change of trains) */
+    this.boarded = null;
   }
 
   /**
@@ -149,6 +151,7 @@ export class Journey extends Emitter {
 
   /** Id of the train in use. */
   get trainId() {
+    if (this.boarded && this.state === 'stopped') return this.boarded;
     return this.state === 'running' || this.stationIndex === 0 ? this.segment.train : this.lastSegment.train;
   }
 
@@ -159,7 +162,9 @@ export class Journey extends Emitter {
    */
   placeAt(index) {
     this.stationIndex = index;
-    this.state = 'stopped';
+    this.boarded = null;
+    // at the last station there is no departure to wait for
+    this.state = index === this.route.stations.length - 1 ? 'finished' : 'stopped';
     this.elapsed = 0;
     this.speed = 0;
     this.controls = null;
@@ -174,6 +179,7 @@ export class Journey extends Emitter {
     if (this.state !== 'stopped' || this.stationIndex >= this.route.segments.length) return;
     const st = this.station;
     this.state = 'running';
+    this.boarded = null;
     this.elapsed = 0;
     this.leg = { plan: this.segment.profile, start: this.segment.start, elapsed: 0 };
     this.emit('depart', st, this.segment);

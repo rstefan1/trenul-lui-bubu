@@ -17,7 +17,8 @@
  * director.
  *
  * When the train is ready to leave a station (its mission finished, or the
- * short stop over), the director emits "ready" (station). If the `holdAt`
+ * short stop over), the director emits "ready" (station); at the last
+ * station it emits "complete" (station) instead: the journey is over. If the `holdAt`
  * policy says so (e.g. at the end of a chapter), the train then waits until
  * {@link MissionDirector#release} is called.
  */
@@ -96,8 +97,6 @@ export class MissionDirector extends Emitter {
    *        skipMission: the mission was already played (resuming a saved journey)
    */
   atStation(station, options = {}) {
-    const j = this.ctx.journey;
-    if (j.state === 'finished') return;
     const entry = this.plan.stations[station.id];
     if (!entry || options.skipMission) {
       this.readyIn = options.wait ?? PLAIN_STOP;
@@ -138,6 +137,10 @@ export class MissionDirector extends Emitter {
       if (this.readyIn <= 0) {
         this.readyIn = Infinity;
         const station = j.station;
+        if (j.state === 'finished') {
+          this.emit('complete', station);
+          return;
+        }
         this.emit('ready', station);
         if (this.holdAt(station)) this.held = true;
         else j.depart();

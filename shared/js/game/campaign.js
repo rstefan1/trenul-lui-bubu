@@ -53,7 +53,7 @@ export class Campaign {
 
     this.director.holdAt = station => this.mode !== 'menu' && !!this.book.endingAt(station.index);
     this.director.on('ready', (/** @type {import('../journey/route.js').Station} */ s) => this.onReady(s));
-    this.journey.on('finish', () => this.onFinish());
+    this.director.on('complete', () => this.onFinish());
   }
 
   /** Shows the introduction the first time, then the menu. */
@@ -232,8 +232,15 @@ export class Campaign {
     } else if (this.mode === 'replay') {
       this.keepBestStars();
     }
-    await new Promise(r => setTimeout(r, 2500));
-    await this.screens.finale();
+    await new Promise(r => setTimeout(r, 800));
+    let stars = 0;
+    let max = 0;
+    for (const chapter of this.book.chapters) {
+      const s = this.book.stars(chapter, this.state);
+      stars += s.stars;
+      max += s.max;
+    }
+    await this.screens.finale(stars, max);
     await this.menu();
   }
 
