@@ -126,12 +126,12 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .route-dot.is-current { transform: scale(1.35); }
 .route-marker {
   position: absolute;
-  left: -16px;
+  left: -19px;
   top: -24px;
-  font-size: 26px;
-  line-height: 1;
+  line-height: 0;
   will-change: transform;
   z-index: 1;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .35));
 }
 .route-next {
   margin: 2px 0 0;
