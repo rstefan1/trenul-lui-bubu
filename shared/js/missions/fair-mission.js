@@ -5,7 +5,7 @@
  *
  *   1. up the hill — Bubu rides the reindeer sleigh up to the fair; the
  *      sleigh follows the mouse or the finger up and down, and catches the
- *      coins and lanterns floating in the night;
+ *      coins floating in the night;
  *   2. the fair — four trees are for sale, each with its height and price.
  *      Bubu must choose one that fits on the train's flat wagon (at most
  *      1,80 m) and that she can pay for with the coins she caught. A wrong
@@ -30,12 +30,12 @@ import { SceneMission } from './scene-mission.js';
 /** Seconds of the ride up the hill and down again. */
 const CLIMB_TIME = 24;
 const DOWN_TIME = 6;
-/** Speed at which the coins and lanterns glide towards the sleigh (stage units/s). */
+/** Speed at which the coins glide towards the sleigh (stage units/s). */
 const ITEM_SPEED = 300;
 
 /**
  * @typedef {{height: number, price: number}} TreeOffer
- * @typedef {{x: number, y: number, kind: 'coin' | 'lantern', taken: boolean, phase: number}} Item
+ * @typedef {{x: number, y: number, taken: boolean, phase: number}} Item
  * @typedef {import('./mission.js').MissionConfig & {
  *   climbText: string, fairText: string, doneText: string, fact: string,
  *   trees: TreeOffer[], maxHeight: number, flag: string
@@ -55,7 +55,6 @@ export class FairMission extends SceneMission {
     this.actTime = 0;
     this.time = 0;
     this.coins = 0;
-    this.lanterns = 0;
     this.mistakes = 0;
     /** @type {Item[]} */
     this.items = [];
@@ -131,7 +130,7 @@ export class FairMission extends SceneMission {
   setAct(act) {
     this.act = act;
     this.actTime = 0;
-    // the coins and lanterns not caught stay behind on the hill
+    // the coins not caught stay behind on the hill
     this.items = [];
     if (act === 'fair') {
       // never leave Bubu without enough coins for a tree that fits
@@ -164,7 +163,6 @@ export class FairMission extends SceneMission {
         this.items.push({
           x: L.right + 40,
           y: lerp(L.top + 40, L.bottom - 60, Math.random()),
-          kind: Math.random() < 0.75 ? 'coin' : 'lantern',
           taken: false,
           phase: Math.random() * 6,
         });
@@ -174,10 +172,9 @@ export class FairMission extends SceneMission {
         it.x -= ITEM_SPEED * dt;
         if (!it.taken && Math.abs(it.x - (sx + 40)) < 70 && Math.abs(it.y - (this.sleighY - 30)) < 70) {
           it.taken = true;
-          if (it.kind === 'coin') this.coins += 1;
-          else this.lanterns += 1;
+          this.coins += 1;
           this.ctx.hud.setCounter('🪙', this.coins, 0);
-          this.particles.burst(it.x, it.y, it.kind === 'coin' ? ['#ffd54f', '#fff3c4'] : ['#ff8a65', '#ffe082'], 10, 160);
+          this.particles.burst(it.x, it.y, ['#ffd54f', '#fff3c4'], 10, 160);
         }
       }
       this.items = this.items.filter(it => !it.taken && it.x > L.left - 60);
@@ -274,29 +271,18 @@ export class FairMission extends SceneMission {
     // mountains, a valley with a village and many firs, scrolling by
     const stage = this.ctx.stage;
     drawWinterValley(c, { left: L.left, right: L.right, top: stage.viewTop, bottom: L.bottom + 60 }, this.scroll);
-    // the fair's lights far away, up the hill
-    for (let i = 0; i < 12; i++) {
-      c.fillStyle = ['#ffd54f', '#ff8a80', '#80d8ff'][i % 3];
-      fillCircle(c, L.right - 320 + i * 22, L.top + 40 + Math.sin(i) * 6, 4);
-    }
     for (const it of this.items) {
       const bob = Math.sin(this.time * 3 + it.phase) * 8;
-      if (it.kind === 'coin') {
-        glow(c, it.x, it.y + bob, 34, 'rgba(255,215,90,0.45)', 'rgba(255,215,90,0)');
-        c.fillStyle = '#f2b632';
-        fillCircle(c, it.x, it.y + bob, 18);
-        c.fillStyle = '#ffd54f';
-        fillCircle(c, it.x, it.y + bob, 13);
-        c.fillStyle = '#c79400';
-        c.font = '800 16px "Baloo 2", system-ui, sans-serif';
-        c.textAlign = 'center';
-        c.textBaseline = 'middle';
-        c.fillText('B', it.x, it.y + bob + 1);
-      } else {
-        glow(c, it.x, it.y + bob, 50, 'rgba(255,170,90,0.55)', 'rgba(255,170,90,0)');
-        fillRoundRect(c, it.x - 14, it.y + bob - 22, 28, 40, 8, '#ff7043');
-        fillRoundRect(c, it.x - 9, it.y + bob - 14, 18, 24, 5, '#ffe082');
-      }
+      glow(c, it.x, it.y + bob, 34, 'rgba(255,215,90,0.45)', 'rgba(255,215,90,0)');
+      c.fillStyle = '#f2b632';
+      fillCircle(c, it.x, it.y + bob, 18);
+      c.fillStyle = '#ffd54f';
+      fillCircle(c, it.x, it.y + bob, 13);
+      c.fillStyle = '#c79400';
+      c.font = '800 16px "Baloo 2", system-ui, sans-serif';
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText('B', it.x, it.y + bob + 1);
     }
     const sx = L.left + L.w * 0.22;
     const y = this.act === 'down' ? (L.top + L.bottom) / 2 + Math.sin(this.time * 2) * 20 : this.sleighY;
