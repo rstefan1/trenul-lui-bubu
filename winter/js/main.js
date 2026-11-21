@@ -88,6 +88,7 @@ const director = new MissionDirector(
 state.on('change', (/** @type {string} */ what) => {
   if (what === 'locoColor') world.train.setLocoColor(state.locoColor);
   if (what === 'baubles') world.train.baubles = state.baubles;
+  if (what === 'lightBulbs') world.train.lightBulbs = state.lightBulbs;
   if (what === 'flags') world.flags = state.flags;
 });
 journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Station} */ station) => {

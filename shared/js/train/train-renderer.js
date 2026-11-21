@@ -13,7 +13,9 @@
  *
  * Decorations. Baubles caught during the journey hang from fir garlands
  * along the roof edges, from the locomotive backwards. A car gets its
- * garland when its first bauble arrives.
+ * garland when its first bauble arrives. A string of coloured lights runs
+ * along the cars under the windows; it lights up bit by bit (front to back)
+ * and twinkles, brightest at night.
  */
 
 import { createOffscreen } from '../core/canvas-cache.js';
@@ -66,6 +68,8 @@ export class TrainRenderer {
     this.locoColor = null;
     /** @type {string[]} colours of the baubles hanging on the train */
     this.baubles = [];
+    /** How much of the string of lights is lit (0..1). */
+    this.lightBulbs = 0;
     /** How far Bubu has appeared at her window (0 = not on the train yet). */
     this.bubuShown = 1;
     this.bubuTarget = 1;
@@ -191,10 +195,17 @@ export class TrainRenderer {
     this.layoutDecorations();
   }
 
-  /** @private Computes the garland hooks and the bauble slots of every car. */
+  /** @private Computes the garland hooks, the bauble slots and the light bulbs of every car. */
   layoutDecorations() {
     /** @type {Array<{x: number, y: number, car: number}>} */
     this.slots = [];
+    /** @type {Array<{x: number, y: number}>} bulbs of the string of lights, front to back */
+    this.bulbs = [];
+    for (const car of this.cars) {
+      const L = car.spec.length;
+      const y = car.spec.kind === 'electricLoco' ? -92 : -86;
+      for (let x = L - 14; x > 10; x -= 28) this.bulbs.push({ x: car.left + x, y: y + (Math.round(x / 28) % 2) * 5 });
+    }
     this.cars.forEach((car, index) => {
       const L = car.spec.length;
       const n = Math.max(2, Math.round((L - 30) / HOOK_SPACING) + 1);
@@ -233,6 +244,7 @@ export class TrainRenderer {
    * @param {TrainFrame} f
    */
   drawDecorations(c, f) {
+    this.drawBulbs(c, f, false);
     const count = Math.min(this.baubles.length, this.baubleSlots.length);
     if (count === 0) return;
     const decorated = new Set();
@@ -255,6 +267,46 @@ export class TrainRenderer {
   }
 
   /**
+   * The string of lights: the wire and dark bulbs in the tinted pass, the
+   * glow of the lit bulbs in the lights pass.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {TrainFrame} f
+   * @param {boolean} glowing
+   */
+  drawBulbs(c, f, glowing) {
+    const bulbs = /** @type {Array<{x: number, y: number}>} */ (this.bulbs);
+    const lit = Math.round(bulbs.length * this.lightBulbs);
+    if (lit === 0) return;
+    const colors = ['#ff5252', '#ffd740', '#40c4ff', '#69f0ae'];
+    c.save();
+    c.translate(f.frontX, f.railY);
+    if (!glowing) {
+      c.strokeStyle = '#2d3a2f';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      bulbs.slice(0, lit).forEach((b, i) => (i ? c.lineTo(b.x, b.y) : c.moveTo(b.x, b.y)));
+      c.stroke();
+    }
+    for (let i = 0; i < lit; i++) {
+      const b = bulbs[i];
+      const color = colors[i % colors.length];
+      const on = 0.6 + 0.4 * Math.sin(f.time * 3 + i * 1.7);
+      if (glowing) {
+        c.globalAlpha = on;
+        glow(c, b.x, b.y, 14, 'rgba(255,240,180,0.55)', 'rgba(255,240,180,0)');
+        c.fillStyle = color;
+        fillCircle(c, b.x, b.y, 4);
+        c.globalAlpha = 1;
+      } else {
+        c.fillStyle = color;
+        fillCircle(c, b.x, b.y, 4);
+      }
+    }
+    c.restore();
+  }
+
+  /**
    * Draws the glowing parts, on top of the tint: windows, Bubu's lamp-lit
    * face, the headlight beam and the tail light.
    * @param {CanvasRenderingContext2D} c
@@ -262,6 +314,11 @@ export class TrainRenderer {
    */
   drawLights(c, f) {
     this.ensureBody();
+    if (this.lightBulbs > 0) {
+      c.globalAlpha = 0.35 + 0.65 * Math.max(f.lights, 0.2);
+      this.drawBulbs(c, f, true);
+      c.globalAlpha = 1;
+    }
     if (f.lights > 0.02) {
       c.globalAlpha = f.lights;
       for (const car of this.cars) {

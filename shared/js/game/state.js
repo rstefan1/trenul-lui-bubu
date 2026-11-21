@@ -16,6 +16,7 @@ import { Emitter } from '../core/emitter.js';
  * @property {string | null} locoColor
  * @property {Array<[string, number]>} stars
  * @property {string[]} baubles
+ * @property {number} [lightBulbs]
  * @property {string[]} [flags]
  */
 
@@ -30,6 +31,8 @@ export class GameState extends Emitter {
     /** Colours of the baubles hanging on the train, in the order they were caught. */
     /** @type {string[]} */
     this.baubles = [];
+    /** How much of the string of lights along the train is lit (0..1). */
+    this.lightBulbs = 0;
     /** Things that changed in the world thanks to the player (e.g. "deva-fortress-lit"). */
     /** @type {Set<string>} */
     this.flags = new Set();
@@ -71,6 +74,7 @@ export class GameState extends Emitter {
       locoColor: this.locoColor,
       stars: [...this.stars],
       baubles: [...this.baubles],
+      lightBulbs: this.lightBulbs,
       flags: [...this.flags],
     };
   }
@@ -86,15 +90,25 @@ export class GameState extends Emitter {
     this.stars = new Map(data?.stars ?? []);
     this.baubles.length = 0;
     this.baubles.push(...(data?.baubles ?? []));
+    this.lightBulbs = data?.lightBulbs ?? 0;
     this.flags.clear();
     for (const f of data?.flags ?? []) this.flags.add(f);
-    for (const what of ['travelerName', 'locoColor', 'stars', 'baubles', 'flags']) this.emit('change', what);
+    for (const what of ['travelerName', 'locoColor', 'stars', 'baubles', 'lightBulbs', 'flags']) this.emit('change', what);
   }
 
   /** @param {string} flag */
   setFlag(flag) {
     this.flags.add(flag);
     this.emit('change', 'flags');
+  }
+
+  /**
+   * Lights more of the string of lights along the train.
+   * @param {number} fraction  0..1, how much of it is lit now
+   */
+  setLightBulbs(fraction) {
+    this.lightBulbs = Math.max(this.lightBulbs, Math.min(1, fraction));
+    this.emit('change', 'lightBulbs');
   }
 
   /** @param {string} color */
