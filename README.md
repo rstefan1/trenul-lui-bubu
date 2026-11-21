@@ -17,3 +17,44 @@ winter/          the Christmas journey
 ```
 
 A future summer journey will live in `summer/` and reuse `shared/`.
+
+## Running locally
+
+The game uses JavaScript modules, so it must be served over HTTP (opening
+`index.html` directly from disk does not work):
+
+```sh
+python3 -m http.server 8000
+```
+
+Then open <http://localhost:8000/winter/>.
+
+To try it on a phone or tablet in the same Wi-Fi network, start the server
+with `--bind 0.0.0.0` and open `http://<computer IP>:8000/winter/` on the
+device.
+
+### Testing helpers
+
+URL parameters that make testing faster:
+
+| Parameter        | Effect                                                    |
+|------------------|-----------------------------------------------------------|
+| `?skip`          | skip Bubu's introduction                                  |
+| `?from=<id>`     | start at a station, e.g. `?from=ilva-mica`                |
+| `?speed=<n>`     | run the journey `n` times faster, e.g. `?speed=4`         |
+| `?at=<seconds>`  | skip the intro and fast-forward the journey               |
+
+They can be combined: `?from=ilva-mica&speed=3` shows the viaducts quickly.
+Station ids are listed in `winter/js/route-data.js`.
+
+## Code overview
+
+```
+shared/js/core/      stage (resolution-independent canvas), loop, cache, math
+shared/js/gfx/       colours, drawing primitives, time-of-day tinting
+shared/js/world/     sky, lighting, landscape (biomes), railway, features, snow
+shared/js/train/     train compositions, car painters, Bubu
+shared/js/journey/   route model, motion planning, journey state machine
+shared/js/ui/        HUD and overlays
+winter/js/           winter route data and entry point
+```
