@@ -31,6 +31,14 @@ import { BellsMission } from '../../shared/js/missions/bells-mission.js';
 import { CandlesMission } from '../../shared/js/missions/candles-mission.js';
 import { CatchMission } from '../../shared/js/missions/catch-mission.js';
 import { CircuitMission } from '../../shared/js/missions/circuit-mission.js';
+import { ConnectStarsMission } from '../../shared/js/missions/connect-stars-mission.js';
+import { CrossingMission } from '../../shared/js/missions/crossing-mission.js';
+import { EyesMission } from '../../shared/js/missions/eyes-mission.js';
+import { FairMission } from '../../shared/js/missions/fair-mission.js';
+import { MemoryMission } from '../../shared/js/missions/memory-mission.js';
+import { PhotoMission } from '../../shared/js/missions/photo-mission.js';
+import { RhythmMission } from '../../shared/js/missions/rhythm-mission.js';
+import { SnowboundMission } from '../../shared/js/missions/snowbound-mission.js';
 import { DeliveryMission } from '../../shared/js/missions/delivery-mission.js';
 import { DepartureMission } from '../../shared/js/missions/departure-mission.js';
 import { LanternMission } from '../../shared/js/missions/lantern-mission.js';
@@ -62,6 +70,14 @@ const MISSION_TYPES = {
   'rotate-puzzle': RotatePuzzleMission,
   sequence: SequenceMission,
   switches: SwitchesMission,
+  'connect-stars': ConnectStarsMission,
+  crossing: CrossingMission,
+  eyes: EyesMission,
+  fair: FairMission,
+  memory: MemoryMission,
+  photo: PhotoMission,
+  rhythm: RhythmMission,
+  snowbound: SnowboundMission,
 };
 
 const params = new URLSearchParams(location.search);
@@ -95,7 +111,10 @@ state.on('change', (/** @type {string} */ what) => {
   if (what === 'locoColor') world.train.setLocoColor(state.locoColor);
   if (what === 'baubles') world.train.baubles = state.baubles;
   if (what === 'lightBulbs') world.train.lightBulbs = state.lightBulbs;
-  if (what === 'flags') world.flags = state.flags;
+  if (what === 'flags') {
+    world.flags = state.flags;
+    world.train.setTreeWagon(state.flags.has('tree-bought'));
+  }
 });
 journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Station} */ station) => {
   hud.showStation(station.name);
