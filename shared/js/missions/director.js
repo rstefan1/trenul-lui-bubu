@@ -15,7 +15,14 @@
  * Mission classes are looked up in a registry by type, so a journey's plan
  * is pure data and new kinds of missions can be added without touching the
  * director.
+ *
+ * When the train is ready to leave a station (its mission finished, or the
+ * short stop over), the director emits "ready" (station). If the `holdAt`
+ * policy says so (e.g. at the end of a chapter), the train then waits until
+ * {@link MissionDirector#release} is called.
  */
+
+import { Emitter } from '../core/emitter.js';
 
 /**
  * @typedef {object} TravelMissionPlan
@@ -51,13 +58,14 @@ const BEFORE_STATION_MISSION = 2;
 /** Seconds between the result of a station mission and the departure. */
 const AFTER_RESULT = 2.4;
 
-export class MissionDirector {
+export class MissionDirector extends Emitter {
   /**
    * @param {import('./mission.js').MissionContext} ctx
    * @param {MissionPlan} plan
    * @param {Record<string, MissionClass>} registry
    */
   constructor(ctx, plan, registry) {
+    super();
     this.ctx = ctx;
     this.plan = plan;
     this.registry = registry;
@@ -67,27 +75,32 @@ export class MissionDirector {
     this.started = new Set();
     /** Moments already announced (by index in the plan). */
     this.announced = new Set();
-    /** Pending departure, in seconds of game time. */
-    this.departIn = Infinity;
-    /** True while a station mission holds the train. */
+    /** Seconds until the train is ready to leave the station it waits at. */
+    this.readyIn = Infinity;
+    /** The station mission holding the train, if any. */
     this.holding = false;
+    /** True while the train waits for {@link release}. */
+    this.held = false;
     /** @type {{entry: StationMissionPlan, wait: number} | null} station mission about to start */
     this.pending = null;
+    /** @type {(station: import('../journey/route.js').Station) => boolean} */
+    this.holdAt = () => false;
 
     ctx.journey.on('arrive', station => this.atStation(station));
   }
 
   /**
-   * The train is stopped at a station and ready: run its mission, or wait a
-   * little and leave.
+   * The train is stopped at a station: run its mission, or wait a little.
    * @param {import('../journey/route.js').Station} station
+   * @param {{skipMission?: boolean, wait?: number}} [options]
+   *        skipMission: the mission was already played (resuming a saved journey)
    */
-  atStation(station) {
+  atStation(station, options = {}) {
     const j = this.ctx.journey;
     if (j.state === 'finished') return;
     const entry = this.plan.stations[station.id];
-    if (!entry) {
-      this.departIn = PLAIN_STOP;
+    if (!entry || options.skipMission) {
+      this.readyIn = options.wait ?? PLAIN_STOP;
       return;
     }
     this.holding = true;
@@ -95,14 +108,38 @@ export class MissionDirector {
     this.pending = { entry, wait: station.index === 0 ? 0 : BEFORE_STATION_MISSION };
   }
 
+  /** Lets a held train leave. */
+  release() {
+    if (!this.held) return;
+    this.held = false;
+    this.ctx.journey.depart();
+  }
+
+  /** Stops every mission and timer (when a chapter is started again, for example). */
+  reset() {
+    for (const m of this.active) m.dispose();
+    this.active = [];
+    this.started.clear();
+    this.announced.clear();
+    this.readyIn = Infinity;
+    this.holding = false;
+    this.held = false;
+    this.pending = null;
+    this.ctx.hud.hideCounter();
+    this.ctx.hud.hideAnnouncement();
+  }
+
   /** @param {number} dt  game seconds */
   update(dt) {
     const j = this.ctx.journey;
-    if (this.departIn !== Infinity) {
-      this.departIn -= dt;
-      if (this.departIn <= 0) {
-        this.departIn = Infinity;
-        j.depart();
+    if (this.readyIn !== Infinity) {
+      this.readyIn -= dt;
+      if (this.readyIn <= 0) {
+        this.readyIn = Infinity;
+        const station = j.station;
+        this.emit('ready', station);
+        if (this.holdAt(station)) this.held = true;
+        else j.depart();
       }
     }
 
@@ -186,7 +223,7 @@ export class MissionDirector {
     this.ctx.hud.showResult(m.stars, m.resultText);
     if (!m.window && this.holding) {
       this.holding = false;
-      this.departIn = AFTER_RESULT;
+      this.readyIn = AFTER_RESULT;
     }
   }
 }
