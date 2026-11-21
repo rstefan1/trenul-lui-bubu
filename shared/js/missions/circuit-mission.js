@@ -1,15 +1,18 @@
 /**
  * @file Station mission "light the Christmas tree" (Cluj-Napoca).
  *
- * In Piața Unirii the big Christmas tree is dark: the cables are mixed up.
- * On an electric board, every tile carries a piece of cable (straight,
- * corner or T); touching a tile turns it by a quarter. Power flows from the
- * generator on the left through every connected tile — they glow at once,
- * so the child sees how far the current gets — and when it reaches the exit
- * on the right, the tree, the square and the church light up.
+ * In Piața Unirii the big Christmas tree is dark: the cable pieces were
+ * turned the wrong way. The way the cable must go is shown on a small board
+ * as a dotted line, from the generator on the left to a big plug next to
+ * the tree (with a blinking arrow: "the current must get here"). Touching a
+ * piece turns it by a quarter. The current flows — visibly, as moving
+ * sparks — through every piece already turned right, so the child always
+ * sees how far it got; when it reaches the plug, the tree, the square and
+ * the church light up.
  *
- * The board is generated each time: a random path from the generator to the
- * exit guarantees a solution; the other tiles are random decoys.
+ * The board is generated each time: a short random path from the generator
+ * to the plug; only the pieces on it exist (no decoys), which keeps the
+ * puzzle clear and quick for children.
  *
  * Stars depend on the number of turns beyond the minimum needed.
  */
@@ -48,7 +51,7 @@ export const turnBits = (bits, turns) => {
 };
 
 /**
- * @typedef {object} Tile
+ * @typedef {object} Tile   (cells off the cable's path hold null)
  * @property {number} shape     STRAIGHT, CORNER or TEE
  * @property {number} turns     quarter turns done so far (only grows)
  * @property {number} shown     angle shown on screen (animated towards turns)
@@ -71,8 +74,10 @@ export class CircuitMission extends SceneMission {
     this.cell = 80;
     this.x0 = 0;
     this.y0 = 0;
-    /** @type {Tile[]} */
+    /** @type {Array<Tile | null>} */
     this.tiles = [];
+    /** @type {number[]} cells of the cable's path, from the generator to the plug */
+    this.path = [];
     this.startRow = 0;
     this.exitRow = 0;
     /** @type {Uint8Array} powered tiles */
@@ -109,17 +114,17 @@ export class CircuitMission extends SceneMission {
     const size = Math.max(84, 50 / stage.scale);
     this.vertical = w < h * 1.25;
     if (this.vertical) {
-      this.cols = 5;
-      this.rows = 5;
-      this.cell = Math.min(w / (this.cols + 1), (h * 0.55) / this.rows, size * 1.3);
-      this.x0 = left + (w - this.cell * this.cols) / 2 + this.cell * 0.3;
+      this.cols = 4;
+      this.rows = 4;
+      this.cell = Math.min(w / (this.cols + 1.6), (h * 0.5) / this.rows, size * 1.5);
+      this.x0 = left + (w - this.cell * this.cols) / 2;
       this.y0 = bottom - this.cell * this.rows;
       this.tree = { x: left + w * 0.72, y: this.y0 - 40, h: Math.min(h * 0.4, 420) };
       this.church = { x: left + w * 0.25, y: this.y0 - 40, h: Math.min(h * 0.42, 440) };
     } else {
-      this.cols = 6;
-      this.rows = 5;
-      this.cell = Math.min((w * 0.55) / this.cols, h / this.rows, size * 1.25);
+      this.cols = 5;
+      this.rows = 3;
+      this.cell = Math.min((w * 0.5) / this.cols, (h * 0.85) / this.rows, size * 1.6);
       this.x0 = left + this.cell * 1.1;
       this.y0 = top + (h - this.cell * this.rows) / 2;
       const gridRight = this.x0 + this.cell * this.cols;
@@ -136,7 +141,24 @@ export class CircuitMission extends SceneMission {
     const start = this.startRow * cols;
     const goal = this.exitRow * cols + cols - 1;
 
-    // a random path from the generator to the exit (depth-first, backtracking)
+    // a short random path from the generator to the plug (depth-first,
+    // backtracking; tried again until its length is comfortable)
+    /** @type {number[]} */
+    let path = [];
+    do path = this.randomPath(start, goal);
+    while (path.length > cols + rows + 1 || path.length < cols + 1);
+    this.path = path;
+    this.fillTiles(path);
+  }
+
+  /**
+   * @private
+   * @param {number} start
+   * @param {number} goal
+   * @returns {number[]}
+   */
+  randomPath(start, goal) {
+    const { cols, rows } = this;
     const seen = new Uint8Array(cols * rows);
     /** @type {number[]} */
     const path = [start];
@@ -157,7 +179,16 @@ export class CircuitMission extends SceneMission {
       seen[options[0].next] = 1;
       path.push(options[0].next);
     }
+    return path;
+  }
 
+  /**
+   * Puts a turned cable piece on every cell of the path.
+   * @private
+   * @param {number[]} path
+   */
+  fillTiles(path) {
+    const { cols, rows } = this;
     /** @type {Map<number, number>} sides each path tile must connect */
     const need = new Map();
     path.forEach((cell, i) => {
@@ -173,9 +204,7 @@ export class CircuitMission extends SceneMission {
     for (let cell = 0; cell < cols * rows; cell++) {
       const bits = need.get(cell);
       if (bits === undefined) {
-        const shape = [STRAIGHT, CORNER, CORNER, TEE][Math.floor(Math.random() * 4)];
-        const turns = Math.floor(Math.random() * 4);
-        this.tiles.push({ shape, turns, shown: turns, solution: -1 });
+        this.tiles.push(null);
         continue;
       }
       const shape = (bits === (N | S) || bits === (E | W)) ? STRAIGHT : CORNER;
@@ -193,7 +222,10 @@ export class CircuitMission extends SceneMission {
     const { cols, rows } = this;
     this.powered = new Uint8Array(cols * rows);
     const start = this.startRow * cols;
-    const sides = (/** @type {number} */ cell) => turnBits(this.tiles[cell].shape, this.tiles[cell].turns);
+    const sides = (/** @type {number} */ cell) => {
+      const t = this.tiles[cell];
+      return t ? turnBits(t.shape, t.turns) : 0;
+    };
     if (!(sides(start) & W)) return;
     this.powered[start] = 1;
     const queue = [start];
@@ -235,7 +267,9 @@ export class CircuitMission extends SceneMission {
     const cx = Math.floor((p.x - this.x0) / this.cell);
     const cy = Math.floor((p.y - this.y0) / this.cell);
     if (cx < 0 || cy < 0 || cx >= this.cols || cy >= this.rows) return;
-    this.tiles[cy * this.cols + cx].turns += 1;
+    const tile = this.tiles[cy * this.cols + cx];
+    if (!tile) return;
+    tile.turns += 1;
     this.taps += 1;
     this.updatePower();
   }
@@ -245,7 +279,7 @@ export class CircuitMission extends SceneMission {
     this.time += dt;
     this.particles.update(dt);
     this.updateFade(dt);
-    for (const t of this.tiles) t.shown = approach(t.shown, t.turns, 18, dt);
+    for (const t of this.tiles) if (t) t.shown = approach(t.shown, t.turns, 18, dt);
     if (this.solved) {
       this.lit = Math.min(1, this.lit + dt / 1.2);
       if (Math.random() < dt * 2.5) {
@@ -403,11 +437,26 @@ export class CircuitMission extends SceneMission {
       : [[ex, ey], [ex + cell * 0.4, ey], [ex + cell * 0.4, this.tree.y - 6], [this.tree.x, this.tree.y - 6]];
     this.cable(c, toTree, this.solved);
 
+    // the way the cable must go: a dotted golden line under the pieces
+    const centre = (/** @type {number} */ i) => ({ x: x0 + ((i % cols) + 0.5) * cell, y: y0 + (Math.floor(i / cols) + 0.5) * cell });
+    c.save();
+    c.strokeStyle = 'rgba(255,215,90,0.75)';
+    c.lineWidth = Math.max(4, cell * 0.06);
+    c.setLineDash([cell * 0.1, cell * 0.12]);
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(x0, centre(this.path[0]).y);
+    for (const i of this.path) c.lineTo(centre(i).x, centre(i).y);
+    c.lineTo(x0 + cols * cell, centre(this.path[this.path.length - 1]).y);
+    c.stroke();
+    c.restore();
+    this.drawPlug(c);
+
     for (let i = 0; i < this.tiles.length; i++) {
       const t = this.tiles[i];
-      const cx = x0 + ((i % cols) + 0.5) * cell;
-      const cy = y0 + (Math.floor(i / cols) + 0.5) * cell;
-      fillRoundRect(c, cx - cell * 0.46, cy - cell * 0.46, cell * 0.92, cell * 0.92, cell * 0.14, '#33405f');
+      if (!t) continue;
+      const { x: cx, y: cy } = centre(i);
+      fillRoundRect(c, cx - cell * 0.44, cy - cell * 0.44, cell * 0.88, cell * 0.88, cell * 0.14, 'rgba(51,64,95,0.85)');
       const on = !!this.powered[i];
       c.save();
       c.translate(cx, cy);
@@ -421,10 +470,55 @@ export class CircuitMission extends SceneMission {
       c.strokeStyle = on ? '#ffd54f' : '#8590a6';
       c.lineWidth = cell * 0.16;
       this.wires(c, t.shape, cell);
+      if (on) {
+        // sparks flowing through the cable
+        c.strokeStyle = 'rgba(255,255,255,0.85)';
+        c.lineWidth = cell * 0.06;
+        c.setLineDash([cell * 0.08, cell * 0.16]);
+        c.lineDashOffset = -this.time * cell * 0.9;
+        this.wires(c, t.shape, cell);
+        c.setLineDash([]);
+      }
       c.fillStyle = on ? '#fff3c4' : '#a7b0c2';
       fillCircle(c, 0, 0, cell * 0.11);
       c.restore();
     }
+  }
+
+  /**
+   * The plug at the end of the cable's path, next to the tree, with a
+   * blinking arrow and a label: where the current must get to.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   */
+  drawPlug(c) {
+    const { x0, y0, cell, cols } = this;
+    const x = x0 + cols * cell + cell * 0.12;
+    const y = y0 + (this.exitRow + 0.5) * cell;
+    const s = cell * 0.36;
+    if (!this.solved) glow(c, x + s, y, cell * 0.9, 'rgba(255,215,90,0.45)', 'rgba(255,215,90,0)');
+    fillRoundRect(c, x, y - s, s * 1.6, s * 2, s * 0.35, this.solved ? '#ffd54f' : '#f2f2f2');
+    c.fillStyle = '#3b4250';
+    c.fillRect(x + s * 0.45, y - s * 0.5, s * 0.22, s * 0.35);
+    c.fillRect(x + s * 0.45, y + s * 0.15, s * 0.22, s * 0.35);
+    if (this.solved) return;
+    // the arrow points at the plug and blinks
+    const a = 0.5 + 0.5 * Math.sin(this.time * 6);
+    c.globalAlpha = 0.4 + 0.6 * a;
+    c.fillStyle = '#ffd23f';
+    const ay = y - s - cell * 0.35 - a * 8;
+    c.beginPath();
+    c.moveTo(x + s * 0.8, ay + cell * 0.28);
+    c.lineTo(x + s * 0.8 - cell * 0.2, ay);
+    c.lineTo(x + s * 0.8 + cell * 0.2, ay);
+    c.closePath();
+    c.fill();
+    c.globalAlpha = 1;
+    c.fillStyle = '#ffffff';
+    c.font = `800 ${Math.round(Math.max(18, cell * 0.22))}px "Baloo 2", system-ui, sans-serif`;
+    c.textAlign = 'center';
+    c.textBaseline = 'alphabetic';
+    c.fillText('Până aici!', x + s * 0.8, ay - 8);
   }
 
   /**

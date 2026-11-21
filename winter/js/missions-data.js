@@ -179,7 +179,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'circuit-cluj',
         title: 'Bradul din Piața Unirii',
-        text: 'Bradul cel mare din Piața Unirii nu se aprinde: s-au încurcat firele! Atinge piesele de pe panou ca să le rotești și du curentul de la generator ⚡ până la brad.',
+        text: 'Bradul cel mare din Piața Unirii nu se aprinde: bucățile de cablu s-au răsucit! Atinge-le ca să le rotești, după linia punctată, ca să ducă curentul de la generator ⚡ până la priza bradului.',
         doneText: 'Bradul s-a aprins și toată piața strălucește!',
         fact: 'În Piața Unirii din Cluj-Napoca se află Biserica Sfântul Mihail, una dintre cele mai mari biserici gotice din România. De Crăciun, aici se ține un târg mare, cu un brad uriaș.',
       },
