@@ -19,13 +19,13 @@ const MIN_SPEED = 0.5;
 /** Volume of the running train: a soft sound in the background, so the whistle stands out. */
 const VOLUME = 0.2;
 /** Seconds the sound takes to swell in after the train sets off. */
-const FADE_IN = 6;
+const FADE_IN = 4;
 /** Distance before a stop over which the sound fades out (stage units). */
-const FADE_OUT = 2800;
+const FADE_OUT = 1900;
 /** The brakes start squealing this far from the stop (stage units). */
 const SQUEAL_AT = 950;
 /** Seconds over which the sound settles to a new level (a gentle, never abrupt change). */
-const SMOOTH = 0.6;
+const SMOOTH = 0.4;
 /** Volume of the squeal (as loud as the whistle). */
 const SQUEAL_VOLUME = 1;
 
