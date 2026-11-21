@@ -38,6 +38,7 @@ import { MotionPlan, tripLength } from './motion.js';
  * @property {FeatureData[]} [features]
  * @property {Array<[number, number]>} [snowfall]    [fraction, intensity 0..1]
  * @property {Array<[number, number]>} [cover]       [fraction, snow on the ground 0..1]
+ * @property {Array<[number, number, number]>} [slow] [from, to, speed]: stretches with a lower speed
  * @property {string} [train]                        train id (default: "night")
  *
  * @typedef {object} RouteData
@@ -118,7 +119,8 @@ export class Route {
       const length = tripLength(seg.duration, CRUISE_SPEED, ACCELERATION);
       const limits = (seg.features || [])
         .filter(f => f.type === 'viaduct')
-        .map(f => ({ from: f.at * length - SLOW_BEFORE, to: f.at * length + f.length + SLOW_AFTER, speed: VIADUCT_SPEED }));
+        .map(f => ({ from: f.at * length - SLOW_BEFORE, to: f.at * length + f.length + SLOW_AFTER, speed: VIADUCT_SPEED }))
+        .concat((seg.slow || []).map(([from, to, speed]) => ({ from: from * length, to: to * length, speed })));
       const profile = new MotionPlan(length, CRUISE_SPEED, ACCELERATION, limits);
       from.distance = distance;
       this.segments.push({
