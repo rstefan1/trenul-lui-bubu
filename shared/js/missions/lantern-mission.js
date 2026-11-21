@@ -18,12 +18,11 @@
  * train keeps its torches burning.
  */
 
-import { approach, clamp, easeInOut, lerp } from '../core/math.js';
+import { clamp, easeInOut, lerp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillStar, glow } from '../gfx/shapes.js';
 import { drawBubu } from '../train/bubu.js';
-import { el } from '../ui/dom.js';
-import { Mission } from './mission.js';
+import { SceneMission } from './scene-mission.js';
 import { devaLayout, drawDevaBackground, drawDevaFortress, drawDevaTorches, drawLiftCabin } from '../gfx/scenes/deva-fortress.js';
 
 /** Seconds of the ride up the hill. */
@@ -38,8 +37,6 @@ const TOUCH_LIFT = 90;
 const ZOOM_TIME = 1.4;
 /** Height of the fortress from the Christmas star above it to the foot of its walls, at zoom 1. */
 const FORTRESS_H = 400;
-/** Seconds of the fade between the world and the scene. */
-const FADE = 0.6;
 
 /**
  * @typedef {import('./mission.js').MissionConfig & {
@@ -47,7 +44,7 @@ const FADE = 0.6;
  * }} LanternConfig
  */
 
-export class LanternMission extends Mission {
+export class LanternMission extends SceneMission {
   /**
    * @param {import('./mission.js').MissionContext} ctx
    * @param {LanternConfig} config
@@ -55,11 +52,10 @@ export class LanternMission extends Mission {
   constructor(ctx, config) {
     super(ctx, config);
     this.config = config;
-    /** @type {'ride' | 'light' | 'shine' | 'leave'} */
+    /** @type {'ride' | 'light' | 'shine'} */
     this.act = 'ride';
     this.time = 0;
     this.actTime = 0;
-    this.fade = 0;
     this.layout = devaLayout(ctx.stage.width);
     /** @type {boolean[]} */
     this.lit = this.layout.torches.map(() => false);
@@ -156,7 +152,7 @@ export class LanternMission extends Mission {
     this.time += dt;
     this.actTime += dt;
     this.particles.update(dt);
-    this.fade = approach(this.fade, this.act === 'leave' ? 0 : 1, 1 / FADE * 3, dt);
+    this.updateFade(dt);
 
     if (this.act === 'ride' && this.actTime >= RIDE_TIME) {
       this.setAct('light');
@@ -185,10 +181,6 @@ export class LanternMission extends Mission {
         const L = this.layout;
         this.particles.burst(lerp(L.wallLeft, L.wallRight, Math.random()), L.wallTop - 60 - Math.random() * 120, SPARKS, 16, 240);
       }
-    } else if (this.act === 'leave' && this.fade < 0.02) {
-      if (this.config.flag) this.ctx.state.setFlag(this.config.flag);
-      const s = this.lightSeconds;
-      this.complete(s <= 25 ? 3 : s <= 45 ? 2 : 1, 'Cetatea Devei strălucește din nou deasupra orașului!');
     }
   }
 
@@ -222,34 +214,25 @@ export class LanternMission extends Mission {
     if (count === torches.length) {
       this.setAct('shine');
       this.zoomFrom = { ...this.cam };
-      this.ctx.hud.hideAnnouncement();
-      this.showFact();
+      if (this.config.flag) this.ctx.state.setFlag(this.config.flag);
+      const s = this.lightSeconds;
+      this.showEnding({
+        doneText: this.config.doneText,
+        fact: this.config.fact,
+        stars: s <= 25 ? 3 : s <= 45 ? 2 : 1,
+        result: 'Cetatea Devei strălucește din nou deasupra orașului!',
+        delay: 1.6,
+      });
     }
   }
 
   /**
    * @private
-   * @param {'ride' | 'light' | 'shine' | 'leave'} act
+   * @param {'ride' | 'light' | 'shine'} act
    */
   setAct(act) {
     this.act = act;
     this.actTime = 0;
-  }
-
-  /** @private The fact and the button back to the train. */
-  showFact() {
-    const next = el('button', { class: 'big-btn', type: 'button' }, ['Înapoi la tren! 🚂']);
-    next.addEventListener('click', () => {
-      this.setPanel(null);
-      this.setAct('leave');
-    });
-    setTimeout(() => {
-      this.setPanel(el('div', { class: 'panel panel--bottom' }, [
-        el('p', { class: 'puzzle-solved' }, [this.config.doneText]),
-        el('p', { class: 'fact' }, [el('b', {}, ['Știai că? ']), this.config.fact]),
-        next,
-      ]));
-    }, 1600);
   }
 
   /** @param {CanvasRenderingContext2D} c */
@@ -285,7 +268,7 @@ export class LanternMission extends Mission {
     this.applyCamera(c);
     drawDevaTorches(c, L, this.lit, this.time);
     if (this.act === 'light') this.drawHeat(c);
-    if (this.act === 'shine' || this.act === 'leave') {
+    if (this.act === 'shine') {
       // a Christmas star appears above the big tower
       const k = clamp(this.actTime / 1.2, 0, 1);
       const sx = (L.wallLeft + L.wallRight) / 2;
@@ -345,21 +328,8 @@ export class LanternMission extends Mission {
     });
   }
 
-  /**
-   * @private
-   * @param {HTMLElement | null} node
-   */
-  setPanel(node) {
-    const root = this.ctx.panel;
-    root.replaceChildren();
-    root.hidden = !node;
-    root.classList.toggle('is-bottom', !!node);
-    if (node) root.append(node);
-  }
-
   dispose() {
-    this.setPanel(null);
-    this.ctx.hud.hideAnnouncement();
+    super.dispose();
     this.ctx.world.train.setBubuVisible(true);
   }
 }

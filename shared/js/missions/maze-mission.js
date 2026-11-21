@@ -16,13 +16,12 @@
  * one for reaching the tree.
  */
 
-import { approach, clamp, lerp } from '../core/math.js';
+import { clamp, lerp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { css } from '../gfx/color.js';
 import { drawFir, fillCircle, fillStar, glow } from '../gfx/shapes.js';
 import { drawBubu } from '../train/bubu.js';
-import { el } from '../ui/dom.js';
-import { Mission } from './mission.js';
+import { SceneMission } from './scene-mission.js';
 
 /** Wall bits of a cell. */
 const N = 1;
@@ -39,8 +38,6 @@ const DIRS = [
 const CELL = 82;
 /** Seconds Bubu needs to walk one square. */
 const STEP_TIME = 0.14;
-/** Seconds of the fade between the world and the scene. */
-const FADE = 0.5;
 
 /**
  * @typedef {import('./mission.js').MissionConfig & {doneText: string, fact: string, hidden: number}} MazeConfig
@@ -105,7 +102,7 @@ function distances(open, cols, from) {
   return dist;
 }
 
-export class MazeMission extends Mission {
+export class MazeMission extends SceneMission {
   /**
    * @param {import('./mission.js').MissionContext} ctx
    * @param {MazeConfig} config
@@ -114,8 +111,6 @@ export class MazeMission extends Mission {
     super(ctx, config);
     this.config = config;
     this.time = 0;
-    this.fade = 0;
-    this.leaving = false;
     this.particles = new Particles();
     this.cols = 9;
     this.rows = 7;
@@ -265,14 +260,7 @@ export class MazeMission extends Mission {
   update(dt) {
     this.time += dt;
     this.particles.update(dt);
-    this.fade = approach(this.fade, this.leaving ? 0 : 1, 3 / FADE, dt);
-    if (this.leaving && this.fade < 0.02) {
-      const { found, hiddenTotal } = this;
-      this.complete(found >= hiddenTotal ? 3 : found > 0 ? 2 : 1, found >= hiddenTotal
-        ? 'Ai găsit toate stelele ascunse și ai ajuns la brad!'
-        : `Ai ajuns la brad și ai găsit ${found} din ${hiddenTotal} stele ascunse.`);
-      return;
-    }
+    this.updateFade(dt);
     if (!this.path.length || this.reached) return;
     this.stepT += dt;
     if (this.stepT < STEP_TIME) return;
@@ -294,19 +282,15 @@ export class MazeMission extends Mission {
     this.ctx.hud.hideAnnouncement();
     const c = this.centre(this.goal);
     this.particles.burst(c.x, c.y - this.cell * 0.4, SPARKS, 40, 320);
-    const next = el('button', { class: 'big-btn', type: 'button' }, ['Înapoi la tren! 🚂']);
-    next.addEventListener('click', () => {
-      this.setPanel(null);
-      this.ctx.hud.hideCounter();
-      this.leaving = true;
+    const { found, hiddenTotal } = this;
+    this.showEnding({
+      doneText: this.config.doneText,
+      fact: this.config.fact,
+      stars: found >= hiddenTotal ? 3 : found > 0 ? 2 : 1,
+      result: found >= hiddenTotal
+        ? 'Ai găsit toate stelele ascunse și ai ajuns la brad!'
+        : `Ai ajuns la brad și ai găsit ${found} din ${hiddenTotal} stele ascunse.`,
     });
-    setTimeout(() => {
-      this.setPanel(el('div', { class: 'panel panel--bottom' }, [
-        el('p', { class: 'puzzle-solved' }, [this.config.doneText]),
-        el('p', { class: 'fact' }, [el('b', {}, ['Știai că? ']), this.config.fact]),
-        next,
-      ]));
-    }, 1200);
   }
 
   /** @param {CanvasRenderingContext2D} c */
@@ -427,22 +411,8 @@ export class MazeMission extends Mission {
     drawBubu(c, x, y - hop, this.cell * 0.82, this.reached ? Math.sin(this.time * 6) * 0.15 : 0);
   }
 
-  /**
-   * @private
-   * @param {HTMLElement | null} node
-   */
-  setPanel(node) {
-    const root = this.ctx.panel;
-    root.replaceChildren();
-    root.hidden = !node;
-    root.classList.toggle('is-bottom', !!node);
-    if (node) root.append(node);
-  }
-
   dispose() {
-    this.setPanel(null);
+    super.dispose();
     window.removeEventListener('keydown', this.onKey);
-    this.ctx.hud.hideAnnouncement();
-    this.ctx.hud.hideCounter();
   }
 }
