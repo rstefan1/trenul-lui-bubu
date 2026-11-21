@@ -43,6 +43,9 @@ export class WorldView {
     this.train = new TrainRenderer(stage, TRAINS[journey.trainId]);
     this.snow = new Snowfall(stage, REDUCED_MOTION ? 50 : 150);
     this.cameraY = 0;
+    /** How far the view is panned forward (the whole world moves left), and where it is heading. */
+    this.pan = 0;
+    this.panTarget = 0;
     this.time = 0;
     /** What the player changed in the world (set by the game, e.g. lit torches). */
     /** @type {ReadonlySet<string>} */
@@ -53,10 +56,15 @@ export class WorldView {
     this.cover = journey.weather.cover;
   }
 
-  /** Screen x of the front of the train: near the right edge, room for the headlight. */
-  get anchorX() {
+  /** Where the front of the train normally is: near the right edge, room for the headlight. */
+  get baseAnchorX() {
     const w = this.stage.width;
     return w - Math.max(150, w * 0.18);
+  }
+
+  /** Screen x of the front of the train (missions may pan the view to show what is ahead). */
+  get anchorX() {
+    return this.baseAnchorX - this.pan;
   }
 
   /**
@@ -118,6 +126,7 @@ export class WorldView {
     this.train.update(dt);
     const target = this.features.cameraLift(j.distance, this.train.length);
     this.cameraY = approach(this.cameraY, target, 1.6, dt);
+    this.pan = approach(this.pan, this.panTarget, 1.6, dt);
     const w = j.weather;
     this.cover = approach(this.cover, w.cover, 3, dt);
     this.snow.update(dt, w.snowfall, j.speed, this.time);
@@ -134,7 +143,7 @@ export class WorldView {
     this.sky.draw(c, light, this.time);
 
     const view = {
-      distance: j.distance,
+      distance: j.distance + this.pan,
       cameraY: this.cameraY,
       cover: this.cover,
       light,
