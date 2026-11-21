@@ -24,8 +24,8 @@ const BULBS = [
   { color: '#43a047', dim: '#244d2a', name: 'verde' },
 ];
 /** Seconds each bulb stays lit while the order is shown, and the pause after it. */
-const SHOW_ON = 0.5;
-const SHOW_OFF = 0.18;
+const SHOW_ON = 0.65;
+const SHOW_OFF = 0.25;
 /** Radius of a bulb on screen, and the touch tolerance. */
 const BULB_R = 40;
 const TOUCH_R = 62;
