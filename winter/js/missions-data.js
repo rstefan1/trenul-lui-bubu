@@ -6,7 +6,7 @@
  * `stations` maps station ids to the mission played while the train waits
  * there. Mission types are registered in main.js.
  *
- * For now there is one mission of each kind, to try them out.
+ * For now there are only a few missions, to try out each kind.
  */
 
 /** @type {import('../../shared/js/missions/director.js').MissionPlan} */
@@ -68,6 +68,19 @@ export const WINTER_MISSIONS = {
         ],
         boardingText: 'Uită-te pe bilet: în ce vagon are loc Bubu? Atinge vagonul potrivit, ca Bubu să urce în tren.',
         tip: 'Sfatul călătorului: numărul vagonului e scris pe tren, pe o tăbliță albă.',
+      },
+    },
+
+    arad: {
+      type: 'rotate-puzzle',
+      config: {
+        id: 'puzzle-arad',
+        title: 'Ceasul din Arad',
+        text: 'Vântul a răsucit piesele imaginii cu Palatul Administrativ din Arad. Întoarce-le la loc, ca Bubu să vadă cât e ceasul din turn!',
+        picture: 'arad-city-hall',
+        grid: 4,
+        solvedText: 'Ceasul din turn arată ora 16:00. Trenul nostru pleacă din Arad la 16:03 – repede înapoi în vagon!',
+        fact: 'Primăria din Arad se numește Palatul Administrativ și are în mijloc un turn înalt, cu ceas, care se vede de departe.',
       },
     },
   },

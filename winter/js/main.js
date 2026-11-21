@@ -25,6 +25,7 @@ import { Route } from '../../shared/js/journey/route.js';
 import { CatchMission } from '../../shared/js/missions/catch-mission.js';
 import { DepartureMission } from '../../shared/js/missions/departure-mission.js';
 import { MissionDirector } from '../../shared/js/missions/director.js';
+import { RotatePuzzleMission } from '../../shared/js/missions/rotate-puzzle-mission.js';
 import { loadBubu } from '../../shared/js/train/bubu.js';
 import { Hud } from '../../shared/js/ui/hud.js';
 import { MissionHud } from '../../shared/js/ui/mission-hud.js';
@@ -37,6 +38,7 @@ import { WINTER_ROUTE } from './route-data.js';
 const MISSION_TYPES = {
   catch: CatchMission,
   departure: DepartureMission,
+  'rotate-puzzle': RotatePuzzleMission,
 };
 
 const params = new URLSearchParams(location.search);
