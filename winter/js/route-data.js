@@ -147,14 +147,17 @@ export const WINTER_ROUTE = {
       cover: [[0, 1]],
     },
     // Suceava → Rădăuți: the small regional train, first light of the morning
+    // (slower past the gardens with the bird feeders)
     {
       duration: 50,
       train: 'regional',
+      slow: [[0.1, 0.86, 170]],
       biomes: [[0, 'city'], [0.12, 'plain'], [0.6, 'hills'], [0.9, 'city']],
       snowfall: [[0, 0.1], [0.5, 0]],
       cover: [[0, 1]],
     },
     // Rădăuți → Putna (past Marginea): sunrise over the hills of Bucovina
+    // (the gifts mission slows the train down itself near each village)
     {
       duration: 55,
       train: 'regional',

@@ -31,6 +31,13 @@ import { BellsMission } from '../../shared/js/missions/bells-mission.js';
 import { CandlesMission } from '../../shared/js/missions/candles-mission.js';
 import { CatchMission } from '../../shared/js/missions/catch-mission.js';
 import { CircuitMission } from '../../shared/js/missions/circuit-mission.js';
+import { BirdsMission } from '../../shared/js/missions/birds-mission.js';
+import { ChangeTrainMission } from '../../shared/js/missions/change-train-mission.js';
+import { CostumeMission } from '../../shared/js/missions/costume-mission.js';
+import { FrostMission } from '../../shared/js/missions/frost-mission.js';
+import { PaintMission } from '../../shared/js/missions/paint-mission.js';
+import { PutnaMission } from '../../shared/js/missions/putna-mission.js';
+import { SnowflakeMission } from '../../shared/js/missions/snowflake-mission.js';
 import { ConnectStarsMission } from '../../shared/js/missions/connect-stars-mission.js';
 import { EyesMission } from '../../shared/js/missions/eyes-mission.js';
 import { ForestStopsMission } from '../../shared/js/missions/forest-stops-mission.js';
@@ -78,6 +85,13 @@ const MISSION_TYPES = {
   photo: PhotoMission,
   rhythm: RhythmMission,
   snowbound: SnowboundMission,
+  birds: BirdsMission,
+  'change-train': ChangeTrainMission,
+  costume: CostumeMission,
+  frost: FrostMission,
+  paint: PaintMission,
+  putna: PutnaMission,
+  snowflake: SnowflakeMission,
 };
 
 const params = new URLSearchParams(location.search);
@@ -159,7 +173,7 @@ function render() {
 
 // ------------------------------------------------------------ test mode
 async function startTest() {
-  journey.on('finish', () => setTimeout(async () => {
+  director.on('complete', () => setTimeout(async () => {
     await showOverlay(byId('finale'), byId('btnAgain'));
     location.reload();
   }, 2500));

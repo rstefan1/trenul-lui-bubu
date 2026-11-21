@@ -982,3 +982,56 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   .help-btn { animation: none; }
   .briefing__card { transition: none; }
 }
+
+/* ---------- End of the journey ---------- */
+.intro-text {
+  margin: 12px auto 0;
+  max-width: 34em;
+  font-size: clamp(17px, 2.6vmin, 22px);
+  line-height: 1.45;
+}
+.finale-stars {
+  margin: 12px 0 16px;
+  font-size: clamp(20px, 3.2vmin, 28px);
+  font-weight: 800;
+  color: var(--gold-dark, #b8860b);
+}
+
+/* ---------- Paint by numbers (Voroneț) ---------- */
+.paint-panel { width: min(560px, 100%); }
+.paint-palette { display: flex; justify-content: center; gap: clamp(10px, 3vmin, 22px); }
+.paint-btn {
+  width: clamp(58px, 11vmin, 80px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  background: var(--paint);
+  color: #fff;
+  font-size: clamp(24px, 4.4vmin, 34px);
+  font-weight: 800;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .45);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, .25);
+  touch-action: manipulation;
+  transition: transform .15s;
+}
+.paint-btn.is-picked { transform: scale(1.15); box-shadow: 0 0 0 5px var(--gold), 0 5px 0 rgba(0, 0, 0, .25); }
+
+/* ---------- Hats for Bubu (Rădăuți) ---------- */
+.costume-panel { width: min(560px, 100%); }
+.costume-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; width: 100%; }
+@media (max-width: 640px), (max-aspect-ratio: 1/1) {
+  .costume-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.costume-btn {
+  aspect-ratio: 1;
+  padding: 4px;
+  border: 4px solid #fff;
+  border-radius: 16px;
+  background: #fff7e8;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .15);
+  touch-action: manipulation;
+  transition: transform .15s;
+}
+.costume-btn.is-picked { border-color: var(--gold); box-shadow: 0 0 0 4px var(--gold); transform: scale(1.06); }
+.costume-icon { width: 100%; height: 100%; }
+.big-btn:disabled { filter: grayscale(.7) brightness(.95); cursor: default; }

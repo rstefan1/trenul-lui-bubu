@@ -5,8 +5,6 @@
  * position in WINTER_ROUTE.segments, window as fractions of the segment);
  * `stations` maps station ids to the mission played while the train waits
  * there. Mission types are registered in main.js.
- *
- * For now there are only a few missions, to try out each kind.
  */
 
 /** @type {import('../../shared/js/missions/director.js').MissionPlan} */
@@ -132,6 +130,60 @@ export const WINTER_MISSIONS = {
         ],
       },
     },
+    {
+      segment: 9,
+      from: 0.08,
+      to: 0.9,
+      type: 'snowflake',
+      config: {
+        id: 'snowflakes-campulung-gura',
+        title: 'Fulgii gemeni',
+        text: 'Pe Valea Moldovei ninge cu fulgi mari. Uită-te la fulgul din chenarul din stânga sus, apoi atinge fulgii care arată exact la fel!',
+        goal: 6,
+        models: 2,
+      },
+    },
+    {
+      segment: 10,
+      from: 0.08,
+      to: 0.9,
+      type: 'frost',
+      config: {
+        id: 'frost-gura-suceava',
+        title: 'Flori de gheață',
+        text: 'E atât de frig încât pe geam au crescut flori de gheață! Freacă geamul (ține apăsat și mișcă degetul sau mouse-ul) ca să vezi ce se ascunde dedesubt.',
+        pictures: ['fortress', 'star', 'sleigh'],
+      },
+    },
+    {
+      segment: 11,
+      from: 0.1,
+      to: 0.86,
+      type: 'birds',
+      config: {
+        id: 'birds-suceava-radauti',
+        title: 'Păsărelele de iarnă',
+        text: 'Iarna, păsărelele găsesc greu mâncare. Atinge căsuțele goale lângă care așteaptă păsări flămânde, ca Bubu să le umple cu semințe.',
+        feeders: 9,
+        full: 3,
+      },
+    },
+    {
+      segment: 12,
+      from: 0.1,
+      to: 0.86,
+      type: 'delivery',
+      config: {
+        id: 'gifts-bucovina',
+        title: 'Ultimele daruri',
+        text: 'În satele Bucovinei, copiii au ieșit în curte în dimineața de Crăciun. Atinge ecranul ca Bubu să arunce un dar: el cade în cercul auriu. Ochește doar curțile unde te așteaptă un copil!',
+        houses: 9,
+        empty: 2,
+        spare: 3,
+        where: 'în satele Bucovinei',
+        pace: { near: 170, far: 520 },
+      },
+    },
   ],
 
   moments: [
@@ -148,6 +200,20 @@ export const WINTER_MISSIONS = {
       kicker: 'Ora 00:00',
       title: 'E Crăciun! 🎄',
       text: 'Clopotele din sate bat de miezul nopții. Crăciun fericit, Bubu! Crăciun fericit tuturor celor din tren!',
+    },
+    {
+      segment: 11,
+      at: 0.02,
+      kicker: 'Suceava – Rădăuți',
+      title: 'Cu trenul cel mic',
+      text: 'Bubu merge mai departe cu un tren regional mic și verde. Se luminează de ziuă!',
+    },
+    {
+      segment: 12,
+      at: 0.04,
+      kicker: 'Bună dimineața!',
+      title: 'Răsare soarele',
+      text: 'Soarele răsare peste dealurile Bucovinei. Mai e puțin până la Putna!',
     },
   ],
 
@@ -306,5 +372,57 @@ export const WINTER_MISSIONS = {
         fact: 'La Câmpulung Moldovenesc se află un muzeu cu mii de linguri de lemn sculptate, adunate de un singur om de-a lungul vieții.',
       },
     },
+    'gura-humorului': {
+      type: 'paint',
+      config: {
+        id: 'paint-voronet',
+        title: 'Pictează Voronețul',
+        text: 'Lângă Gura Humorului este Mănăstirea Voroneț, pictată și pe dinafară. Ajut-o pe Bubu să picteze biserica: alege o culoare de jos, apoi atinge părțile care au același număr.',
+        doneText: 'Biserica e pictată, iar pe pereții albaștri au apărut sfinții!',
+        fact: 'Mănăstirea Voroneț are pereții pictați și pe dinafară. Albastrul ei este atât de frumos și de rar, încât i se spune „albastru de Voroneț”.',
+      },
+    },
+    suceava: {
+      type: 'change-train',
+      config: {
+        id: 'change-suceava',
+        title: 'Schimbăm trenul',
+        text: 'Trenul de noapte se oprește aici, la Suceava. Bubu merge mai departe cu alt tren. Uită-te pe biletul lui Bubu (jos), apoi atinge pe tabelă trenul care merge acolo.',
+        platformText: 'Acum găsește trenul! Atinge trenul de la linia scrisă pe tabelă.',
+        destination: 'Putna',
+        train: 'regional',
+        departures: [
+          { time: '06:35', to: 'București Nord', platform: 1 },
+          { time: '06:50', to: 'Putna', via: 'Rădăuți', platform: 2, ok: true },
+          { time: '07:05', to: 'Iași', platform: 3 },
+          { time: '07:20', to: 'Vatra Dornei', platform: 1 },
+        ],
+        doneText: 'Bubu și bradul ei au urcat în trenul regional spre Putna!',
+        fact: 'Suceava a fost capitala Moldovei pe vremea lui Ștefan cel Mare. Cetatea de Scaun a Sucevei se vede și azi, pe un deal din oraș.',
+      },
+    },
+    radauti: {
+      type: 'costume',
+      config: {
+        id: 'costume-radauti',
+        title: 'O pălărie pentru Bubu',
+        text: 'La târgul de Crăciun din Rădăuți, Bubu probează pălăriile de sărbătoare din Bucovina! Alege-i una (o poți schimba oricând), apoi apasă „Gata!”.',
+        doneText: 'Bubu e gata de sărbătoare, ca o adevărată bucovineancă!',
+        fact: 'De sărbători, în Bucovina, bărbații poartă clopuri negre împodobite cu mărgele, flori sau pene, iar femeile își pun basmale colorate.',
+      },
+    },
+    putna: {
+      type: 'putna',
+      config: {
+        id: 'christmas-putna',
+        title: 'Crăciun la Putna',
+        text: 'Am ajuns la Mănăstirea Putna, în dimineața de Crăciun! Atinge clopotul din turn de 3 ori, ca să vestească slujba.',
+        treeText: 'Bradul lui Bubu a ajuns cu bine! Atinge bradul ca să agăți globurile pe care le-ai prins în călătorie.',
+        rings: 3,
+        doneText: 'Clopotul a vestit Crăciunul, iar bradul lui Bubu strălucește lângă biserică!',
+        fact: 'Mănăstirea Putna a fost ridicată de Ștefan cel Mare în anul 1466. Tot aici este și mormântul lui.',
+      },
+    },
+
   },
 };
