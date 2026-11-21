@@ -170,10 +170,7 @@ const loop = new GameLoop(dt => {
   world.update(step);
   render();
   hud.update(journey);
-  railSound.update(journey.speed, {
-    tunnel: world.features.tunnelState(journey.distance, world.train.length).any,
-    paused: missionHud.paused,
-  });
+  railSound.update(journey.speed, { paused: missionHud.paused });
   canvas.style.cursor = director.wantsPointer ? 'pointer' : 'default';
 });
 
