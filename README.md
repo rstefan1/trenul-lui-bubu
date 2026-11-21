@@ -33,19 +33,21 @@ The teacher can open every chapter with `?profesor`, e.g.
 ## Running locally
 
 The game uses JavaScript modules, so it must be served over HTTP (opening
-`index.html` directly from disk does not work):
+`index.html` directly from disk does not work). The small development server
+in the repository also turns off the browser cache, so a changed file is
+always loaded fresh:
 
 ```sh
-python3 -m http.server 8000
+python3 serve.py
 ```
 
 Then open <http://localhost:8000/winter/>.
 
-To try it on a phone or tablet in the same Wi-Fi network, start the server
-with `--bind 0.0.0.0` and open `http://<computer IP>:8000/winter/` on the
-device.
+To try it on a phone or tablet in the same Wi-Fi network, start it with
+`python3 serve.py 8000 0.0.0.0` and open `http://<computer IP>:8000/winter/`
+on the device.
 
-### Testing helpers
+## Testing helpers
 
 URL parameters that make testing faster (the first four skip the menu and
 do not save anything):
