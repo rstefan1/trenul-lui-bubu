@@ -38,6 +38,8 @@
 
 /** Seconds a station without a mission keeps the train. */
 const PLAIN_STOP = 4;
+/** Seconds between the arrival and a station mission (time to see the station sign). */
+const BEFORE_STATION_MISSION = 2;
 /** Seconds between the result of a station mission and the departure. */
 const AFTER_RESULT = 2.4;
 
@@ -59,6 +61,8 @@ export class MissionDirector {
     this.departIn = Infinity;
     /** True while a station mission holds the train. */
     this.holding = false;
+    /** @type {{entry: StationMissionPlan, wait: number} | null} station mission about to start */
+    this.pending = null;
 
     ctx.journey.on('arrive', station => this.atStation(station));
   }
@@ -77,7 +81,8 @@ export class MissionDirector {
       return;
     }
     this.holding = true;
-    this.launch(entry.type, entry.config, {});
+    // the first station's mission starts at once (the train is already there)
+    this.pending = { entry, wait: station.index === 0 ? 0 : BEFORE_STATION_MISSION };
   }
 
   /** @param {number} dt  game seconds */
@@ -89,6 +94,12 @@ export class MissionDirector {
         this.departIn = Infinity;
         j.depart();
       }
+    }
+
+    if (this.pending && (this.pending.wait -= dt) <= 0) {
+      const { entry } = this.pending;
+      this.pending = null;
+      this.launch(entry.type, entry.config, {});
     }
 
     if (j.state === 'running') {
