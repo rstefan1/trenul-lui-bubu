@@ -384,12 +384,9 @@ function drawGirder(c, x0, x1) {
 
 /** How far a tunnel's mountain reaches beyond the portals. */
 const MOUNTAIN_SKIRT = 420;
-/** Half the width of a portal's arched opening, and its stone frame. */
-const ARCH_HALF = 118;
-const ARCH_STONE = 26;
-/** Top of the arch (its crown) and where the arch starts curving. */
-const ARCH_TOP = TUBE_TOP - 30;
-const ARCH_SPRING = TUBE_TOP + 90;
+/** A portal seen from the side: thickness of its stone head wall and its top. */
+const PORTAL_THICK = 46;
+const PORTAL_TOP = TUBE_TOP - 46;
 
 /**
  * Height of the mountain a tunnel goes through: a big rounded massif with a
@@ -423,14 +420,32 @@ function mountainTop(u, span, seed) {
  */
 function mountainPath(c, x0, x1, from, to, bottom, f, dy = 0) {
   const span = f.x1 - f.x0;
-  const step = 24;
   c.moveTo(from, bottom);
-  for (let x = from; x < to + step; x += step) {
-    const xx = Math.min(x, to);
-    c.lineTo(xx, mountainTop((xx - x0) / (x1 - x0), span, f.seed) + dy);
-  }
+  for (const x of outlineXs(x0, from, to)) c.lineTo(x, mountainTop((x - x0) / (x1 - x0), span, f.seed) + dy);
   c.lineTo(to, bottom);
   c.closePath();
+}
+
+/** Spacing of the points of a mountain's outline (stage units). */
+const OUTLINE_STEP = 24;
+
+/**
+ * The x values at which a mountain's outline is drawn between `from` and
+ * `to`: always the same points of the mountain (counted from its foot x0),
+ * so the outline does not shimmer while the mountain scrolls by.
+ * @param {number} x0
+ * @param {number} from
+ * @param {number} to
+ * @returns {number[]}
+ */
+function outlineXs(x0, from, to) {
+  const xs = [from];
+  for (let n = Math.ceil((from - x0) / OUTLINE_STEP); x0 + n * OUTLINE_STEP < to; n++) {
+    const x = x0 + n * OUTLINE_STEP;
+    if (x > from) xs.push(x);
+  }
+  xs.push(to);
+  return xs;
 }
 
 /**
@@ -454,9 +469,8 @@ function drawTunnelHill(c, v, f) {
   mountainPath(c, x0, x1, from, to, NEAR_GROUND_Y + 30, f);
   c.fill();
   drawMountainDressing(c, v, f, x0, x1, from, to, 1);
-  // the mouths, each on the outer side of its portal
-  drawTunnelMouth(c, v, p0 - ARCH_HALF + 40);
-  drawTunnelMouth(c, v, p1 + ARCH_HALF - 40);
+  drawPortal(c, v, p0, 1, 'back');
+  drawPortal(c, v, p1, -1, 'back');
 }
 
 /**
@@ -506,12 +520,9 @@ function drawMountainDressing(c, v, f, x0, x1, from, to, shade) {
   if (v.cover > 0.05) {
     c.fillStyle = `rgba(244,248,255,${v.cover})`;
     c.beginPath();
-    const step = 24;
-    for (let x = from; x < to + step; x += step) c.lineTo(Math.min(x, to), top(Math.min(x, to)) - 2);
-    for (let x = to; x > from - step; x -= step) {
-      const xx = Math.max(x, from);
-      c.lineTo(xx, top(xx) + 22 + 10 * Math.sin(xx * 0.05 + f.seed));
-    }
+    const xs = outlineXs(x0, from, to);
+    for (const x of xs) c.lineTo(x, top(x) - 2);
+    for (let i = xs.length - 1; i >= 0; i--) c.lineTo(xs[i], top(xs[i]) + 22 + 10 * Math.sin((xs[i] - x0) * 0.05 + f.seed));
     c.closePath();
     c.fill();
   }
@@ -528,81 +539,86 @@ function drawMountainDressing(c, v, f, x0, x1, from, to, shade) {
 }
 
 /**
- * The outline of a portal's arched opening.
+ * A tunnel portal seen in profile, as the train sees it from the side: a
+ * stone head wall standing against the mountain, a little taller than the
+ * train, with a cornice on top and a sloping wing wall holding the slope.
  * @param {CanvasRenderingContext2D} c
- * @param {number} cx
- * @param {number} half
- * @param {number} crown
+ * @param {FeatureView} v
+ * @param {number} px    screen x of the tunnel's end
+ * @param {1 | -1} dir   1 = the mountain is to the right (entrance), -1 = exit
+ * @param {'back' | 'front'} part  behind the train (wing wall) or in front (head wall)
  */
-function archPath(c, cx, half, crown) {
-  const bottom = TRACK_Y + 28;
-  c.moveTo(cx - half, bottom);
-  c.lineTo(cx - half, ARCH_SPRING);
-  c.bezierCurveTo(cx - half, crown + 10, cx - half * 0.55, crown, cx, crown);
-  c.bezierCurveTo(cx + half * 0.55, crown, cx + half, crown + 10, cx + half, ARCH_SPRING);
-  c.lineTo(cx + half, bottom);
-  c.closePath();
+function drawPortal(c, v, px, dir, part) {
+  if (px < v.left - 200 || px > v.right + 200) return;
+  const ground = TRACK_Y + 30;
+  const outer = px - dir * 12;                     // face towards the open line
+  const inner = outer + dir * PORTAL_THICK;
+  const left = Math.min(outer, inner);
+  if (part === 'back') {
+    drawWingWall(c, outer, dir, NEAR_GROUND_Y + 10);
+    return;
+  }
+  drawHeadWall(c, v, left, inner, dir, ground);
 }
 
 /**
- * A tunnel mouth in the mountain: a stone arch with a keystone around a
- * dark opening that fades into the depth.
+ * The wing wall behind the track: a stone slope from the top of the portal
+ * down to the ground, holding the mountain's side.
+ * @param {CanvasRenderingContext2D} c
+ * @param {number} outer
+ * @param {1 | -1} dir
+ * @param {number} ground
+ */
+function drawWingWall(c, outer, dir, ground) {
+  c.fillStyle = '#9d8d79';
+  c.beginPath();
+  c.moveTo(outer, PORTAL_TOP + 30);
+  c.lineTo(outer - dir * 120, ground);
+  c.lineTo(outer, ground);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = 'rgba(70,55,40,0.3)';
+  c.lineWidth = 2;
+  c.beginPath();
+  for (let k = 1; k < 5; k++) {
+    const y = PORTAL_TOP + 30 + (ground - PORTAL_TOP - 30) * (k / 5);
+    c.moveTo(outer, y);
+    c.lineTo(outer - dir * 120 * (k / 5), y);
+  }
+  c.stroke();
+}
+
+/**
+ * The portal's head wall in front of the train, seen from the side.
  * @param {CanvasRenderingContext2D} c
  * @param {FeatureView} v
- * @param {number} cx  centre of the arch
+ * @param {number} left
+ * @param {number} inner
+ * @param {1 | -1} dir
+ * @param {number} ground
  */
-function drawTunnelMouth(c, v, cx) {
-  if (cx < v.left - 300 || cx > v.right + 300) return;
-  // the facade: a stone wall a little wider than the arch, with a cornice
-  const wallHalf = ARCH_HALF + ARCH_STONE + 40;
-  const wallTop = ARCH_TOP - ARCH_STONE - 30;
-  fillRoundRect(c, cx - wallHalf, wallTop, wallHalf * 2, TRACK_Y + 28 - wallTop, 6, '#a39380');
-  c.fillStyle = '#8f7f6c';
-  c.fillRect(cx - wallHalf - 10, wallTop - 14, wallHalf * 2 + 20, 18);
+function drawHeadWall(c, v, left, inner, dir, ground) {
+  // the head wall, with a darker edge where the tunnel opens behind it
+  fillRoundRect(c, left, PORTAL_TOP, PORTAL_THICK, ground - PORTAL_TOP, 4, '#b7a58e');
+  c.fillStyle = 'rgba(40,30,25,0.35)';
+  c.fillRect(dir === 1 ? inner - 8 : inner, PORTAL_TOP + 16, 8, ground - PORTAL_TOP - 16);
+  c.strokeStyle = 'rgba(70,55,40,0.3)';
+  c.beginPath();
+  for (let y = PORTAL_TOP + 40, row = 0; y < ground; y += 34, row++) {
+    c.moveTo(left, y);
+    c.lineTo(left + PORTAL_THICK, y);
+    const jx = left + (row % 2 ? PORTAL_THICK * 0.35 : PORTAL_THICK * 0.65);
+    c.moveTo(jx, y);
+    c.lineTo(jx, y - 34);
+  }
+  c.stroke();
+  // the cornice, overhanging a little on both sides, with snow on it
+  c.fillStyle = '#968470';
+  c.fillRect(left - 10, PORTAL_TOP - 14, PORTAL_THICK + 20, 18);
   if (v.cover > 0.3) {
     c.fillStyle = `rgba(244,248,255,${v.cover})`;
-    fillRoundRect(c, cx - wallHalf - 14, wallTop - 22, wallHalf * 2 + 28, 12, 6, c.fillStyle);
+    fillRoundRect(c, left - 13, PORTAL_TOP - 22, PORTAL_THICK + 26, 10, 5, c.fillStyle);
   }
-  // masonry lines on the wall
-  c.strokeStyle = 'rgba(70,55,40,0.25)';
-  c.lineWidth = 2;
-  c.beginPath();
-  for (let y = wallTop + 26, row = 0; y < TRACK_Y + 20; y += 26, row++) {
-    c.moveTo(cx - wallHalf, y);
-    c.lineTo(cx + wallHalf, y);
-    for (let x = cx - wallHalf + (row % 2 ? 24 : 0); x < cx + wallHalf; x += 48) {
-      c.moveTo(x, y);
-      c.lineTo(x, y - 26);
-    }
-  }
-  c.stroke();
-  // the arch of big stones (voussoirs)
-  c.fillStyle = '#c2b29c';
-  c.beginPath();
-  archPath(c, cx, ARCH_HALF + ARCH_STONE, ARCH_TOP - ARCH_STONE);
-  c.fill();
-  // the dark opening, deeper towards the middle
-  const g = c.createRadialGradient(cx, TRACK_Y - 60, 10, cx, TRACK_Y - 60, ARCH_HALF * 1.6);
-  g.addColorStop(0, '#05040a');
-  g.addColorStop(1, '#2a2433');
-  c.fillStyle = g;
-  c.beginPath();
-  archPath(c, cx, ARCH_HALF, ARCH_TOP);
-  c.fill();
-  // joints between the arch stones
-  c.strokeStyle = 'rgba(70,55,40,0.4)';
-  c.lineWidth = 2;
-  c.beginPath();
-  for (let i = 1; i < 9; i++) {
-    const a = Math.PI + (i * Math.PI) / 9;
-    const rx = ARCH_HALF + ARCH_STONE / 2;
-    const ry = ARCH_SPRING - ARCH_TOP;
-    c.moveTo(cx + Math.cos(a) * (rx - ARCH_STONE / 2), ARCH_SPRING + Math.sin(a) * (ry - ARCH_STONE / 2));
-    c.lineTo(cx + Math.cos(a) * (rx + ARCH_STONE / 2), ARCH_SPRING + Math.sin(a) * (ry + ARCH_STONE / 2));
-  }
-  c.stroke();
-  // the keystone
-  fillRoundRect(c, cx - 18, ARCH_TOP - ARCH_STONE - 8, 36, ARCH_STONE + 22, 4, '#d8c9b2');
 }
 
 /**
@@ -638,22 +654,8 @@ function drawTunnelFront(c, v, f) {
     }
     c.restore();
   }
-  // the arch's inner pillars, in front of the train, at both portals
-  for (const [px, side] of [[p0, 1], [p1, -1]]) {
-    if (px < v.left - 200 || px > v.right + 200) continue;
-    const cx = px + side * 4;
-    fillRoundRect(c, cx - 22, ARCH_SPRING - 30, 44, TRACK_Y + 30 - ARCH_SPRING + 30, 6, '#b7a58e');
-    c.fillStyle = '#9c8b75';
-    c.fillRect(cx - 26, ARCH_SPRING - 34, 52, 12);
-    c.strokeStyle = 'rgba(70,55,40,0.3)';
-    c.lineWidth = 2;
-    c.beginPath();
-    for (let y = ARCH_SPRING; y < TRACK_Y + 20; y += 30) {
-      c.moveTo(cx - 22, y);
-      c.lineTo(cx + 22, y);
-    }
-    c.stroke();
-  }
+  drawPortal(c, v, p0, 1, 'front');
+  drawPortal(c, v, p1, -1, 'front');
 }
 
 // ------------------------------------------------------------------ stations
