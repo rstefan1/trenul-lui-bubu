@@ -4,18 +4,20 @@
  * Climbing towards the pass in a heavy snowfall, the train stops in front
  * of a huge snowdrift that covers the line. In three short steps:
  *
+ *   0. Bubu climbs out of her window and lands next to the shovel;
  *   1. dig — the child rubs the drift (moves the mouse with the button held,
  *      or the finger) or taps it; snow flies off and the drift shrinks;
  *   2. signal — the rest is too much for Bubu: the child touches the
  *      lantern (the one packed in Timișoara!) three times to call for help;
  *   3. the snowplough — a little orange plough engine comes down the line,
- *      clears it and goes away, and the train continues.
+ *      clears it and goes away; Bubu hops back to her window and the train
+ *      continues.
  *
  * The mission takes the controls of the train to stop it and gives them
  * back at the end.
  */
 
-import { clamp, lerp } from '../core/math.js';
+import { clamp, easeInOut, lerp } from '../core/math.js';
 import { Particles } from '../gfx/particles.js';
 import { fillCircle, fillRoundRect, glow } from '../gfx/shapes.js';
 import { drawBubu } from '../train/bubu.js';
@@ -28,6 +30,8 @@ const RUB = 1 / 2400;
 const TAP = 0.035;
 /** The plough takes over when this much snow is left. */
 const PLOUGH_AT = 0.38;
+/** Seconds of Bubu's hop out of the window, and back in. */
+const HOP_TIME = 1.1;
 /** Width of the drift (stage units). */
 const DRIFT_W = 320;
 /** Gap between the stopped train and the drift (room for Bubu and the lantern). */
@@ -45,7 +49,7 @@ export class SnowboundMission extends Mission {
   constructor(ctx, config) {
     super(ctx, config);
     this.config = config;
-    /** @type {'stopping' | 'dig' | 'signal' | 'plough' | 'go'} */
+    /** @type {'stopping' | 'out' | 'dig' | 'signal' | 'plough' | 'back' | 'go'} */
     this.step = 'stopping';
     this.stepT = 0;
     this.time = 0;
@@ -137,17 +141,19 @@ export class SnowboundMission extends Mission {
 
   /**
    * @private
-   * @param {'stopping' | 'dig' | 'signal' | 'plough' | 'go'} step
+   * @param {'stopping' | 'out' | 'dig' | 'signal' | 'plough' | 'back' | 'go'} step
    */
   setStep(step) {
     if (this.step === step) return;
     this.step = step;
     this.stepT = 0;
     const hud = this.ctx.hud;
-    if (step === 'dig') hud.announce(this.config.title, this.config.digText, 'Misiune', 0);
-    if (step === 'signal') hud.announce(this.config.title, this.config.signalText, 'Misiune', 0);
+    if (step === 'out') this.ctx.world.train.setBubuVisible(false, true);
+    if (step === 'go') this.ctx.world.train.setBubuVisible(true, true);
+    if (step === 'dig') hud.instruct(this.config.title, this.config.digText);
+    if (step === 'signal') hud.instruct(this.config.title, this.config.signalText);
     if (step === 'plough') {
-      hud.announce(this.config.title, this.config.ploughText, 'Misiune', 0);
+      hud.instruct(this.config.title, this.config.ploughText);
       this.ploughX = this.ctx.stage.viewRight + 300;
     }
   }
@@ -161,8 +167,10 @@ export class SnowboundMission extends Mission {
     const j = this.ctx.journey;
     // pan the view forward so the drift ahead of the train is fully on screen
     const w = this.ctx.world;
-    w.panTarget = this.step === 'go' ? 0 : Math.max(0, w.baseAnchorX + GAP + DRIFT_W + 60 - this.ctx.stage.viewRight);
-    if (this.step === 'stopping' && j.speed < 1) this.setStep('dig');
+    w.panTarget = this.step === 'back' || this.step === 'go' ? 0 : Math.max(0, w.baseAnchorX + GAP + DRIFT_W + 60 - this.ctx.stage.viewRight);
+    if (this.step === 'stopping' && j.speed < 1) this.setStep('out');
+    if (this.step === 'out' && this.stepT >= HOP_TIME) this.setStep('dig');
+    if (this.step === 'back' && this.stepT >= HOP_TIME) this.setStep('go');
     if (this.step === 'dig') this.digTime += dt;
     if (this.step === 'plough') {
       // the plough comes down the line, pushes through the drift and goes away
@@ -173,7 +181,7 @@ export class SnowboundMission extends Mission {
         this.snow = Math.max(0, lerp(PLOUGH_AT, 0, (t - 2.2) / 1.4));
         if (Math.random() < 0.5) this.particles.burst(this.ploughX, TRACK_Y - 60 - this.ctx.world.cameraY, ['#ffffff', '#e3ecf8'], 6, 260);
       } else this.ploughX = lerp(target, this.ctx.stage.viewRight + 400, clamp((t - 3.6) / 2, 0, 1));
-      if (t > 5.4) this.setStep('go');
+      if (t > 5.4) this.setStep('back');
     }
     if (this.step === 'go') {
       if (this.controls) {
@@ -219,7 +227,7 @@ export class SnowboundMission extends Mission {
     c.lineTo(bx + 60 + Math.cos(dig) * 20, TRACK_Y - 10 + Math.sin(dig) * 30);
     c.stroke();
     fillRoundRect(c, bx + 66 + Math.cos(dig) * 20, TRACK_Y - 26 + Math.sin(dig) * 30, 26, 22, 4, '#90a4ae');
-    drawBubu(c, bx, TRACK_Y + 30, 90, dig * 0.3);
+    if (this.step !== 'out' && this.step !== 'back') drawBubu(c, bx, TRACK_Y + 30, 90, dig * 0.3);
     const l = { x: x0 - 190, y: TRACK_Y + 40 };
     if (this.step === 'signal' || this.flash > 0) {
       glow(c, l.x, l.y - 40, 90 + this.flash * 160, `rgba(255,214,120,${0.35 + 0.5 * this.flash})`, 'rgba(255,214,120,0)');
@@ -253,7 +261,25 @@ export class SnowboundMission extends Mission {
       fillRoundRect(c, x0 + DRIFT_W / 2 - 100, TRACK_Y - 330, Math.max(16, 200 * k), 16, 8, '#e3ecf8');
     }
     c.restore();
+    if (this.step === 'out' || this.step === 'back') this.drawHop(c, x0 - 95);
     this.particles.draw(c);
+  }
+
+  /**
+   * Bubu hopping between her window and the shovel (in an arc, spinning once).
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {number} groundX  where she stands to dig
+   */
+  drawHop(c, groundX) {
+    const w = this.ctx.world;
+    const win = w.trainToStage(w.train.bubuPosition);
+    const ground = { x: groundX, y: TRACK_Y + 30 - w.cameraY };
+    const t = easeInOut(clamp(this.stepT / HOP_TIME, 0, 1));
+    const k = this.step === 'out' ? t : 1 - t;   // 0 = at the window, 1 = by the shovel
+    const x = lerp(win.x, ground.x, k);
+    const y = lerp(win.y, ground.y, k) - Math.sin(Math.PI * k) * 150;
+    drawBubu(c, x, y, lerp(80, 90, k), (this.step === 'out' ? 1 : -1) * t * 6.28);
   }
 
   /**
@@ -288,6 +314,7 @@ export class SnowboundMission extends Mission {
 
   dispose() {
     this.ctx.world.panTarget = 0;
+    this.ctx.world.train.setBubuVisible(true);
     if (this.controls) this.ctx.journey.releaseControl();
     this.ctx.hud.hideAnnouncement();
   }
