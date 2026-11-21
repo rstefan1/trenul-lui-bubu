@@ -1,8 +1,9 @@
 # Trenul lui Bubu
 
 A browser game for children (5th grade): Bubu, a plush ladybug, travels by
-train from Timișoara to Putna on Christmas Eve and completes missions along
-the way.
+train across Romania and completes missions at the stations and along the
+way. Each journey is a route of its own, with its own stations, landscapes
+and missions.
 
 The game runs entirely in the browser (laptop, tablet and phone) and is
 published with GitHub Pages. It uses plain HTML, CSS and JavaScript modules,
@@ -11,16 +12,17 @@ with no libraries and no build step.
 ## Structure
 
 ```
-index.html       entry page (redirects to the winter journey for now)
-shared/          code and assets shared by every season of the game
-winter/          the Christmas journey
+index.html       entry page (redirects to the first journey for now)
+shared/          code and assets shared by every journey of the game
+winter/          the first journey
 ```
 
-A future summer journey will live in `summer/` and reuse `shared/`.
+Every new journey gets a folder of its own, next to `winter/`, and reuses
+`shared/`.
 
 ## Playing
 
-The journey has four chapters, which unlock one after another. Progress is
+A journey is divided into chapters, which unlock one after another. Progress is
 saved in the browser after every station (no accounts, nothing leaves the
 device), so it can be continued another day with “Continuă călătoria”.
 Finished chapters can be replayed for more stars.
