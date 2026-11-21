@@ -9,6 +9,8 @@
  * Configuration (besides id/title/text):
  *   feeders   how many feeders pass by
  *   full      how many of them are already full (nothing to do there)
+ *   pace      optional {far, slow}: the train crawls while hungry birds wait
+ *             on screen and goes fast between the gardens (see TrainPace)
  */
 
 import { TAU, clamp, lerp } from '../core/math.js';
@@ -16,6 +18,7 @@ import { Particles } from '../gfx/particles.js';
 import { fillCircle, fillRoundRect, glow } from '../gfx/shapes.js';
 import { TRACK_Y } from '../world/track.js';
 import { Mission } from './mission.js';
+import { TrainPace } from './pace.js';
 
 /** Ground of the gardens in front of the track (stage units). */
 const GARDEN_Y = TRACK_Y + 115;
@@ -36,7 +39,7 @@ const BIRDS = [
  * @property {number} fedT      seconds since it was filled (−1 = not yet)
  * @property {number[]} birds   kinds of the birds around it
  *
- * @typedef {import('./mission.js').MissionConfig & {feeders: number, full: number}} BirdsConfig
+ * @typedef {import('./mission.js').MissionConfig & {feeders: number, full: number, pace?: import('./pace.js').PaceOptions}} BirdsConfig
  */
 
 /** Where the front of the train stands during the mission (share of the screen's width). */
@@ -77,6 +80,8 @@ export class BirdsMission extends Mission {
       fedT: -1,
       birds: [i % 3, (i + 1) % 3, (i + 2) % 3].slice(0, 2 + (i % 2)),
     }));
+    /** @type {TrainPace | null} */
+    this.pace = this.config.pace ? new TrainPace(j, this.config.pace) : null;
     this.ctx.hud.setCounter('🐦', 0, this.hungryCount);
   }
 
@@ -115,6 +120,10 @@ export class BirdsMission extends Mission {
     this.ctx.world.lookAhead(this.phase === 'finished' ? null : LOOK_AHEAD);
     this.time += dt;
     this.particles.update(dt);
+    if (this.pace) {
+      const stage = this.ctx.stage;
+      this.pace.slowNear(this.feeders.filter(f => f.hungry && f.fedT < 0).map(f => this.toScreen(f.worldX)), { left: stage.viewLeft, right: stage.viewRight });
+    }
     for (const f of this.feeders) if (f.fedT >= 0) f.fedT += dt;
     // over when every hungry feeder is filled (and the birds have flown down),
     // or when the last feeder has gone by
@@ -128,6 +137,7 @@ export class BirdsMission extends Mission {
   finishMission() {
     if (this.phase === 'finished') return;
     this.ctx.hud.hideCounter();
+    this.pace?.release();
     const total = this.hungryCount;
     const k = this.fed / total;
     this.complete(k >= 1 ? (this.mistakes <= 1 ? 3 : 2) : k >= 0.5 ? 2 : 1,
@@ -194,6 +204,7 @@ export class BirdsMission extends Mission {
 
   dispose() {
     super.dispose();
+    this.pace?.release();
     this.ctx.world.lookAhead(null);
   }
 }

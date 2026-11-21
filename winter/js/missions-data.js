@@ -31,10 +31,11 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'gifts-mures-valley',
         title: 'Daruri pe Valea Mureșului',
-        text: 'În satele de pe Valea Mureșului, copiii așteaptă în curte. Atinge ecranul ca Bubu să arunce un dar: el cade în cercul auriu. Ochește doar curțile unde te așteaptă un copil!',
-        houses: 14,
-        empty: 4,
+        text: 'În satele de pe Valea Mureșului, copiii așteaptă în curte. Trenul oprește lângă fiecare copil care așteaptă: atunci atinge ecranul, ca Bubu să-i arunce un dar în cercul auriu.',
+        houses: 12,
+        empty: 3,
         spare: 3,
+        pace: { far: 520 },
       },
     },
     {
@@ -73,6 +74,7 @@ export const WINTER_MISSIONS = {
         text: 'E noapte. În unele case, câte un copil stă la geam și așteaptă trenul lui Bubu. Atinge casele unde vezi un copil la fereastră, ca Bubu să-i aprindă o lumânare de Crăciun.',
         houses: 12,
         empty: 4,
+        pace: { far: 480, slow: 100 },
       },
     },
     {
@@ -97,6 +99,7 @@ export const WINTER_MISSIONS = {
         title: 'Fotografii de pe viaducte',
         text: 'Urmează viaductele cele mai frumoase! Când trenul trece pe un viaduct, uită-te în vale: acolo e un animal. Atinge-l ca să-l fotografiezi.',
         animals: ['🦌', '🦊', '🦉', '🐇'],
+        pace: { far: 480, slow: 120 },
       },
     },
     {
@@ -166,6 +169,7 @@ export const WINTER_MISSIONS = {
         text: 'Iarna, păsărelele găsesc greu mâncare. Atinge căsuțele goale lângă care așteaptă păsări flămânde, ca Bubu să le umple cu semințe.',
         feeders: 9,
         full: 3,
+        pace: { far: 480, slow: 100 },
       },
     },
     {

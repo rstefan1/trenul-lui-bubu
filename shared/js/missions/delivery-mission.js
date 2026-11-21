@@ -28,6 +28,7 @@ import { Particles, SPARKS } from '../gfx/particles.js';
 import { drawHouse, fillCircle, glow, lightWindows } from '../gfx/shapes.js';
 import { ROOFS, WALLS } from '../world/biomes/terrain.js';
 import { Mission } from './mission.js';
+import { TrainPace } from './pace.js';
 
 /** Ground line of the yards in front of the track (stage units). */
 const YARD_Y = 893;
@@ -66,9 +67,6 @@ const THROW_COOLDOWN = 0.4;
  * @typedef {import('./mission.js').MissionConfig & {houses: number, empty: number, spare: number, where?: string, pace?: {far: number}}} DeliveryConfig
  */
 
-/** Braking rate used to stop by a waiting child (a little under the train's). */
-const PACE_BRAKE = 230;
-
 /** Where the front of the train stands during the mission (share of the screen's width). */
 const LOOK_AHEAD = 0.55;
 
@@ -95,8 +93,8 @@ export class DeliveryMission extends Mission {
     this.cooldown = 0;
     /** @type {boolean[]} which houses have a child (decided at the start) */
     this.plan = [];
-    /** @type {import('../journey/journey.js').Controls | null} set when the mission sets the pace */
-    this.controls = null;
+    /** @type {TrainPace | null} set when the mission sets the train's pace */
+    this.pace = null;
   }
 
   /** @param {{duration?: number, window?: {from: number, to: number}}} hints */
@@ -123,7 +121,7 @@ export class DeliveryMission extends Mission {
     this.spacing = Math.max(900, (length - this.ctx.stage.width) / houses);
     this.nextWorldX = j.distance - w.anchorX + this.ctx.stage.viewRight + 150;
     if (this.config.pace) {
-      this.controls = j.takeControl();
+      this.pace = new TrainPace(j, this.config.pace);
       // the houses come one after another; the train speeds up between them
       this.spacing = Math.min(this.spacing, 1500);
     }
@@ -136,7 +134,7 @@ export class DeliveryMission extends Mission {
    * @private
    */
   updatePace() {
-    if (!this.controls || !this.config.pace) return;
+    if (!this.pace) return;
     const landing = this.landingX;
     let gap = Infinity;
     for (const h of this.houses) {
@@ -148,16 +146,16 @@ export class DeliveryMission extends Mission {
     if (gap === Infinity && this.spawned < this.config.houses && this.plan[this.spawned]) {
       gap = this.toScreen(this.nextWorldX) + 190 - landing;
     }
-    const far = this.config.pace.far;
-    this.controls.target = gap === Infinity ? far : Math.min(far, Math.sqrt(2 * PACE_BRAKE * Math.max(0, gap)));
+    if (gap === Infinity) this.pace.cruise();
+    else this.pace.stopAt(gap);
   }
 
   /** @private Gives the train back to its timetable. */
   releasePace() {
-    if (!this.controls) return;
-    this.controls = null;
-    this.ctx.journey.releaseControl();
+    this.pace?.release();
+    this.pace = null;
   }
+
 
   /** @private */
   updateCounter() {

@@ -11,6 +11,8 @@
  * Configuration (besides id/title/text):
  *   houses   how many houses pass by
  *   empty    how many of them have nobody at the window
+ *   pace     optional {far, slow}: the train crawls while a child waits on
+ *            screen and goes fast between the houses (see TrainPace)
  */
 
 import { TAU } from '../core/math.js';
@@ -19,6 +21,7 @@ import { drawHouse, fillCircle, glow, lightWindows } from '../gfx/shapes.js';
 import { ROOFS, WALLS } from '../world/biomes/terrain.js';
 import { drawCandle } from './delivery-mission.js';
 import { Mission } from './mission.js';
+import { TrainPace } from './pace.js';
 
 /** Ground line of the houses in front of the track (stage units). */
 const GROUND = 895;
@@ -39,7 +42,7 @@ const BAND_TOP = 680;
  * @property {number} phase
  * @property {Array<[number, number, number, number]>} windows   (relative to the left wall)
  *
- * @typedef {import('./mission.js').MissionConfig & {houses: number, empty: number}} CandlesConfig
+ * @typedef {import('./mission.js').MissionConfig & {houses: number, empty: number, pace?: import('./pace.js').PaceOptions}} CandlesConfig
  */
 
 export class CandlesMission extends Mission {
@@ -83,7 +86,18 @@ export class CandlesMission extends Mission {
     const length = hints.window ? (hints.window.to - hints.window.from) * j.segment.length : 15000;
     this.spacing = Math.max(800, (length - this.ctx.stage.width) / houses);
     this.nextWorldX = j.distance - this.ctx.world.anchorX + this.ctx.stage.viewRight + 150;
+    /** @type {TrainPace | null} */
+    this.pace = this.config.pace ? new TrainPace(j, this.config.pace) : null;
     this.ctx.hud.setCounter('🕯️', 0, this.children);
+  }
+
+  /** @private Crawls while a child waits at a window on screen. */
+  updatePace() {
+    if (!this.pace) return;
+    const xs = this.houses.filter(h => h.child && !h.lit).map(h => this.toScreen(h.worldX) + HOUSE_W / 2);
+    if (this.spawned < this.config.houses && this.plan[this.spawned]) xs.push(this.toScreen(this.nextWorldX) + HOUSE_W / 2);
+    const stage = this.ctx.stage;
+    this.pace.slowNear(xs, { left: stage.viewLeft, right: stage.viewRight });
   }
 
   /** Screen x of a world position. */
@@ -95,6 +109,9 @@ export class CandlesMission extends Mission {
   update(dt) {
     this.time += dt;
     this.particles.update(dt);
+    // the train moves towards the middle of the screen: the houses are seen early
+    this.ctx.world.lookAhead(this.phase === 'finished' ? null : 0.6);
+    this.updatePace();
     for (let i = this.misses.length - 1; i >= 0; i--) if ((this.misses[i].t += dt) > 0.6) this.misses.splice(i, 1);
 
     while (this.phase === 'running' && this.spawned < this.config.houses
@@ -118,6 +135,7 @@ export class CandlesMission extends Mission {
     const out = this.spawned >= this.config.houses && this.houses.length === 0;
     if (this.phase === 'wrapping' || out) {
       this.ctx.hud.hideCounter();
+      this.pace?.release();
       const n = this.lit;
       const k = n / Math.max(1, this.children);
       this.complete(k >= 0.9 ? 3 : k >= 0.6 ? 2 : 1,
@@ -251,5 +269,10 @@ export class CandlesMission extends Mission {
     c.lineTo(cx + r * 0.9 + Math.sin(wave) * r * 1.2, cy + r * 1.4 - Math.cos(wave) * r * 1.6);
     c.stroke();
     c.restore();
+  }
+
+  dispose() {
+    this.pace?.release();
+    this.ctx.world.lookAhead(null);
   }
 }

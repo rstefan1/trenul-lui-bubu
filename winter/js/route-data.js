@@ -58,12 +58,11 @@ export const WINTER_ROUTE = {
       cover: [[0, 0]],
     },
     // Arad → Deva: along the Mureș valley (past Săvârșin); sunset, and the first snowflakes.
-    // The train goes slower through the villages, where Bubu throws gifts to the children.
+    // (the gifts mission stops the train by every waiting child)
     {
       duration: 50,
       biomes: [[0, 'city'], [0.14, 'plain'], [0.38, 'hills'], [0.9, 'city']],
       features: [{ type: 'bridge', at: 0.28, length: 420, depth: 120 }],
-      slow: [[0.1, 0.86, 250]],
       snowfall: [[0, 0], [0.42, 0], [0.5, 0.25], [0.75, 0.6], [1, 0.55]],
       cover: [[0, 0], [0.5, 0], [0.97, 1]],
     },
@@ -83,10 +82,9 @@ export const WINTER_ROUTE = {
       snowfall: [[0, 0.3], [1, 0.45]],
       cover: [[0, 1]],
     },
-    // Cluj-Napoca → Dej: along the Someș; slower through the villages, for the gifts
+    // Cluj-Napoca → Dej: along the Someș (the candles mission sets the pace near the houses)
     {
       duration: 45,
-      slow: [[0.1, 0.86, 250]],
       biomes: [[0, 'city'], [0.14, 'hills'], [0.86, 'city']],
       features: [{ type: 'bridge', at: 0.45, length: 360, depth: 120 }],
       snowfall: [[0, 0.45], [1, 0.35]],
@@ -147,11 +145,10 @@ export const WINTER_ROUTE = {
       cover: [[0, 1]],
     },
     // Suceava → Rădăuți: the small regional train, first light of the morning
-    // (slower past the gardens with the bird feeders)
+    // (the birds mission sets the pace near the feeders)
     {
       duration: 50,
       train: 'regional',
-      slow: [[0.1, 0.86, 170]],
       biomes: [[0, 'city'], [0.12, 'plain'], [0.6, 'hills'], [0.9, 'city']],
       snowfall: [[0, 0.1], [0.5, 0]],
       cover: [[0, 1]],

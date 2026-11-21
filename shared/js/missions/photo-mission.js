@@ -8,12 +8,15 @@
  *
  * Configuration (besides id/title/text):
  *   animals   emoji of the animals, one per viaduct, in order
+ *   pace      optional {far, slow}: the train crawls while an animal waits
+ *             to be photographed (see TrainPace)
  */
 
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillRoundRect, glow } from '../gfx/shapes.js';
 import { NEAR_GROUND_Y } from '../world/biomes/terrain.js';
 import { Mission } from './mission.js';
+import { TrainPace } from './pace.js';
 
 /** Size of the snapshot taken around an animal (stage units) and of the thumbnail (pixels). */
 const SHOT_W = 300;
@@ -29,7 +32,7 @@ const THUMB_H = 105;
  * @property {'waiting' | 'taken' | 'missed'} state
  * @property {number} phase
  *
- * @typedef {import('./mission.js').MissionConfig & {animals: string[]}} PhotoConfig
+ * @typedef {import('./mission.js').MissionConfig & {animals: string[], pace?: import('./pace.js').PaceOptions}} PhotoConfig
  */
 
 export class PhotoMission extends Mission {
@@ -66,6 +69,8 @@ export class PhotoMission extends Mission {
         phase: Math.random() * 6,
       };
     });
+    /** @type {TrainPace | null} */
+    this.pace = this.config.pace ? new TrainPace(j, this.config.pace) : null;
     this.ctx.hud.setCounter('📷', 0, this.sightings.length);
   }
 
@@ -100,11 +105,16 @@ export class PhotoMission extends Mission {
     this.time += dt;
     this.flash = Math.max(0, this.flash - dt * 4);
     this.particles.update(dt);
+    if (this.pace) {
+      const stage = this.ctx.stage;
+      this.pace.slowNear(this.sightings.filter(s => s.state === 'waiting').map(s => this.at(s).x), { left: stage.viewLeft, right: stage.viewRight });
+    }
     const left = this.ctx.stage.viewLeft - 200;
     for (const s of this.sightings) if (s.state === 'waiting' && this.at(s).x < left) s.state = 'missed';
     const over = this.sightings.every(s => s.state !== 'waiting');
     if (over || this.phase === 'wrapping') {
       this.ctx.hud.hideCounter();
+      this.pace?.release();
       const n = this.album.length;
       const total = this.sightings.length;
       this.complete(n >= total ? 3 : n >= Math.ceil(total / 2) ? 2 : 1,
@@ -181,5 +191,9 @@ export class PhotoMission extends Mission {
       c.drawImage(thumb, -w / 2, -h / 2, w, h);
       c.restore();
     });
+  }
+
+  dispose() {
+    this.pace?.release();
   }
 }
