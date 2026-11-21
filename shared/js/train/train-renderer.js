@@ -157,6 +157,25 @@ export class TrainRenderer {
   }
 
   /**
+   * Centres of the passenger windows (Bubu's excepted), back of the train
+   * first, in train coordinates: where passengers a mission brings can sit.
+   * @returns {Array<{x: number, y: number}>}
+   */
+  get passengerWindows() {
+    this.ensureBody();
+    const out = [];
+    for (const car of this.cars) {
+      if (car.spec.kind === 'electricLoco' || car.spec.kind === 'flatcar') continue;
+      const b = car.geo.bubuWindow;
+      for (const r of car.geo.windows) {
+        if (b && r[0] === b[0] && r[1] === b[1]) continue;
+        out.push({ x: car.left + r[0] + r[2] / 2, y: r[1] + r[3] * 0.55 });
+      }
+    }
+    return out.sort((a, b) => a.x - b.x);
+  }
+
+  /**
    * Which car is at a point (train coordinates), if any.
    * @param {number} x
    * @param {number} y

@@ -32,8 +32,8 @@ import { CandlesMission } from '../../shared/js/missions/candles-mission.js';
 import { CatchMission } from '../../shared/js/missions/catch-mission.js';
 import { CircuitMission } from '../../shared/js/missions/circuit-mission.js';
 import { ConnectStarsMission } from '../../shared/js/missions/connect-stars-mission.js';
-import { CrossingMission } from '../../shared/js/missions/crossing-mission.js';
 import { EyesMission } from '../../shared/js/missions/eyes-mission.js';
+import { ForestStopsMission } from '../../shared/js/missions/forest-stops-mission.js';
 import { FairMission } from '../../shared/js/missions/fair-mission.js';
 import { MemoryMission } from '../../shared/js/missions/memory-mission.js';
 import { PhotoMission } from '../../shared/js/missions/photo-mission.js';
@@ -71,9 +71,9 @@ const MISSION_TYPES = {
   sequence: SequenceMission,
   switches: SwitchesMission,
   'connect-stars': ConnectStarsMission,
-  crossing: CrossingMission,
   eyes: EyesMission,
   fair: FairMission,
+  'forest-stops': ForestStopsMission,
   memory: MemoryMission,
   photo: PhotoMission,
   rhythm: RhythmMission,

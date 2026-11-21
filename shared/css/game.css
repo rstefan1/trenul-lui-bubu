@@ -875,20 +875,18 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 }
 .brake-btn.is-stopped { background: radial-gradient(circle at 35% 30%, #5fd68a, var(--green) 60%, var(--green-dark)); box-shadow: 0 8px 0 #155a30, 0 14px 30px rgba(0, 0, 0, .35); }
 .brake-btn:active { transform: translateY(5px); }
+.brake-btn:disabled { filter: saturate(.4) brightness(.9); }
+.brake-btn.is-urgent { animation: brake-pulse 1s ease-in-out infinite; }
+@keyframes brake-pulse { 50% { transform: scale(1.08); box-shadow: 0 8px 0 rgba(0, 0, 0, .3), 0 0 0 10px rgba(255, 214, 90, .55); } }
+@media (prefers-reduced-motion: reduce) { .brake-btn.is-urgent { animation: none; outline: 6px solid var(--gold); } }
 
 /* ---------- Memory game (Câmpulung spoons) ---------- */
-.memory-panel { width: min(760px, 100%); }
+.memory-panel { width: min(620px, 100%); }
 .memory-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(var(--cols, 4), 1fr);
+  gap: 12px;
   width: 100%;
-}
-@media (max-width: 640px), (max-aspect-ratio: 1/1) {
-  .memory-grid { grid-template-columns: repeat(4, 1fr); }
-}
-@media (max-height: 560px) {
-  .memory-card { aspect-ratio: 1; }
 }
 .memory-card {
   position: relative;
@@ -919,6 +917,9 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .memory-card__front { transform: rotateY(180deg); }
 .memory-card.is-up .memory-card__back { transform: rotateY(180deg); }
 .memory-card.is-up .memory-card__front { transform: rotateY(0); }
+@media (max-height: 560px) {
+  .memory-card { aspect-ratio: 1; }
+}
 .memory-card.is-matched { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold); }
 
 /* ---------- Mission briefing (pauses the game until it is closed) ---------- */
