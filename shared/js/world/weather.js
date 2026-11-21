@@ -52,7 +52,7 @@ export class Snowfall {
 
   /**
    * @param {number} dt
-   * @param {number} intensity  0..1
+   * @param {number} intensity  0..2 (1 = ordinary snowfall, 2 = blizzard)
    * @param {number} trainSpeed world units per second (flakes drift backwards)
    * @param {number} time
    */
@@ -72,7 +72,8 @@ export class Snowfall {
 
   /** @param {CanvasRenderingContext2D} c */
   draw(c) {
-    const n = Math.round(this.flakes.length * this.intensity);
+    // intensity 1 is an ordinary snowfall (half of the pool), 2 a blizzard
+    const n = Math.min(this.flakes.length, Math.round(this.flakes.length * 0.5 * this.intensity));
     if (n === 0) return;
     c.fillStyle = 'rgba(255,255,255,0.88)';
     c.beginPath();

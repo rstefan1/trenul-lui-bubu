@@ -15,7 +15,7 @@
  *   features  viaducts, bridges and tunnels, at a fraction of the segment
  *   slow      stretches where the train goes slower, as [from, to, speed]
  *             (e.g. while gifts are thrown to the houses)
- *   snowfall  how hard it snows, as [fraction, 0..1]
+ *   snowfall  how hard it snows, as [fraction, 0..2] (1 = snowfall, 2 = blizzard)
  *   cover     how white the ground is, as [fraction, 0..1]
  *   train     which train runs on the segment ("night" or "regional")
  *
@@ -113,11 +113,11 @@ export const WINTER_ROUTE = {
       snowfall: [[0, 0.15], [0.3, 0.04], [0.9, 0.04], [1, 0.12]],
       cover: [[0, 1]],
     },
-    // Vatra Dornei → Mestecăniș: climbing towards the pass, in a heavy snowfall
+    // Vatra Dornei → Mestecăniș: climbing towards the pass, in a blizzard (the train gets snowed in)
     {
       duration: 40,
       biomes: [[0, 'city'], [0.15, 'forest']],
-      snowfall: [[0, 0.4], [0.5, 0.8], [1, 0.6]],
+      snowfall: [[0, 0.8], [0.25, 2], [1, 1.8]],
       cover: [[0, 1]],
     },
     // Mestecăniș → Câmpulung Moldovenesc: through the long tunnel under the pass
@@ -126,7 +126,7 @@ export const WINTER_ROUTE = {
       duration: 45,
       biomes: [[0, 'forest'], [0.62, 'hills'], [0.9, 'city']],
       features: [{ type: 'tunnel', at: 0.14, length: 3600 }],
-      snowfall: [[0, 0.5], [1, 0.3]],
+      snowfall: [[0, 1.4], [0.5, 0.6], [1, 0.3]],
       cover: [[0, 1]],
     },
     // Câmpulung Moldovenesc → Gura Humorului: down the Moldova valley

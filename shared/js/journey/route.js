@@ -37,7 +37,7 @@ import { MotionPlan, tripLength } from './motion.js';
  *                                                   the slow crossing of viaducts
  * @property {Array<[number, string]>} biomes        [fraction, biome id], sorted
  * @property {FeatureData[]} [features]
- * @property {Array<[number, number]>} [snowfall]    [fraction, intensity 0..1]
+ * @property {Array<[number, number]>} [snowfall]    [fraction, intensity 0..2 (2 = blizzard)]
  * @property {Array<[number, number]>} [cover]       [fraction, snow on the ground 0..1]
  * @property {Array<[number, number, number]>} [slow] [from, to, speed]: stretches with a lower speed
  * @property {string} [train]                        train id (default: "night")
