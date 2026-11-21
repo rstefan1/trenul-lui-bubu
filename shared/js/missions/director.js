@@ -189,6 +189,12 @@ export class MissionDirector extends Emitter {
     if (m) m.pointerMove(p);
   }
 
+  /** @param {import('../core/input.js').PointerInfo} p */
+  pointerUp(p) {
+    const m = this.active[this.active.length - 1];
+    if (m) m.pointerUp(p);
+  }
+
   /** True when a mission wants the pointer (the canvas then shows a hand cursor). */
   get wantsPointer() {
     return this.active.length > 0;
