@@ -42,7 +42,8 @@ URL parameters that make testing faster:
 | `?skip`          | skip Bubu's introduction                                  |
 | `?from=<id>`     | start at a station, e.g. `?from=ilva-mica`                |
 | `?speed=<n>`     | run the journey `n` times faster, e.g. `?speed=4`         |
-| `?at=<seconds>`  | skip the intro and fast-forward the journey               |
+| `?at=<seconds>`  | skip the intro and the first mission, fast-forward        |
+| `?debug`         | expose the game objects as `window.trenulDebug`           |
 
 They can be combined: `?from=ilva-mica&speed=3` shows the viaducts quickly.
 Station ids are listed in `winter/js/route-data.js`.
@@ -55,6 +56,8 @@ shared/js/gfx/       colours, drawing primitives, time-of-day tinting
 shared/js/world/     sky, lighting, landscape (biomes), railway, features, snow
 shared/js/train/     train compositions, car painters, Bubu
 shared/js/journey/   route model, motion planning, journey state machine
-shared/js/ui/        HUD and overlays
-winter/js/           winter route data and entry point
+shared/js/game/      player state (name, stars, ornaments)
+shared/js/missions/  mission base class, director and mission types
+shared/js/ui/        HUD, mission HUD and overlays
+winter/js/           winter route, winter missions and entry point
 ```

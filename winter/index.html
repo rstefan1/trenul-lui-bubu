@@ -32,8 +32,25 @@
       </div>
       <p class="route-next" id="hudNext">Suntem în gara <b>Timișoara</b></p>
     </div>
+    <div class="hud-card stars-card" title="Stelele câștigate în misiuni">
+      <span class="stars-icon" aria-hidden="true">★</span>
+      <span class="stars-count" id="hudStars" aria-label="Stele">0</span>
+    </div>
     <button class="hud-btn" id="btnFullscreen" type="button" title="Ecran complet" aria-label="Ecran complet">⛶</button>
   </header>
+
+  <!-- ===== Missions: announcement, progress, result, panels ===== -->
+  <div class="mission-card" id="missionCard" role="status" hidden>
+    <p class="mission-kicker" id="missionKicker">Misiune</p>
+    <h2 class="mission-title" id="missionTitle"></h2>
+    <p class="mission-text" id="missionText"></p>
+  </div>
+  <div class="mission-counter" id="missionCounter" aria-live="polite" hidden></div>
+  <div class="mission-result" id="missionResult" role="status" hidden>
+    <div class="mission-result__stars" id="missionResultStars" aria-hidden="true"></div>
+    <p class="mission-result__text" id="missionResultText"></p>
+  </div>
+  <section class="mission-panel" id="missionPanel" aria-label="Misiune" hidden></section>
 
   <!-- ===== Station sign, shown when the train stops ===== -->
   <div class="station-banner" id="stationBanner" role="status" hidden>

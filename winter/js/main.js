@@ -1,76 +1,94 @@
 /**
  * @file Entry point of the winter journey.
  *
- * Wires the shared engine to the winter route: builds the route and the
- * journey, starts the render loop, shows Bubu's introduction and drives the
- * stops at the stations.
- *
- * Stations have no missions yet: the train simply stops for a few seconds
- * ({@link PLACEHOLDER_STOP}) and leaves again. The missions will plug into
- * the "arrive" event.
+ * Wires the shared engine to the winter content: builds the route, the
+ * journey, the world view and the mission director, starts the render loop
+ * and shows Bubu's introduction.
  *
  * Testing helpers (URL parameters):
  *   ?from=<station id>   start stopped at that station (e.g. ?from=ilva-mica)
  *   ?speed=<factor>      run the journey faster (e.g. ?speed=4)
  *   ?skip                skip the introduction
- *   ?at=<seconds>        skip the introduction and fast-forward the journey
+ *   ?at=<seconds>        skip the introduction and the first station's mission
+ *                        and fast-forward the journey
+ *   ?debug               expose the game objects as window.trenulDebug (for
+ *                        automated tests)
  */
 
+import { PointerInput } from '../../shared/js/core/input.js';
 import { GameLoop } from '../../shared/js/core/loop.js';
 import { clamp } from '../../shared/js/core/math.js';
 import { Stage } from '../../shared/js/core/stage.js';
+import { GameState } from '../../shared/js/game/state.js';
 import { Journey } from '../../shared/js/journey/journey.js';
 import { Route } from '../../shared/js/journey/route.js';
+import { CatchMission } from '../../shared/js/missions/catch-mission.js';
+import { DepartureMission } from '../../shared/js/missions/departure-mission.js';
+import { MissionDirector } from '../../shared/js/missions/director.js';
 import { loadBubu } from '../../shared/js/train/bubu.js';
 import { Hud } from '../../shared/js/ui/hud.js';
+import { MissionHud } from '../../shared/js/ui/mission-hud.js';
 import { setupFullscreen, showOverlay } from '../../shared/js/ui/screens.js';
 import { WorldView } from '../../shared/js/world/world-view.js';
+import { WINTER_MISSIONS } from './missions-data.js';
 import { WINTER_ROUTE } from './route-data.js';
 
-/** Seconds the train waits in a station, until the missions exist. */
-const PLACEHOLDER_STOP = 4;
-/** Seconds between pressing "Hai la drum!" and the train moving off. */
-const START_DELAY = 1.2;
+/** Mission types used by the winter journey. */
+const MISSION_TYPES = {
+  catch: CatchMission,
+  departure: DepartureMission,
+};
 
 const params = new URLSearchParams(location.search);
 const timeScale = clamp(Number(params.get('speed')) || 1, 0.25, 20);
 
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('game'));
+const byId = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.getElementById(id));
+
+// ------------------------------------------------------------ model and view
+const canvas = /** @type {HTMLCanvasElement} */ (byId('game'));
 const stage = new Stage(canvas);
 const route = new Route(WINTER_ROUTE);
 const journey = new Journey(route);
 const startIndex = Math.max(0, route.stations.findIndex(s => s.id === params.get('from')));
 journey.placeAt(startIndex);
 
+const state = new GameState();
 const world = new WorldView(stage, journey);
 const hud = new Hud(route, { month: 11, dayLabels: { 24: 'Ajunul Crăciunului', 25: 'Crăciunul' } });
-setupFullscreen(/** @type {HTMLButtonElement} */ (document.getElementById('btnFullscreen')));
-loadBubu('../shared/assets/bubu.webp');
+const missionHud = new MissionHud(state);
+const director = new MissionDirector(
+  { stage, journey, world, state, hud: missionHud, panel: byId('missionPanel') },
+  WINTER_MISSIONS,
+  MISSION_TYPES,
+);
 
-/** Pending departure: seconds left (counted in game time, so ?speed applies). */
-let departIn = Infinity;
-
-journey.on('arrive', station => {
+// the train shows what the player chose and collected
+state.on('change', (/** @type {string} */ what) => {
+  if (what === 'locoColor') world.train.setLocoColor(state.locoColor);
+  if (what === 'baubles') world.train.baubles = state.baubles;
+});
+journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Station} */ station) => {
   hud.showStation(station.name);
-  if (journey.state !== 'finished') departIn = PLACEHOLDER_STOP;
 });
-journey.on('finish', () => {
-  setTimeout(showFinale, 2500);
-});
+journey.on('finish', () => setTimeout(showFinale, 2500));
+
+// ------------------------------------------------------------ input and loop
+const input = new PointerInput(stage);
+input.on('down', (/** @type {import('../../shared/js/core/input.js').PointerInfo} */ p) => director.pointerDown(p));
+
+setupFullscreen(/** @type {HTMLButtonElement} */ (byId('btnFullscreen')));
+loadBubu('../shared/assets/bubu.webp');
+// texts painted on the train (car numbers) need the game font
+document.fonts?.ready.then(() => world.train.setLocoColor(state.locoColor));
 
 const loop = new GameLoop(dt => {
   const step = dt * timeScale;
-  if (departIn !== Infinity) {
-    departIn -= step;
-    if (departIn <= 0) {
-      departIn = Infinity;
-      journey.depart();
-    }
-  }
+  director.update(step);
   journey.update(step);
   world.update(step);
   render();
   hud.update(journey);
+  canvas.style.cursor = director.wantsPointer ? 'pointer' : 'default';
 });
 
 function render() {
@@ -84,21 +102,18 @@ function render() {
   ctx.rect(stage.viewLeft, stage.viewTop, stage.viewRight - stage.viewLeft, stage.viewBottom - stage.viewTop);
   ctx.clip();
   world.draw(ctx);
+  director.draw(ctx);
   ctx.restore();
 }
 
+// ------------------------------------------------------------ screens
 async function showIntro() {
-  if (!params.has('skip')) {
-    await showOverlay(/** @type {HTMLElement} */ (document.getElementById('intro')),
-      /** @type {HTMLElement} */ (document.getElementById('btnStart')));
-  }
-  hud.showStation(journey.station.name, 2.5);
-  departIn = START_DELAY;
+  if (!params.has('skip')) await showOverlay(byId('intro'), byId('btnStart'));
+  director.atStation(journey.station);
 }
 
 async function showFinale() {
-  await showOverlay(/** @type {HTMLElement} */ (document.getElementById('finale')),
-    /** @type {HTMLElement} */ (document.getElementById('btnAgain')));
+  await showOverlay(byId('finale'), byId('btnAgain'));
   location.reload();
 }
 
@@ -107,17 +122,16 @@ async function showFinale() {
  * @param {number} seconds
  */
 function fastForward(seconds) {
-  departIn = 0;
+  journey.depart();
   const step = 1 / 30;
   for (let t = 0; t < seconds; t += step) {
-    if (departIn !== Infinity && (departIn -= step) <= 0) {
-      departIn = Infinity;
-      journey.depart();
-    }
+    director.update(step);
     journey.update(step);
     world.update(step);
   }
 }
+
+if (params.has('debug')) Object.assign(window, { trenulDebug: { stage, journey, world, state, director } });
 
 loop.start();
 if (params.has('at')) fastForward(Number(params.get('at')) || 0);

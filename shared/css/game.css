@@ -342,3 +342,338 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   .intro-bubu, .big-btn { animation: none; }
   .station-banner, .overlay, .overlay-card { transition: opacity .2s; }
 }
+
+/* ======================================================================
+   Missions
+   ====================================================================== */
+
+/* ---------- Stars in the HUD ---------- */
+.stars-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 4px 14px;
+}
+.stars-icon { color: var(--gold); font-size: clamp(24px, 3.6vmin, 34px); line-height: 1; }
+.stars-count { font-size: clamp(22px, 3.4vmin, 32px); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ---------- Announcement card ---------- */
+.mission-card {
+  position: fixed;
+  left: 50%;
+  top: calc(max(var(--gap), env(safe-area-inset-top)) + 96px);
+  z-index: 16;
+  width: min(620px, calc(100% - 32px));
+  padding: 10px 22px 14px;
+  background: rgba(255, 250, 240, .96);
+  color: var(--ink);
+  border: 5px solid #fff;
+  border-radius: 24px;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, .18), 0 16px 34px rgba(0, 0, 0, .3);
+  text-align: center;
+  transform: translate(-50%, -16px);
+  opacity: 0;
+  transition: transform .35s cubic-bezier(.2, 1.3, .4, 1), opacity .3s;
+  pointer-events: none;
+}
+.mission-card.is-visible { transform: translate(-50%, 0); opacity: 1; }
+.mission-kicker, .panel-kicker {
+  margin: 0;
+  font-size: clamp(13px, 2vmin, 16px);
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+.mission-title, .panel-title {
+  margin: 0;
+  font-size: clamp(24px, 4.2vmin, 38px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--red);
+}
+.mission-text {
+  margin: 4px 0 0;
+  font-size: clamp(16px, 2.5vmin, 21px);
+  line-height: 1.3;
+}
+
+/* ---------- Progress counter ---------- */
+.mission-counter {
+  position: fixed;
+  right: max(var(--gap), env(safe-area-inset-right));
+  top: calc(max(var(--gap), env(safe-area-inset-top)) + 96px);
+  z-index: 16;
+  padding: 6px 18px;
+  background: rgba(19, 41, 90, .82);
+  border: 3px solid #fff;
+  border-radius: 999px;
+  font-size: clamp(22px, 3.6vmin, 32px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .25);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.mission-counter.is-visible { opacity: 1; }
+.mission-counter.is-bumped { animation: bump .35s ease-out; }
+@keyframes bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- Result ---------- */
+.mission-result {
+  position: fixed;
+  left: 50%;
+  top: 30%;
+  z-index: 17;
+  width: min(560px, calc(100% - 32px));
+  padding: 14px 24px 18px;
+  background: rgba(255, 250, 240, .97);
+  color: var(--ink);
+  border: 6px solid var(--gold);
+  border-radius: 28px;
+  text-align: center;
+  box-shadow: 0 10px 0 rgba(0, 0, 0, .2), 0 20px 50px rgba(0, 0, 0, .35);
+  transform: translate(-50%, 0) scale(.7);
+  opacity: 0;
+  transition: transform .4s cubic-bezier(.2, 1.4, .4, 1), opacity .3s;
+  pointer-events: none;
+}
+.mission-result.is-visible { transform: translate(-50%, 0) scale(1); opacity: 1; }
+.mission-result__stars { font-size: clamp(48px, 9vmin, 80px); line-height: 1; letter-spacing: .08em; }
+.star { color: #d8d2c4; display: inline-block; }
+.star.is-won { color: var(--gold); text-shadow: 0 3px 0 #c79400; animation: star-pop .5s cubic-bezier(.2, 1.6, .4, 1) both; }
+@keyframes star-pop {
+  0% { transform: scale(0) rotate(-40deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.mission-result__text { margin: 6px 0 0; font-size: clamp(17px, 2.7vmin, 23px); font-weight: 600; line-height: 1.3; }
+
+/* ---------- Panels (station missions) ---------- */
+.mission-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  padding: calc(max(16px, env(safe-area-inset-top)) + 80px) 16px max(16px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+.panel {
+  min-width: 0;
+  width: min(640px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: clamp(16px, 2.6vmin, 26px);
+  background: rgba(255, 250, 240, .97);
+  color: var(--ink);
+  border: 6px solid #fff;
+  border-radius: 30px;
+  box-shadow: 0 12px 0 rgba(0, 0, 0, .2), 0 24px 60px rgba(0, 0, 0, .4);
+  text-align: center;
+  animation: panel-in .45s cubic-bezier(.2, 1.3, .4, 1);
+}
+.panel--wide { width: min(860px, 100%); }
+@keyframes panel-in {
+  0% { transform: translateY(24px); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+.panel-text { margin: 0; font-size: clamp(16px, 2.5vmin, 21px); line-height: 1.3; }
+.panel-hint { margin: 0; font-size: 15px; font-weight: 700; color: var(--red); }
+.panel .big-btn { margin-top: 6px; animation: none; }
+.panel .big-btn:disabled { filter: grayscale(.8); opacity: .55; cursor: not-allowed; box-shadow: 0 4px 0 #155a30; }
+
+/* ---------- Ticket ---------- */
+.ticket {
+  width: min(500px, 100%);
+  margin: 6px 0;
+  background: linear-gradient(#fff8e7, #fff1d0);
+  border: 3px dashed #d9a441;
+  border-radius: 18px;
+  padding: 10px 18px 14px;
+  text-align: left;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .1);
+}
+.ticket-head {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: 13px;
+  color: var(--station-blue);
+  border-bottom: 2px solid #ecd7a6;
+  padding-bottom: 4px;
+}
+.ticket-route { margin: 6px 0; font-size: clamp(18px, 2.8vmin, 24px); }
+.ticket-route small { display: block; font-size: 14px; color: #6b5a3a; }
+.ticket-grid {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr 1fr 1fr;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+.ticket-grid div { background: #fff; border-radius: 10px; padding: 2px 8px; }
+.ticket-grid dt { font-size: 12px; font-weight: 700; color: #8a7350; text-transform: uppercase; }
+.ticket-grid dd { margin: 0; font-size: 20px; font-weight: 800; color: var(--ink); }
+.ticket-name { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 18px; font-weight: 700; }
+.ticket-input {
+  flex: 1;
+  min-width: 140px;
+  max-width: 100%;
+  font: inherit;
+  font-size: 20px;
+  padding: 4px 12px;
+  border: 3px solid #d9a441;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  user-select: text;
+  -webkit-user-select: text;
+}
+.ticket-input:focus { outline: 3px solid var(--gold); }
+@media (max-width: 480px) {
+  .ticket-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.swatches { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.swatch {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  background: var(--swatch);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, .15), 0 4px 0 rgba(0, 0, 0, .2);
+  transition: transform .15s;
+}
+.swatch[aria-pressed="true"] { transform: scale(1.18); box-shadow: 0 0 0 4px var(--ink), 0 4px 0 rgba(0, 0, 0, .2); }
+
+/* ---------- Luggage ---------- */
+.luggage {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  width: 100%;
+  margin: 6px 0;
+}
+.luggage-items {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+}
+.luggage-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 6px;
+  border: 3px solid #e6d3a8;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.1;
+  touch-action: none;
+  transition: transform .15s, opacity .3s;
+}
+.luggage-icon { font-size: 40px; line-height: 1.1; }
+.luggage-item.is-dragging { position: relative; z-index: 2; transition: none; box-shadow: 0 10px 20px rgba(0, 0, 0, .25); }
+.luggage-item.is-packed { opacity: .25; transform: scale(.9); cursor: default; }
+.luggage-item.is-wrong { animation: shake .45s; border-color: var(--red); }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+.suitcase { flex: none; width: clamp(150px, 26vmin, 220px); display: flex; flex-direction: column; align-items: center; }
+.suitcase-handle {
+  width: 40%;
+  height: 22px;
+  border: 7px solid #8d5524;
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+}
+.suitcase-body {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(#c0392b, #a93226);
+  border: 5px solid #7b241c;
+  border-radius: 18px;
+  padding: 10px;
+  transition: transform .2s;
+}
+.suitcase.is-target .suitcase-body { transform: scale(1.06); box-shadow: 0 0 0 6px var(--gold); }
+.suitcase.is-closed .suitcase-body { animation: bump .5s; }
+.suitcase-inside {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  justify-content: center;
+  align-content: flex-start;
+  height: 100%;
+  background: rgba(255, 255, 255, .18);
+  border-radius: 10px;
+  padding: 4px;
+}
+.packed-item { font-size: clamp(22px, 4vmin, 32px); animation: star-pop .35s ease-out; }
+.suitcase-count { margin: 4px 0 0; font-size: 20px; font-weight: 800; }
+.bubu-says {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 0;
+  padding: 6px 16px 6px 6px;
+  background: #fff;
+  border: 3px solid #f1d9a8;
+  border-radius: 999px;
+  font-size: clamp(15px, 2.4vmin, 19px);
+  font-weight: 700;
+  text-align: left;
+}
+.bubu-says img { width: 48px; height: 48px; flex: none; }
+@media (max-width: 640px) {
+  .luggage { flex-direction: column-reverse; }
+  .luggage-items { grid-template-columns: repeat(3, 1fr); width: 100%; }
+  .luggage-icon { font-size: 32px; }
+  .luggage-item { font-size: 13px; }
+}
+
+/* ---------- Ticket reminder while boarding ---------- */
+.ticket-chip {
+  position: fixed;
+  left: max(var(--gap), env(safe-area-inset-left));
+  bottom: max(var(--gap), env(safe-area-inset-bottom));
+  z-index: 16;
+  max-width: min(340px, calc(100% - 32px));
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px 10px;
+  background: linear-gradient(#fff8e7, #fff1d0);
+  color: var(--ink);
+  border: 3px dashed #d9a441;
+  border-radius: 16px;
+  font-size: clamp(20px, 3.2vmin, 26px);
+  font-weight: 800;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, .2);
+  animation: panel-in .4s ease-out;
+}
+.ticket-chip__label { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--station-blue); }
+.ticket-chip small { font-size: 14px; font-weight: 600; line-height: 1.25; color: #6b5a3a; margin-top: 2px; }
+
+@media (max-width: 640px) {
+  .stars-card { padding: 2px 10px; }
+  .mission-card, .mission-counter { top: calc(max(var(--gap), env(safe-area-inset-top)) + 150px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel, .ticket-chip, .packed-item, .star.is-won, .mission-counter.is-bumped, .luggage-item.is-wrong { animation: none; }
+}
