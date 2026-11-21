@@ -37,7 +37,9 @@ export class TrainPace {
 
   /** Go at full pace (nothing to wait for). */
   cruise() {
-    if (this.controls) this.controls.target = this.far;
+    if (!this.controls) return;
+    this.controls.target = this.far;
+    this.controls.stopIn = undefined;
   }
 
   /**
@@ -45,7 +47,9 @@ export class TrainPace {
    * @param {number} gap  how far it still has to come (≤ 0: it is there)
    */
   stopAt(gap) {
-    if (this.controls) this.controls.target = Math.min(this.far, Math.sqrt(2 * BRAKE * Math.max(0, gap)));
+    if (!this.controls) return;
+    this.controls.target = Math.min(this.far, Math.sqrt(2 * BRAKE * Math.max(0, gap)));
+    this.controls.stopIn = Math.max(0, gap);
   }
 
   /**
@@ -66,6 +70,7 @@ export class TrainPace {
       target = Math.min(target, v);
     }
     this.controls.target = target;
+    this.controls.stopIn = undefined;
   }
 
   /** Gives the train back to its timetable. */

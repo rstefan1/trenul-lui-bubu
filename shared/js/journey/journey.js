@@ -41,6 +41,7 @@ export const MANUAL = Object.freeze({ maxSpeed: 620, minSpeed: 0, accelerate: 23
 /**
  * @typedef {object} Controls
  * @property {number} target   the speed chosen by the child (0 stops the train)
+ * @property {number} [stopIn] distance to a planned stop (e.g. a forest halt), if any
  */
 
 /** Play seconds a normal stop is expected to last (for the clock). */
@@ -69,6 +70,23 @@ export class Journey extends Emitter {
     this.controls = null;
     /** @type {string | null} train already boarded at this station (a change of trains) */
     this.boarded = null;
+  }
+
+  /**
+   * How far ahead the train will stop next: the next station, a stop a
+   * mission is braking for, or the end of braking when a mission stops the
+   * train (for the sounds: the brakes squeal before every stop).
+   * @returns {number} stage units (∞ if the train is not about to stop)
+   */
+  get toStop() {
+    if (this.state !== 'running') return Infinity;
+    let d = this.nextStation.distance - this.distance;
+    const c = this.controls;
+    if (c) {
+      if (c.stopIn !== undefined) d = Math.min(d, c.stopIn);
+      if (c.target < 1) d = Math.min(d, (this.speed * this.speed) / (2 * MANUAL.brake));
+    }
+    return d;
   }
 
   /**

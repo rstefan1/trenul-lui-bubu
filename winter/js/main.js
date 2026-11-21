@@ -121,9 +121,10 @@ world.flags = state.flags;
 // ------------------------------------------------------------ sound
 const audio = new AudioEngine();
 audio.register('train', '../shared/assets/sounds/train.mp3');
-audio.register('whistle', '../shared/assets/sounds/whistle.mp3');
+audio.register('whistle', '../shared/assets/sounds/whistle.mp3', { normalize: true });
+audio.register('brakes', '../shared/assets/sounds/brakes.mp3', { normalize: true });
 setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
-const railSound = new RailSound(audio, 'train');
+const railSound = new RailSound(audio, 'train', 'brakes');
 
 const director = new MissionDirector(
   { stage, journey, world, state, hud: missionHud, panel: byId('missionPanel'), audio },
@@ -168,7 +169,10 @@ const loop = new GameLoop(dt => {
   world.update(step);
   render();
   hud.update(journey);
-  railSound.update(journey.speed, { paused: missionHud.paused });
+  railSound.update(journey.speed, {
+    paused: missionHud.paused,
+    toStop: journey.toStop,
+  });
   canvas.style.cursor = director.wantsPointer ? 'pointer' : 'default';
 });
 

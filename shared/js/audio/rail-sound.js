@@ -1,47 +1,65 @@
 /**
  * @file The sound of the train running: a real recording played in a plain
- * loop, softly in the background, always at the same speed and volume
- * whatever the train's speed
- * (missions slow the train down on purpose, and that must not change how
- * it sounds). It is heard while the train moves and goes quiet while it
- * stands or while the game waits for the player. It starts with the first
- * turn of the wheels when the train leaves a station.
+ * loop, softly in the background, always at the same speed (missions slow
+ * the train down on purpose, and that must not change how it sounds).
+ *
+ * It swells in gently when the train sets off and fades out gently on the
+ * last stretch before it stops — at a station, at a forest halt, by a child
+ * waiting for a gift or in front of a snowdrift — while the brakes squeal
+ * until the train stands still. It also goes quiet while the game waits for
+ * the player.
  *
  * So that the loop never hitches, the recording is prepared once: the bits
- * of silence an MP3 has at both ends are cut off, and its last fraction of
- * a second is blended into its beginning, so the end flows straight into
- * the start.
+ * of silence an MP3 has at both ends are cut off, and the end is blended
+ * into the beginning for a few hundredths of a second.
  */
 
 /** Below this speed the train is considered stopped. */
 const MIN_SPEED = 0.5;
 /** Volume of the running train: a soft sound in the background, so the whistle stands out. */
 const VOLUME = 0.2;
-/** Seconds to go quiet or to be heard again (just enough to avoid a click). */
-const SWITCH = 0.12;
+/** Seconds the sound takes to swell in after the train sets off. */
+const FADE_IN = 6;
+/** Distance before a stop over which the sound fades out (stage units). */
+const FADE_OUT = 2800;
+/** The brakes start squealing this far from the stop (stage units). */
+const SQUEAL_AT = 520;
+/** Seconds over which the sound settles to a new level (a gentle, never abrupt change). */
+const SMOOTH = 0.6;
+/** Volume of the squeal (soft, in the background too). */
+const SQUEAL_VOLUME = 0.18;
 
 export class RailSound {
   /**
    * @param {import('./audio.js').AudioEngine} engine
-   * @param {string} name  the recording (registered with the engine)
+   * @param {string} name   the running train (registered with the engine)
+   * @param {string} brakes an optional recording of squealing brakes
    */
-  constructor(engine, name) {
+  constructor(engine, name, brakes) {
     this.engine = engine;
     this.name = name;
-    /** @type {GainNode | null} on while the train moves, off while it stands */
+    this.brakes = brakes;
+    /** @type {GainNode | null} */
     this.gate = null;
-    this.on = false;
+    /** Time (audio clock) when the train set off; null while it stands. */
+    this.since = null;
+    /** @type {{stop: () => void} | null} the squeal while it plays */
+    this.squeal = null;
+    /** The squeal already played on the way into this stop. */
+    this.squealed = false;
   }
 
   /**
    * @param {number} speed  stage units per second
-   * @param {{paused: boolean}} view
+   * @param {{paused: boolean, toStop: number}} view
+   *        toStop: distance to where the train will stop next (∞ if it is not stopping)
    */
   update(speed, view) {
     const e = this.engine;
     const buffer = e.buffers.get(this.name);
     if (!e.ready || !e.ctx || !e.master || !buffer) return;
     const ctx = e.ctx;
+    const now = ctx.currentTime;
     if (!this.gate) {
       // one copy of the recording, looping for as long as the game runs
       this.gate = ctx.createGain();
@@ -53,10 +71,82 @@ export class RailSound {
       src.connect(this.gate);
       src.start();
     }
-    const on = !view.paused && speed > MIN_SPEED;
-    if (on === this.on) return;
-    this.on = on;
-    this.gate.gain.setTargetAtTime(on ? VOLUME : 0, ctx.currentTime, SWITCH / 3);
+    const moving = !view.paused && speed > MIN_SPEED;
+    if (moving && this.since === null) this.since = now;
+    if (!moving) this.since = null;
+    // swell in after setting off, fade out on the way into the stop
+    let level = 0;
+    if (moving && this.since !== null) {
+      level = VOLUME * Math.min(1, (now - this.since) / FADE_IN);
+      if (view.toStop < FADE_OUT) level *= Math.max(0, view.toStop / FADE_OUT);
+    }
+    this.gate.gain.setTargetAtTime(level, now, SMOOTH);
+
+    // the brakes squeal on the last metres before the train stands still
+    if (!moving || view.toStop > SQUEAL_AT * 2) this.squealed = false;
+    if (!this.squeal && !this.squealed && moving && view.toStop < SQUEAL_AT) {
+      this.squealed = true;
+      this.squeal = this.startSqueal();
+    }
+    if (this.squeal && !moving) {
+      this.squeal.stop();
+      this.squeal = null;
+    }
+  }
+
+  /**
+   * Starts the squeal: the recording if there is one, otherwise a soft
+   * metallic squeal made of a few wobbling high tones.
+   * @private
+   * @returns {{stop: () => void}}
+   */
+  startSqueal() {
+    const e = this.engine;
+    const ctx = /** @type {AudioContext} */ (e.ctx);
+    const now = ctx.currentTime;
+    const out = ctx.createGain();
+    out.gain.setValueAtTime(0.0001, now);
+    out.gain.exponentialRampToValueAtTime(SQUEAL_VOLUME, now + 0.6);
+    out.connect(/** @type {GainNode} */ (e.master));
+    /** @type {AudioScheduledSourceNode[]} */
+    const sources = [];
+    const recorded = e.buffers.get(this.brakes);
+    if (recorded) {
+      const src = ctx.createBufferSource();
+      src.buffer = recorded;
+      src.loop = true;
+      src.connect(out);
+      src.start(now);
+      sources.push(src);
+    } else {
+      for (const [freq, level] of [[2950, 1], [3720, 0.6], [5150, 0.25]]) {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.linearRampToValueAtTime(freq * 0.94, now + 3);
+        // the wobble of the wheel on the rail
+        const lfo = ctx.createOscillator();
+        lfo.frequency.value = 5 + Math.random() * 3;
+        const depth = ctx.createGain();
+        depth.gain.value = freq * 0.006;
+        lfo.connect(depth).connect(osc.frequency);
+        const g = ctx.createGain();
+        g.gain.value = 0.25 * level;
+        osc.connect(g).connect(out);
+        osc.start(now);
+        lfo.start(now);
+        sources.push(osc, lfo);
+      }
+    }
+    return {
+      stop() {
+        const t = ctx.currentTime;
+        out.gain.cancelScheduledValues(t);
+        out.gain.setValueAtTime(Math.max(0.0001, out.gain.value), t);
+        out.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+        for (const s of sources) s.stop(t + 0.55);
+      },
+    };
   }
 }
 

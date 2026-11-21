@@ -65,6 +65,8 @@ export class SnowboundMission extends Mission {
     this.controls = null;
     this.particles = new Particles();
     this.digTime = 0;
+    /** Seconds the locomotive whistles before setting off again. */
+    this.whistleFor = 0;
   }
 
   start(hints) {
@@ -149,7 +151,12 @@ export class SnowboundMission extends Mission {
     this.stepT = 0;
     const hud = this.ctx.hud;
     if (step === 'out') this.ctx.world.train.setBubuVisible(false, true);
-    if (step === 'go') this.ctx.world.train.setBubuVisible(true, true);
+    if (step === 'go') {
+      this.ctx.world.train.setBubuVisible(true, true);
+      const audio = this.ctx.audio;
+      this.whistleFor = audio?.canPlay('whistle') ? audio.duration('whistle') : 0;
+      audio?.play('whistle');
+    }
     if (step === 'dig') hud.instruct(this.config.title, this.config.digText);
     if (step === 'signal') hud.instruct(this.config.title, this.config.signalText);
     if (step === 'plough') {
@@ -184,12 +191,15 @@ export class SnowboundMission extends Mission {
       if (t > 5.4) this.setStep('back');
     }
     if (this.step === 'go') {
-      if (this.controls) {
-        this.controls = null;
-        this.ctx.journey.releaseControl();
+      // the locomotive whistles first, then the train sets off again
+      if (this.stepT >= this.whistleFor) {
+        if (this.controls) {
+          this.controls = null;
+          this.ctx.journey.releaseControl();
+        }
+        this.ctx.hud.hideAnnouncement();
+        this.complete(this.digTime < 25 ? 3 : 2, 'Linia e liberă! Mulțumim, plugule de zăpadă!');
       }
-      this.ctx.hud.hideAnnouncement();
-      this.complete(this.digTime < 25 ? 3 : 2, 'Linia e liberă! Mulțumim, plugule de zăpadă!');
     }
   }
 

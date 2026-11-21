@@ -17,7 +17,7 @@ export class AudioEngine {
     /** @type {GainNode | null} */
     this.master = null;
     this.muted = readMuted();
-    /** @type {Map<string, string>} name → file of every sound */
+    /** @type {Map<string, {url: string, normalize: boolean}>} name → file of every sound */
     this.files = new Map();
     /** @type {Map<string, AudioBuffer>} sounds ready to play */
     this.buffers = new Map();
@@ -45,7 +45,7 @@ export class AudioEngine {
       this.master = this.ctx.createGain();
       this.master.gain.value = this.muted ? 0 : 0.8;
       this.master.connect(this.ctx.destination);
-      for (const [name, url] of this.files) this.fetch(name, url);
+      for (const [name, file] of this.files) this.fetch(name, file.url, file.normalize);
     }
     if (this.ctx.state === 'suspended' && !this.muted) this.ctx.resume();
   }
@@ -54,24 +54,29 @@ export class AudioEngine {
    * Declares a recorded sound; it is loaded as soon as sound is allowed.
    * @param {string} name
    * @param {string} url
+   * @param {{normalize?: boolean}} [options]  normalize: make it as loud as it can be without distortion
    */
-  register(name, url) {
-    this.files.set(name, url);
-    if (this.ctx) this.fetch(name, url);
+  register(name, url, options = {}) {
+    const file = { url, normalize: !!options.normalize };
+    this.files.set(name, file);
+    if (this.ctx) this.fetch(name, file.url, file.normalize);
   }
 
   /**
    * @private
    * @param {string} name
    * @param {string} url
+   * @param {boolean} normalize
    */
-  async fetch(name, url) {
+  async fetch(name, url, normalize) {
     try {
       const res = await fetch(url);
       if (!res.ok) return;   // the file is missing: the game simply stays silent
       const data = await res.arrayBuffer();
       const ctx = /** @type {AudioContext} */ (this.ctx);
-      this.buffers.set(name, await ctx.decodeAudioData(data));
+      const buffer = await ctx.decodeAudioData(data);
+      if (normalize) normalizeBuffer(buffer);
+      this.buffers.set(name, buffer);
     } catch {
       // a broken file only means no sound
     }
@@ -131,6 +136,24 @@ function readMuted() {
     return localStorage.getItem(MUTE_KEY) === '1';
   } catch {
     return false;
+  }
+}
+
+/**
+ * Scales a sound so its loudest sample reaches just under full scale.
+ * @param {AudioBuffer} buffer
+ */
+function normalizeBuffer(buffer) {
+  let peak = 0;
+  for (let c = 0; c < buffer.numberOfChannels; c++) {
+    const d = buffer.getChannelData(c);
+    for (let i = 0; i < d.length; i++) peak = Math.max(peak, Math.abs(d[i]));
+  }
+  if (peak < 1e-4) return;
+  const k = 0.95 / peak;
+  for (let c = 0; c < buffer.numberOfChannels; c++) {
+    const d = buffer.getChannelData(c);
+    for (let i = 0; i < d.length; i++) d[i] *= k;
   }
 }
 

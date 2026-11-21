@@ -125,6 +125,7 @@ export class ForestStopsMission extends Mission {
       this.drive = 'driving';
       this.lastHalt = null;
       this.controls.target = DRIVE_SPEED;
+      this.controls.stopIn = undefined;
     } else if (this.drive === 'driving') {
       const next = this.nextHalt;
       const gap = next ? next.worldX + STOP_OFFSET - this.ctx.journey.distance : Infinity;
@@ -169,6 +170,7 @@ export class ForestStopsMission extends Mission {
       // plan the speed so the train stops right at the halt
       const gap = this.target.worldX + STOP_OFFSET - j.distance;
       this.controls.target = Math.min(DRIVE_SPEED, Math.sqrt(2 * BRAKE * Math.max(0, gap)));
+      this.controls.stopIn = Math.max(0, gap);
       if (gap < 4 || j.speed < 3) {
         this.controls.target = 0;
         if (j.speed < 3) {
