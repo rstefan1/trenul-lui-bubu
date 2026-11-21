@@ -61,7 +61,7 @@ export const REGIONAL_TRAIN = Object.freeze({
   ],
 });
 
-/** The flat wagon that carries the Christmas tree bought in Vatra Dornei (added at the back). */
+/** The flat wagon that carries the Christmas tree bought in Vatra Dornei (behind the locomotive). */
 export const TREE_WAGON = Object.freeze({ kind: 'flatcar', length: 250, colors: { body: '#6d4c41', band: '#8d6e63', roof: '#5d4037' } });
 
 /** @type {Readonly<Record<string, TrainSpec>>} */

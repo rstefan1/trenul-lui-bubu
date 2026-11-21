@@ -8,7 +8,7 @@
  * geometry to draw the moving and glowing parts every frame.
  */
 
-import { drawFir, fillCircle, fillRoundRect, roundRectPath } from '../gfx/shapes.js';
+import { drawFir, fillCircle, fillRoundRect, fillStar, roundRectPath } from '../gfx/shapes.js';
 import { TRACK_Y, WIRE_Y } from '../world/track.js';
 
 /** Radius of a wheel. */
@@ -388,22 +388,26 @@ function flatcar(c, car, pos) {
   // stakes along the sides
   c.fillStyle = '#4e342e';
   for (let x = 14; x < L; x += 44) c.fillRect(x, -82, 6, 32);
-  // the tree, lying a little tilted, with a red bow
-  c.save();
-  c.translate(L * 0.5, -52);
-  c.rotate(-Math.PI / 2 + 0.08);
-  drawFir(c, 0, 90, 190, { snowy: true });
-  c.restore();
-  c.strokeStyle = '#d32f2f';
-  c.lineWidth = 4;
-  for (const x of [L * 0.3, L * 0.68]) {
-    c.beginPath();
-    c.moveTo(x, -52);
-    c.lineTo(x, -112);
-    c.stroke();
+  // the tree standing in the middle, tied to the stakes, with baubles and a star
+  const cx = L * 0.5;
+  const base = -52;
+  const h = 170;
+  drawFir(c, cx, base, h, { snowy: true });
+  c.strokeStyle = '#c9a26b';
+  c.lineWidth = 3;
+  c.beginPath();
+  c.moveTo(18, -82);
+  c.lineTo(cx - 12, base - h * 0.45);
+  c.moveTo(L - 18, -82);
+  c.lineTo(cx + 12, base - h * 0.45);
+  c.stroke();
+  const balls = [[-26, 0.3, '#e53935'], [22, 0.38, '#ffd23f'], [-12, 0.55, '#1e88e5'], [14, 0.66, '#e53935'], [-30, 0.18, '#ffd23f'], [32, 0.2, '#8e44ad']];
+  for (const [dx, k, color] of balls) {
+    c.fillStyle = /** @type {string} */ (color);
+    fillCircle(c, cx + /** @type {number} */ (dx), base - h * /** @type {number} */ (k), 5.5);
   }
-  c.fillStyle = '#d32f2f';
-  fillCircle(c, L * 0.68, -114, 7);
+  c.fillStyle = '#ffd23f';
+  fillStar(c, cx, base - h - 4, 12, 5);
   return { windows: [], bubuWindow: null, wheels, headlight: null, taillight: pos.trailing ? { x: 4, y: -44 } : null, roofY: -60 };
 }
 

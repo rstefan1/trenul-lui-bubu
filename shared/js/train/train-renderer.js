@@ -71,7 +71,7 @@ export class TrainRenderer {
     this.baubles = [];
     /** How much of the string of lights is lit (0..1). */
     this.lightBulbs = 0;
-    /** The train pulls the flat wagon with the Christmas tree (after Vatra Dornei). */
+    /** The train carries the flat wagon with the Christmas tree (after Vatra Dornei). */
     this.treeWagon = false;
     /** How far Bubu has appeared at her window (0 = not on the train yet). */
     this.bubuShown = 1;
@@ -89,7 +89,8 @@ export class TrainRenderer {
     /** @type {LaidOutCar[]} */
     this.cars = [];
     let cursor = 0;
-    const cars = this.treeWagon ? [...spec.cars, TREE_WAGON] : spec.cars;
+    // the tree wagon goes right behind the front car, where it is always on screen
+    const cars = this.treeWagon ? [spec.cars[0], TREE_WAGON, ...spec.cars.slice(1)] : spec.cars;
     cars.forEach((car) => {
       const left = cursor - car.length;
       this.cars.push({ spec: car, left, geo: /** @type {any} */ (null) });
@@ -101,7 +102,8 @@ export class TrainRenderer {
   }
 
   /**
-   * Adds (or removes) the flat wagon with the Christmas tree at the back.
+   * Adds (or removes) the flat wagon with the Christmas tree, right behind
+   * the locomotive.
    * @param {boolean} on
    */
   setTreeWagon(on) {
