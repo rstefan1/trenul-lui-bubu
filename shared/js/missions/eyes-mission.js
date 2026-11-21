@@ -10,6 +10,7 @@
  *   doneText, fact
  */
 
+import { between, createRng } from '../core/random.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { drawFir, fillCircle, glow } from '../gfx/shapes.js';
 import { SceneMission } from './scene-mission.js';
@@ -19,7 +20,18 @@ import { SceneMission } from './scene-mission.js';
  * next to a fir).
  * @type {ReadonlyArray<[number, number]>}
  */
-const SPOTS = [[0.12, 0.62], [0.33, 0.38], [0.52, 0.7], [0.71, 0.44], [0.88, 0.66], [0.24, 0.82], [0.63, 0.2]];
+/**
+ * The forest, back to front: each row of firs stands on its own snowy hill.
+ * line = where the hill's top is (fraction of the free area), size = fir
+ * height (stage units), and the colours of the snow and of the firs.
+ */
+const ROWS = [
+  { line: 0.36, size: 110, snow: '#5a6c9c', fir: '#1c3a3f', shade: '#16302f', count: 16 },
+  { line: 0.6, size: 150, snow: '#8193bf', fir: '#22504a', shade: '#1b423d', count: 12 },
+  { line: 0.86, size: 200, snow: '#c3cfe6', fir: '#2c6a4d', shade: '#22573f', count: 9 },
+];
+
+const SPOTS = [[0.12, 0.52], [0.33, 0.29], [0.52, 0.78], [0.71, 0.31], [0.88, 0.53], [0.24, 0.77], [0.6, 0.5]];
 
 /**
  * @typedef {{u: number, v: number, emoji: string, found: boolean, t: number, phase: number}} Hidden
@@ -45,7 +57,7 @@ export class EyesMission extends SceneMission {
 
   start() {
     this.phase = 'running';
-    this.ctx.hud.announce(this.config.title, this.config.text, 'Misiune', 7);
+    this.ctx.hud.instruct(this.config.title, this.config.text);
     this.ctx.hud.setCounter('👀', 0, this.hidden.length);
   }
 
@@ -111,24 +123,62 @@ export class EyesMission extends SceneMission {
   draw(c) {
     const stage = this.ctx.stage;
     const a = this.area;
+    const left = stage.viewLeft;
+    const width = stage.viewRight - stage.viewLeft;
     c.save();
     c.globalAlpha = this.fade;
     const g = c.createLinearGradient(0, stage.viewTop, 0, stage.viewBottom);
     g.addColorStop(0, '#050b24');
-    g.addColorStop(1, '#16244d');
+    g.addColorStop(1, '#1c2c5c');
     c.fillStyle = g;
-    c.fillRect(stage.viewLeft, stage.viewTop, stage.viewRight - stage.viewLeft, stage.viewBottom - stage.viewTop);
+    c.fillRect(left, stage.viewTop, width, stage.viewBottom - stage.viewTop);
     c.fillStyle = 'rgba(255,255,255,0.8)';
-    for (let i = 0; i < 50; i++) fillCircle(c, stage.viewLeft + ((i * 977) % 1000) / 1000 * (stage.viewRight - stage.viewLeft), stage.viewTop + ((i * 613) % 1000) / 1000 * (a.top - stage.viewTop + 120), (i % 3) * 0.5 + 0.7);
-    c.fillStyle = '#c9d5ea';
-    c.fillRect(stage.viewLeft, a.top + a.h * 0.92, stage.viewRight - stage.viewLeft, stage.viewBottom);
-    // three rows of firs, darker in the back
-    for (const [row, color, shade, scale] of [[0.45, '#1d3d3a', '#173230', 0.8], [0.7, '#24504a', '#1d433e', 1], [0.95, '#2f6e4f', '#245a41', 1.25]]) {
-      for (let i = 0; i < 12; i++) {
-        const x = a.left + ((i + (row * 7) % 1) / 11.5) * a.w;
-        drawFir(c, x, a.top + /** @type {number} */ (row) * a.h, 170 * /** @type {number} */ (scale), { color: /** @type {string} */ (color), shade: /** @type {string} */ (shade), snowy: true });
-      }
+    for (let i = 0; i < 60; i++) fillCircle(c, left + ((i * 977) % 1000) / 1000 * width, stage.viewTop + ((i * 613) % 1000) / 1000 * (a.top - stage.viewTop + a.h * 0.25), (i % 3) * 0.5 + 0.7);
+    // the moon and the mountains far away
+    const moonX = left + width * 0.82;
+    const moonY = a.top + a.h * 0.08;
+    glow(c, moonX, moonY, 120, 'rgba(255,248,225,0.3)', 'rgba(255,248,225,0)');
+    c.fillStyle = '#fff6d8';
+    fillCircle(c, moonX, moonY, 36);
+    c.fillStyle = '#26345f';
+    c.beginPath();
+    c.moveTo(left, a.top + a.h * 0.42);
+    for (let i = 0; i <= 8; i++) {
+      c.lineTo(left + (i / 8) * width, a.top + a.h * (i % 2 ? 0.12 : 0.3));
     }
+    c.lineTo(stage.viewRight, stage.viewBottom);
+    c.lineTo(left, stage.viewBottom);
+    c.closePath();
+    c.fill();
+    c.fillStyle = 'rgba(235,242,255,0.55)';
+    for (let i = 1; i <= 7; i += 2) {
+      const x = left + (i / 8) * width;
+      const y = a.top + a.h * 0.12;
+      c.beginPath();
+      c.moveTo(x, y);
+      c.lineTo(x + width / 40, y + a.h * 0.05);
+      c.lineTo(x - width / 40, y + a.h * 0.05);
+      c.closePath();
+      c.fill();
+    }
+    // the rows of firs, each on its rolling snowy hill
+    ROWS.forEach((row, r) => {
+      const hill = (/** @type {number} */ x) => a.top + a.h * row.line - Math.sin((x - left) / width * Math.PI * 2 + r * 1.7) * a.h * 0.04;
+      c.fillStyle = row.snow;
+      c.beginPath();
+      c.moveTo(left, stage.viewBottom);
+      for (let x = left; x <= stage.viewRight + 20; x += 20) c.lineTo(x, hill(x));
+      c.lineTo(stage.viewRight + 20, stage.viewBottom);
+      c.closePath();
+      c.fill();
+      const rng = createRng(31 + r * 17);
+      const count = Math.max(4, Math.round(row.count * width / 1600));
+      for (let i = 0; i < count; i++) {
+        const x = left + ((i + between(rng, 0.1, 0.9)) / count) * width;
+        const size = row.size * between(rng, 0.8, 1.2) * Math.min(1, a.h / 600 + 0.3);
+        drawFir(c, x, hill(x) + 6, size, { color: row.fir, shade: row.shade, snowy: true });
+      }
+    });
     // the animals: eyes while hidden, the animal once found
     for (const h of this.hidden) {
       const q = this.at(h);
