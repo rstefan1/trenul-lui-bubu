@@ -21,7 +21,7 @@
  * one for reaching the tree.
  */
 
-import { clamp, lerp } from '../core/math.js';
+import { approach, clamp, lerp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { css } from '../gfx/color.js';
 import { drawFir, fillCircle, fillStar, glow } from '../gfx/shapes.js';
@@ -41,6 +41,8 @@ const DIRS = [
 ];
 /** Preferred size of a square, in stage units. */
 const CELL = 82;
+/** Room left at the top for the heads-up display and the star counter (stage units). */
+const TOP_MARGIN = 200;
 /** Seconds Bubu needs to walk one square. */
 const STEP_TIME = 0.14;
 
@@ -169,23 +171,50 @@ export class MazeMission extends SceneMission {
     window.addEventListener('keydown', this.onKey);
   }
 
-  /** @private Sizes the maze to the free part of the screen. */
+  /**
+   * Chooses the size of the maze for the whole screen below the heads-up
+   * display, and places it below the instructions card for now.
+   * @private
+   */
   layout() {
     const stage = this.ctx.stage;
-    const cardBottom = this.ctx.hud.cardBottom;
-    const top = Math.max(stage.viewTop + 110, cardBottom ? stage.toStage(0, cardBottom + 30).y : 0) + 20;
-    const bottom = stage.viewBottom - 50;
-    const left = stage.viewLeft + 70;
-    const right = stage.viewRight - 70;
-    const w = right - left;
-    const h = bottom - top;
+    const area = this.area(stage.viewTop + TOP_MARGIN);
     // squares at least about 48 screen pixels wide, so a finger can hit them
     const size = Math.max(CELL, 48 / stage.scale);
-    this.cols = clamp(Math.floor(w / size), 6, 15);
-    this.rows = clamp(Math.floor(h / size), 5, 13);
-    this.cell = Math.min(w / this.cols, h / this.rows);
-    this.x0 = left + (w - this.cell * this.cols) / 2;
-    this.y0 = top + (h - this.cell * this.rows) / 2;
+    this.cols = clamp(Math.floor(area.w / size), 6, 15);
+    this.rows = clamp(Math.floor(area.h / size), 5, 13);
+    Object.assign(this, this.fit());
+  }
+
+  /**
+   * The free rectangle of the screen below a given top edge.
+   * @private
+   * @param {number} top
+   */
+  area(top) {
+    const stage = this.ctx.stage;
+    const left = stage.viewLeft + 70;
+    const bottom = stage.viewBottom - 50;
+    return { left, top, w: stage.viewRight - 70 - left, h: bottom - top };
+  }
+
+  /**
+   * Where the maze goes now: below the instructions card while it is shown,
+   * and as large as the screen allows once it is gone.
+   * @private
+   * @returns {{cell: number, x0: number, y0: number}}
+   */
+  fit() {
+    const stage = this.ctx.stage;
+    const cardBottom = this.ctx.hud.cardBottom;
+    const top = Math.max(stage.viewTop + TOP_MARGIN, cardBottom ? stage.toStage(0, cardBottom + 30).y + 20 : 0);
+    const a = this.area(top);
+    const cell = Math.min(a.w / this.cols, a.h / this.rows);
+    return {
+      cell,
+      x0: a.left + (a.w - cell * this.cols) / 2,
+      y0: a.top + (a.h - cell * this.rows) / 2,
+    };
   }
 
   /**
@@ -325,6 +354,11 @@ export class MazeMission extends SceneMission {
   update(dt) {
     this.time += dt;
     this.particles.update(dt);
+    // grow smoothly into the space freed when the instructions card goes away
+    const to = this.fit();
+    this.cell = approach(this.cell, to.cell, 5, dt);
+    this.x0 = approach(this.x0, to.x0, 5, dt);
+    this.y0 = approach(this.y0, to.y0, 5, dt);
     this.updateFade(dt);
     if (!this.path.length || this.reached) return;
     this.stepT += dt;
