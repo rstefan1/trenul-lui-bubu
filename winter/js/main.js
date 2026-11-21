@@ -28,6 +28,7 @@ import { GameState } from '../../shared/js/game/state.js';
 import { Journey } from '../../shared/js/journey/journey.js';
 import { Route } from '../../shared/js/journey/route.js';
 import { BellsMission } from '../../shared/js/missions/bells-mission.js';
+import { CandlesMission } from '../../shared/js/missions/candles-mission.js';
 import { CatchMission } from '../../shared/js/missions/catch-mission.js';
 import { CircuitMission } from '../../shared/js/missions/circuit-mission.js';
 import { DeliveryMission } from '../../shared/js/missions/delivery-mission.js';
@@ -51,6 +52,7 @@ import { WINTER_ROUTE } from './route-data.js';
 /** Mission types used by the winter journey. */
 const MISSION_TYPES = {
   bells: BellsMission,
+  candles: CandlesMission,
   catch: CatchMission,
   circuit: CircuitMission,
   delivery: DeliveryMission,
