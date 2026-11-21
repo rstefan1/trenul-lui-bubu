@@ -26,8 +26,8 @@ const FADE_OUT = 2800;
 const SQUEAL_AT = 950;
 /** Seconds over which the sound settles to a new level (a gentle, never abrupt change). */
 const SMOOTH = 0.6;
-/** Volume of the squeal (soft, in the background too). */
-const SQUEAL_VOLUME = 0.55;
+/** Volume of the squeal (clearly heard over the train, a little softer than the whistle). */
+const SQUEAL_VOLUME = 1;
 
 export class RailSound {
   /**
@@ -131,7 +131,7 @@ export class RailSound {
         depth.gain.value = freq * 0.006;
         lfo.connect(depth).connect(osc.frequency);
         const g = ctx.createGain();
-        g.gain.value = 0.25 * level;
+        g.gain.value = 0.36 * level;
         osc.connect(g).connect(out);
         osc.start(now);
         lfo.start(now);
