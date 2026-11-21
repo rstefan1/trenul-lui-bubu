@@ -32,9 +32,22 @@ function aradCityHall(c) {
   sky.addColorStop(1, '#ffd9a8');
   c.fillStyle = sky;
   c.fillRect(0, 0, S, S);
-  glow(c, 505, 95, 120, 'rgba(255,236,170,0.8)', 'rgba(255,236,170,0)');
-  c.fillStyle = '#fff1b8';
-  fillCircle(c, 505, 95, 38);
+  // the sun is cut by the top-right corner and its rays point down-left,
+  // so its tile can only be turned one way (a whole round sun looks the same
+  // in every position)
+  glow(c, S, 0, 190, 'rgba(255,236,170,0.75)', 'rgba(255,236,170,0)');
+  c.strokeStyle = '#ffd54f';
+  c.lineWidth = 9;
+  c.lineCap = 'round';
+  c.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const a = Math.PI / 2 + (i + 0.5) * (Math.PI / 2 / 5);   // between down and left
+    c.moveTo(S + Math.cos(a) * 92, Math.sin(a) * 92);
+    c.lineTo(S + Math.cos(a) * 128, Math.sin(a) * 128);
+  }
+  c.stroke();
+  c.fillStyle = '#ffe27a';
+  fillCircle(c, S, 0, 76);
   c.fillStyle = 'rgba(255,255,255,0.9)';
   for (const [x, y, s] of [[95, 80, 1], [190, 130, 0.7], [420, 200, 0.6]]) {
     fillCircle(c, x, y, 26 * s);
