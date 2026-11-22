@@ -163,11 +163,9 @@ export class TrainRenderer {
     this.passengers.push({ emoji, seat, leaving: -1 });
   }
 
-  /** All passengers get off (one after another) and walk away. */
+  /** All passengers get off together and walk away. */
   leaveAll() {
-    this.passengers.forEach((p, i) => {
-      if (p.leaving < 0) p.leaving = -i * 0.5;
-    });
+    for (const p of this.passengers) if (p.leaving < 0) p.leaving = 0;
   }
 
   /**
