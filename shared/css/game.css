@@ -443,9 +443,10 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   font-variant-numeric: tabular-nums;
   box-shadow: var(--shadow-s);
   opacity: 0;
-  transition: opacity .3s;
+  transform: scale(.6);
+  transition: opacity .25s, transform .35s var(--spring);
 }
-.mission-counter.is-visible { opacity: 1; }
+.mission-counter.is-visible { opacity: 1; transform: none; }
 .mission-counter.is-bumped { animation: bump .35s ease-out; }
 @keyframes bump {
   0% { transform: scale(1); }
@@ -515,6 +516,17 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   0% { transform: translateY(24px); opacity: 0; }
   100% { transform: none; opacity: 1; }
 }
+/* a panel being replaced shares the spot with the new one, then leaves */
+.mission-panel > * { grid-area: 1 / 1; }
+@keyframes panel-out {
+  to { transform: scale(.92); opacity: 0; }
+}
+/* controls over the game (gearbox, big buttons, ticket) spring in */
+@keyframes pop-in {
+  0% { transform: scale(.5); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+.gearbox, .brake-btn { animation: pop-in .4s var(--spring); }
 .panel-text { margin: 0; font-size: clamp(16px, 2.5vmin, 21px); line-height: 1.3; }
 .panel-hint { margin: 0; font-size: 15px; font-weight: 700; color: var(--red); }
 .panel .big-btn { margin-top: 6px; animation: none; }
@@ -997,7 +1009,7 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   z-index: 17;
   background: var(--green);
   font-weight: 800;
-  animation: help-pulse 2.4s ease-in-out 3;
+  animation: pop-in .4s var(--spring), help-pulse 2.4s ease-in-out .5s 3;
 }
 @keyframes help-pulse { 50% { transform: scale(1.12); } }
 @media (max-width: 640px) {
@@ -1062,3 +1074,16 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .costume-btn.is-picked { border-color: var(--gold); box-shadow: 0 0 0 4px var(--gold); transform: scale(1.06); }
 .costume-icon { display: block; width: 100%; height: 100%; min-width: 0; }
 .big-btn:disabled { filter: grayscale(.7) brightness(.95); cursor: default; }
+
+/* ---------- Leaving ---------- */
+/* Last in the file and doubled, so it wins over every box's own animation
+   (e.g. a pulsing button). */
+.is-leaving.is-leaving { animation: panel-out .25s ease-in forwards; pointer-events: none; }
+
+/* ---------- Reduced motion ---------- */
+/* Boxes appear and disappear without springing or shrinking. */
+@media (prefers-reduced-motion: reduce) {
+  .panel, .gearbox, .brake-btn, .help-btn, .ticket-chip, .is-leaving.is-leaving { animation: none; }
+  .is-leaving.is-leaving { opacity: 0; }
+  .mission-counter, .mission-card, .mission-result, .station-banner, .overlay-card { transition: opacity .2s; }
+}
