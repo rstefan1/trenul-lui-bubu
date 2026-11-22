@@ -47,6 +47,8 @@ const PLACES = {
 };
 /** Seconds the sound takes to change when the train enters or leaves a place. */
 const PLACE_SMOOTH = 0.25;
+/** Seconds after leaving a place with an echo until the echo has died away and is switched off. */
+const ECHO_TAIL = PLACE_SMOOTH * 5 + 1.5;
 
 export class RailSound {
   /**
@@ -66,8 +68,12 @@ export class RailSound {
     this.squeal = null;
     /** The squeal already played on the way into this stop. */
     this.squealed = false;
-    /** @type {{cut: BiquadFilterNode, ring: BiquadFilterNode, boom: BiquadFilterNode, echo: GainNode} | null} */
+    /** @type {{cut: BiquadFilterNode, ring: BiquadFilterNode, boom: BiquadFilterNode, echo: GainNode, delay: DelayNode, feedback: GainNode} | null} */
     this.tone = null;
+    /** The echo is switched on (only in tunnels and on bridges: it costs processor time). */
+    this.echoing = false;
+    /** Audio time when the echo, now silent, can be switched off (null: keep it). */
+    this.echoOffAt = /** @type {number | null} */ (null);
     /** @type {keyof typeof PLACES | null} */
     this.place = null;
   }
@@ -96,6 +102,7 @@ export class RailSound {
       src.start();
     }
     this.setPlace(view.place ?? 'open', now);
+    if (this.echoOffAt !== null && now >= this.echoOffAt) this.setEcho(false);
     const moving = !view.paused && speed > MIN_SPEED;
     if (moving && this.since === null) this.since = now;
     if (!moving) this.since = null;
@@ -122,7 +129,8 @@ export class RailSound {
   /**
    * The filters that colour the sound by place: source → low-pass →
    * metallic ring → hollow boom → out, plus an echo (a short delay feeding
-   * back into itself) mixed in for tunnels.
+   * back into itself) mixed in for tunnels. The echo's loop is closed only
+   * while it is needed (see setEcho).
    * @private
    * @param {AudioContext} ctx
    * @param {AudioNode} src
@@ -148,9 +156,29 @@ export class RailSound {
     feedback.gain.value = 0.45;
     const echo = ctx.createGain();
     echo.gain.value = 0;
-    boom.connect(delay).connect(feedback).connect(delay);
+    delay.connect(feedback);
     delay.connect(echo).connect(out);
-    return { cut, ring, boom, echo };
+    return { cut, ring, boom, echo, delay, feedback };
+  }
+
+  /**
+   * Switches the echo on (the train's sound goes into the delay, which
+   * feeds back into itself) or off (both links undone: the delay rests).
+   * @private
+   * @param {boolean} on
+   */
+  setEcho(on) {
+    this.echoOffAt = null;
+    const t = this.tone;
+    if (!t || on === this.echoing) return;
+    this.echoing = on;
+    if (on) {
+      t.boom.connect(t.delay);
+      t.feedback.connect(t.delay);
+    } else {
+      t.boom.disconnect(t.delay);
+      t.feedback.disconnect(t.delay);
+    }
   }
 
   /**
@@ -167,6 +195,9 @@ export class RailSound {
     this.tone.ring.gain.setTargetAtTime(p.ring, now, PLACE_SMOOTH);
     this.tone.boom.gain.setTargetAtTime(p.boom, now, PLACE_SMOOTH);
     this.tone.echo.gain.setTargetAtTime(p.echo, now, PLACE_SMOOTH);
+    // the echo runs only where it is heard; after leaving, it is let die away first
+    if (p.echo > 0) this.setEcho(true);
+    else if (this.echoing) this.echoOffAt = now + ECHO_TAIL;
   }
 
   /**
