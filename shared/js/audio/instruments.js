@@ -1,6 +1,7 @@
 /**
  * @file The game's little instruments, synthesised: the music box that
- * plays the carols (and the notes of the missions), and a hand bell.
+ * plays the carols (and the notes of the missions), a hand bell, and the
+ * soft chime that announces a station.
  * Both are made of a few sine partials that ring and fade, so they sound
  * like small metal bells and fit together.
  */
@@ -74,6 +75,55 @@ export function handBell(ctx, out, f, t, level = 0.25) {
     osc.start(t);
     osc.stop(t + decay + 0.05);
   }
+}
+
+/**
+ * One bar of a station chime: a soft vibraphone tone (a pure note with the
+ * high fourth and tenth partials of a metal bar) that rings for a while.
+ * @param {BaseAudioContext} ctx
+ * @param {AudioNode} out
+ * @param {number} f
+ * @param {number} t
+ * @param {number} level
+ */
+function chimeBar(ctx, out, f, t, level) {
+  const ring = 2.6;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(level, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + ring);
+  g.connect(out);
+  for (const [ratio, amount, decay] of [[1, 1, ring], [4, 0.12, 0.5], [10, 0.03, 0.15]]) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = f * ratio;
+    const pg = ctx.createGain();
+    pg.gain.setValueAtTime(amount, t);
+    pg.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+    osc.connect(pg).connect(g);
+    osc.start(t);
+    osc.stop(t + decay + 0.05);
+  }
+}
+
+/** The three rising notes of the station chime, and the time between them. */
+const CHIME = ['G4', 'B4', 'D5'];
+const CHIME_STEP = 0.42;
+
+/**
+ * The "ding-ding-dong" heard in a station before an announcement. A
+ * recording registered as "station-chime" is played instead, if there is one.
+ * @param {import('./audio.js').AudioEngine | undefined} engine
+ * @param {number} [level=0.22]
+ */
+export function stationChime(engine, level = 0.22) {
+  if (!engine?.ready || !engine.ctx || !engine.master) return;
+  if (engine.canPlay('station-chime')) {
+    engine.play('station-chime');
+    return;
+  }
+  const t = engine.ctx.currentTime + 0.01;
+  CHIME.forEach((note, i) => chimeBar(/** @type {AudioContext} */ (engine.ctx), /** @type {GainNode} */ (engine.master), freqOf(note), t + i * CHIME_STEP, level));
 }
 
 /**
