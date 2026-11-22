@@ -275,6 +275,7 @@ export class MissionDirector extends Emitter {
     this.ctx.state.awardStars(m.id, m.stars);
     this.ctx.hud.showResult(m.stars, m.resultText);
     successSound(this.ctx.audio);
+    this.ctx.world.train.react('joy');
     for (let i = 1; i <= m.stars; i++) setTimeout(() => starSound(this.ctx.audio, i - 1), starDelay(i) * 1000);
     // a travel mission finished early: if nothing else is left on this trip,
     // the train hurries to the next station instead of making the child wait

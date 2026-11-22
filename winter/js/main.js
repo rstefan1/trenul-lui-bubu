@@ -195,7 +195,10 @@ journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Stat
 
 // ------------------------------------------------------------ input and loop
 const input = new PointerInput(stage);
-input.on('down', (/** @type {import('../../shared/js/core/input.js').PointerInfo} */ p) => director.pointerDown(p));
+input.on('down', (/** @type {import('../../shared/js/core/input.js').PointerInfo} */ p) => {
+  world.train.lookAt(p.x);   // Bubu turns towards what the child touches
+  director.pointerDown(p);
+});
 input.on('move', (/** @type {import('../../shared/js/core/input.js').PointerInfo} */ p) => director.pointerMove(p));
 input.on('up', (/** @type {import('../../shared/js/core/input.js').PointerInfo} */ p) => director.pointerUp(p));
 

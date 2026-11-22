@@ -118,6 +118,7 @@ export class Mission {
    */
   oops() {
     oopsSound(this.ctx.audio);
+    this.ctx.world.train.react('sad');
   }
 
   /**
