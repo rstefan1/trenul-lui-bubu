@@ -1,6 +1,6 @@
 /**
  * @file The look of the boxes the missions draw on the canvas, the same as
- * the HTML ones (see the design tokens at the top of shared/css/game.css):
+ * the HTML ones (see shared/css/tokens.css):
  * a dark blue "glass" box with a thin white line and a solid shadow under
  * it. A box can be "active" (waiting for the child): its line turns green
  * and thicker.

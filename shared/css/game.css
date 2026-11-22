@@ -3,41 +3,7 @@
    on top of it: the heads-up display, the station sign and the overlays.
    Animations use only transform and opacity (cheap on old devices). */
 
-:root {
-  --night: #0b1a3a;
-  --night-2: #13295a;
-  --snow: #f4f8ff;
-  --red: #e53935;
-  --red-dark: #b71c1c;
-  --green: #2e9d57;
-  --green-dark: #1d6e3b;
-  --gold: #ffcf3f;
-  --ink: #1b2440;
-  --paper: #fffaf0;
-  --station-blue: #1f4f9c;
-  --font: 'Baloo 2', 'Comic Sans MS', system-ui, sans-serif;
-  --gap: clamp(8px, 1.4vmin, 14px);
-
-  /* One look for every box in the game (the canvas uses the same values,
-     see shared/js/gfx/ui-style.js). Two families:
-       glass  dark blue, see-through, thin white line: the HUD, counters,
-              buttons and controls over the game;
-       paper  warm white card, thick white line: everything to read
-              (announcements, results, briefings, station missions). */
-  --glass: rgba(19, 41, 90, .85);
-  --glass-line: 3px solid rgba(255, 255, 255, .9);
-  --paper-card: rgba(255, 250, 240, .97);
-  --paper-line: 5px solid #fff;
-  --radius-s: 18px;
-  --radius-m: 24px;
-  --radius-l: 30px;
-  /* shadows: a solid one under the box (it "stands" on the page) plus, for
-     big cards, one soft shadow — painted once, never animated */
-  --shadow-s: 0 4px 0 rgba(0, 0, 0, .25);
-  --shadow-l: 0 10px 0 rgba(0, 0, 0, .2), 0 22px 48px rgba(0, 0, 0, .35);
-  /* the springy curve every box uses to come in */
-  --spring: cubic-bezier(.2, 1.35, .4, 1);
-}
+/* The colours and the look of the boxes are in tokens.css (shared with the home page). */
 
 * { box-sizing: border-box; }
 
