@@ -71,7 +71,7 @@ const MIX = {
   birdsong: -16, sleigh: -11,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
-const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, churchBell: 3.5, star: 0.5 };
+const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, star: 0.5 };
 /** Least time between two of the same sound (rubbing snow would make dozens a second). */
 const MIN_GAP = { crunch: 0.11, tock: 0.04, brush: 0.15 };
 /** Random variation of every sound: pitch (± share) and volume (± dB). */
