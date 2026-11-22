@@ -13,6 +13,11 @@
  * place is never louder than the journey itself: each recording is measured
  * (its average loudness, RMS) and scaled so that level 1 is exactly as loud
  * as the reference. Recordings made louder or softer need no new numbers.
+ *
+ * A place can also have events: short sounds that happen now and then, at
+ * random moments and from a random side — a monastery bell far away, the
+ * toaca, a bird. They are played by the game's sound effects (the ambience
+ * only decides when).
  */
 
 import { makeSeamless } from './seamless.js';
@@ -22,8 +27,16 @@ import { makeSeamless } from './seamless.js';
  * @property {string} sound   a recording registered with the engine
  * @property {number} level   1 = as loud as the reference (the running train)
  *
+ * @typedef {object} AmbienceEvent
+ * @property {string} sound            a sound effect (see effects.js)
+ * @property {[number, number]} every  seconds between two of them (at random in this range)
+ * @property {[number, number]} [first] seconds before the first one (default: `every`)
+ * @property {number} [gain=1]         volume, relative to the effect's own
+ * @property {number} [spread=0.6]     how far to the sides it may come from (0 = centre)
+ *
  * @typedef {object} Place
  * @property {AmbienceLayer[]} layers
+ * @property {AmbienceEvent[]} [events]
  */
 
 /** Seconds to fade a place in, and out. */
@@ -37,10 +50,15 @@ export class Ambience {
    * @param {import('./audio.js').AudioEngine} engine
    * @param {{sound: string, volume: number}} reference  the sound the places are
    *        matched to, and the volume it is played at (e.g. the running train)
+   * @param {(sound: string, o: {gain: number, pan: number}) => void} [playEvent]
+   *        plays one event of a place
    */
-  constructor(engine, reference) {
+  constructor(engine, reference, playEvent = () => {}) {
     this.engine = engine;
     this.reference = reference;
+    this.playEvent = playEvent;
+    /** @type {Array<{event: AmbienceEvent, at: number}>} when each event of the place happens next */
+    this.timers = [];
     /** @type {Map<string, number>} the gain that makes each recording as loud as the reference */
     this.match = new Map();
     /** @type {Place | null} the place being heard */
@@ -53,12 +71,15 @@ export class Ambience {
 
   /**
    * Called every frame with the place that should be heard (null: none).
-   * Nothing happens while the place stays the same.
    * @param {Place | null} place
    */
   update(place) {
     const e = this.engine;
-    if (!e.ready || !e.ctx || !e.master || place === this.place) return;
+    if (!e.ready || !e.ctx || !e.master) return;
+    if (place === this.place) {
+      this.events(e.ctx.currentTime);
+      return;
+    }
     // wait until every recording of the new place (and the reference) is loaded
     if (place && ![...place.layers.map(l => l.sound), this.reference.sound].every(s => e.buffers.has(s))) return;
     const ctx = e.ctx;
@@ -71,6 +92,7 @@ export class Ambience {
     }
     this.playing = [];
     this.place = place;
+    this.timers = (place?.events ?? []).map(event => ({ event, at: now + between(event.first ?? event.every) }));
     if (!place) return;
     for (const layer of place.layers) {
       const buffer = this.loopOf(ctx, layer.sound);
@@ -83,6 +105,21 @@ export class Ambience {
       src.connect(gain).connect(e.master);
       src.start(now, Math.random() * buffer.duration);
       this.playing.push({ gain, src });
+    }
+  }
+
+  /**
+   * Plays the events whose time has come, and plans the next ones.
+   * @private
+   * @param {number} now
+   */
+  events(now) {
+    for (const timer of this.timers) {
+      if (now < timer.at) continue;
+      const { event } = timer;
+      const spread = event.spread ?? 0.6;
+      this.playEvent(event.sound, { gain: event.gain ?? 1, pan: (Math.random() * 2 - 1) * spread });
+      timer.at = now + between(event.every);
     }
   }
 
@@ -122,3 +159,9 @@ function rms(buffer) {
   }
   return n ? Math.sqrt(sum / n) : 0;
 }
+
+/**
+ * A random number in a range.
+ * @param {[number, number]} range
+ */
+const between = ([a, b]) => a + Math.random() * (b - a);
