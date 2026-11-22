@@ -213,21 +213,44 @@ const loop = new GameLoop(dt => {
   world.update(step);
   render();
   hud.update(journey);
-  railSound.update(journey.speed, {
-    paused: missionHud.paused,
-    toStop: journey.toStop,
-    place: world.features.placeAt(journey.distance),
-  });
-  windSound.update(world.snow.intensity, missionHud.paused);
-  // a whistle before every tunnel
-  const tunnel = world.features.nextTunnel(journey.distance);
-  if (journey.state === 'running' && tunnel - journey.distance < HORN_AHEAD && tunnel !== hornedFor) {
-    hornedFor = tunnel;
-    audio.play('whistle', 0.6);
-  }
-  music.update(...musicNow());
+  updateSound();
   canvas.style.cursor = director.wantsPointer ? 'pointer' : 'default';
 });
+
+/** The sound problem already reported in the console (reported only once). */
+let soundError = '';
+
+/**
+ * The sounds that follow the game every frame: the train, the wind, the
+ * whistle before tunnels and the music. A failure here is reported once and
+ * never stops the rest of the frame (or the other sounds).
+ */
+function updateSound() {
+  const parts = [
+    () => railSound.update(journey.speed, {
+      paused: missionHud.paused,
+      toStop: journey.toStop,
+      place: world.features.placeAt(journey.distance),
+    }),
+    () => windSound.update(world.snow.intensity, missionHud.paused),
+    () => {
+      // a whistle before every tunnel
+      const tunnel = world.features.nextTunnel(journey.distance);
+      if (journey.state === 'running' && tunnel - journey.distance < HORN_AHEAD && tunnel !== hornedFor) {
+        hornedFor = tunnel;
+        audio.play('whistle', 0.6);
+      }
+    },
+    () => music.update(...musicNow()),
+  ];
+  for (const part of parts) {
+    try {
+      part();
+    } catch (err) {
+      if (String(err) !== soundError) console.error('Sound:', (soundError = String(err)));
+    }
+  }
+}
 
 function render() {
   const ctx = stage.ctx;
