@@ -68,7 +68,7 @@ const MIX = {
   // the big moments
   success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 6,
   // the sounds of places (heard now and then, far away, under everything)
-  distantBell: -14, toaca: -15, birdsong: -16,
+  distantBell: -7, toaca: -15, birdsong: -16,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
 const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, churchBell: 3.5, star: 0.5 };
@@ -313,9 +313,9 @@ const SOUNDS = {
   distantBell(ctx, out, t) {
     const far = ctx.createBiquadFilter();
     far.type = 'lowpass';
-    far.frequency.value = 1100;
+    far.frequency.value = 2200;
     far.connect(out);
-    for (let i = 0; i < 3; i++) churchBell(ctx, far, fq('D3'), t + i * 2.6, 0.3);
+    for (let i = 0; i < 3; i++) churchBell(ctx, far, fq('A3'), t + i * 2.6, 0.3);
   },
   /**
    * The toaca: a long wooden plank struck with two mallets, in the old

@@ -42,7 +42,7 @@ export const WINTER_PLACES = {
     layers: [{ sound: 'winter-wind', level: 0.35 }],
     events: [
       { sound: 'toaca', first: [2, 5], every: [45, 70] },
-      { sound: 'distantBell', first: [14, 22], every: [30, 50] },
+      { sound: 'distantBell', first: [5, 8], every: [22, 35] },
     ],
   },
   /** Putna on Christmas morning: the birds wake up; the toaca and a bell far away */
@@ -51,7 +51,7 @@ export const WINTER_PLACES = {
     events: [
       { sound: 'birdsong', first: [1, 3], every: [1.5, 5], spread: 0.8 },
       { sound: 'toaca', first: [4, 8], every: [50, 80] },
-      { sound: 'distantBell', first: [25, 35], every: [45, 75] },
+      { sound: 'distantBell', first: [2, 4], every: [22, 35] },
     ],
   },
   /** Putna while the child rings the big bell: only the birds (no other bell to confuse it) */
