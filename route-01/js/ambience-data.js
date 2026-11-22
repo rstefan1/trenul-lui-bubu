@@ -3,14 +3,14 @@
  * the station missions (see shared/js/audio/ambience.js).
  *
  * A place with `carol` also lets a carol be heard from afar (muffled), as
- * from a Christmas fair or a square down the street; the other places have
- * no music, only their own sounds.
+ * from a Christmas fair, a square down the street or a monastery church;
+ * the other places have no music, only their own sounds.
  *
  * The levels are relative to the running train (1 = just as loud): a place
  * is a soft background, never louder than the journey.
  */
 
-import { CLOPOTEI } from '../../shared/js/audio/songs.js';
+import { CLOPOTEI, NOAPTE_DE_VIS, O_BRAD_FRUMOS } from '../../shared/js/audio/songs.js';
 
 /**
  * @typedef {import('../../shared/js/audio/ambience.js').Place & {
@@ -22,13 +22,11 @@ import { CLOPOTEI } from '../../shared/js/audio/songs.js';
 /**
  * Life around a monastery on Christmas morning: horse sleighs going by
  * almost all the time (each one crosses from one side to the other in
- * about 8 s, then a short pause), and little bells ringing every few
- * seconds.
+ * about 8 s, then a short pause).
  * @type {import('../../shared/js/audio/ambience.js').AmbienceEvent[]}
  */
 const MONASTERY_LIFE = [
   { sound: 'sleigh', first: [0.5, 1.5], every: [9.5, 13], spread: 0 },
-  { sound: 'littleBells', first: [3, 4], every: [4, 6], spread: 0.7 },
 ];
 /** @type {import('../../shared/js/audio/ambience.js').AmbienceEvent} the birds of the morning (Putna) */
 const BIRDS = { sound: 'birdsong', first: [1, 3], every: [1.5, 5], spread: 0.8 };
@@ -51,14 +49,18 @@ export const WINTER_PLACES = {
   yard: { layers: [{ sound: 'freight-train', level: 0.7 }] },
   /** the forest in the mountains */
   forest: { layers: [{ sound: 'winter-wind', level: 0.8 }] },
-  /** Voroneț before sunrise: a light wind, sleighs going by, little bells */
+  /** Voroneț before sunrise: a light wind, sleighs going by, and carols from the church */
   monastery: {
     layers: [{ sound: 'winter-wind', level: 0.35 }],
     events: MONASTERY_LIFE,
+    carol: true,
+    song: NOAPTE_DE_VIS,
   },
-  /** Putna on Christmas morning: the birds wake up; sleighs and little bells */
+  /** Putna on Christmas morning: the birds wake up; sleighs, and carols from the church */
   putna: {
     layers: [{ sound: 'winter-wind', level: 0.15 }],
     events: [...MONASTERY_LIFE, BIRDS],
+    carol: true,
+    song: O_BRAD_FRUMOS,
   },
 };
