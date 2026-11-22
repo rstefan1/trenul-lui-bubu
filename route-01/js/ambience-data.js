@@ -29,10 +29,12 @@ export const WINTER_PLACES = {
   street: { layers: [{ sound: 'town-square', level: 0.6 }] },
   /** the enchanted Christmas fair: people around the stalls and "Clopoței" from afar */
   fair: { layers: [{ sound: 'town-square', level: 0.9 }], carol: true, song: CLOPOTEI },
-  /** a fortress at night: the wind on the walls */
-  fortress: { layers: [{ sound: 'winter-wind', level: 0.8 }] },
-  /** a railway yard at night: a freight train shunting far away, the wind */
-  yard: { layers: [{ sound: 'freight-train', level: 0.7 }, { sound: 'winter-wind', level: 0.4 }] },
+  /** a fortress high on a hill at night (Deva): the wind blows hard on the walls */
+  hilltop: { layers: [{ sound: 'winter-wind', level: 0.8 }] },
+  /** a fortress in the town (Alba Carolina): only a light wind, the snow falls quietly */
+  fortress: { layers: [{ sound: 'winter-wind', level: 0.5 }] },
+  /** a railway yard at night: a freight train shunting far away, nothing else */
+  yard: { layers: [{ sound: 'freight-train', level: 0.7 }] },
   /** the forest in the mountains */
   forest: { layers: [{ sound: 'winter-wind', level: 0.8 }] },
   /** a monastery in the hills: almost silent, a light wind */

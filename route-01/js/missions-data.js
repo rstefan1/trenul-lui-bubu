@@ -280,7 +280,7 @@ export const WINTER_MISSIONS = {
     },
 
     deva: {
-      ambience: 'fortress',
+      ambience: 'hilltop',
       type: 'lantern',
       config: {
         id: 'lanterns-deva',
