@@ -24,7 +24,7 @@
  * {@link MissionDirector#release} is called.
  */
 
-import { starSound, successSound } from '../audio/effects.js';
+import { missionSound, starSound, successSound } from '../audio/effects.js';
 import { Emitter } from '../core/emitter.js';
 import { starDelay } from '../ui/mission-hud.js';
 
@@ -61,6 +61,9 @@ const PLAIN_STOP = 4;
 const BEFORE_STATION_MISSION = 2;
 /** Seconds between the result of a station mission and the departure. */
 const AFTER_RESULT = 2.4;
+
+/** Seconds the doors take to close before the whistle. */
+const DOORS_CLOSE = 1.1;
 
 export class MissionDirector extends Emitter {
   /**
@@ -120,16 +123,21 @@ export class MissionDirector extends Emitter {
   }
 
   /**
-   * The train leaves the station: first the whistle, then the departure.
+   * The train leaves the station: the doors close, the whistle blows, and
+   * then the train departs.
    * @private
    */
   leave() {
     const audio = this.ctx.audio;
-    if (audio?.canPlay('whistle')) {
-      audio.play('whistle');
-      this.departIn = audio.duration('whistle');
-    } else {
+    if (!audio?.ready) {
       this.departIn = 0;
+      return;
+    }
+    missionSound(audio, 'doorsClose');
+    this.departIn = DOORS_CLOSE;
+    if (audio.canPlay('whistle')) {
+      setTimeout(() => audio.play('whistle'), DOORS_CLOSE * 1000);
+      this.departIn += audio.duration('whistle');
     }
   }
 
