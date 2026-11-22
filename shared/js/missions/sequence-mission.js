@@ -18,10 +18,10 @@ import { WIRE_Y } from '../world/track.js';
 import { Mission, starsForMistakes } from './mission.js';
 
 const BULBS = [
-  { color: '#e53935', dim: '#6b2a2a', name: 'roșu' },
-  { color: '#fbc02d', dim: '#6b5a24', name: 'galben' },
-  { color: '#1e88e5', dim: '#22406b', name: 'albastru' },
-  { color: '#43a047', dim: '#244d2a', name: 'verde' },
+  { color: '#e53935', dim: '#6b2a2a', name: 'roșu', note: 'C5' },
+  { color: '#fbc02d', dim: '#6b5a24', name: 'galben', note: 'E5' },
+  { color: '#1e88e5', dim: '#22406b', name: 'albastru', note: 'G5' },
+  { color: '#43a047', dim: '#244d2a', name: 'verde', note: 'C6' },
 ];
 /** Seconds each bulb stays lit while the order is shown, and the pause after it. */
 const SHOW_ON = 0.65;
@@ -53,6 +53,8 @@ export class SequenceMission extends Mission {
     this.mistakes = 0;
     /** @type {number[]} seconds each bulb still glows (feedback) */
     this.flash = BULBS.map(() => 0);
+    /** Index (in the shown order) of the last bulb that sang its note. */
+    this.sung = -1;
     this.message = 'Privește cu atenție…';
     this.time = 0;
     this.particles = new Particles();
@@ -120,12 +122,14 @@ export class SequenceMission extends Mission {
     if (this.step !== 'input') return;
     this.flash[i] = 0.3;
     if (this.sequence[this.index] !== i) {
+      playNote(this.ctx.audio, 'C4', { length: 0.3, level: 0.2 });   // a soft, low "oops"
       this.mistakes += 1;
       this.message = 'Hopa! Mai privește o dată…';
       this.step = 'pause';
       this.stepT = -0.6;
       return;
     }
+    playNote(this.ctx.audio, BULBS[i].note);
     this.index += 1;
     if (this.index < this.sequence.length) return;
     // round won: another part of the string of lights on the train lights up
@@ -155,6 +159,7 @@ export class SequenceMission extends Mission {
 
     if (this.step === 'pause' && this.stepT > 0.6) {
       this.step = 'show';
+      this.sung = -1;
       this.stepT = 0;
       this.index = 0;
       this.message = 'Privește cu atenție…';
@@ -170,6 +175,11 @@ export class SequenceMission extends Mission {
         this.message = 'Rândul tău! Atinge beculețele în aceeași ordine.';
       } else if (this.stepT % slot < SHOW_ON) {
         this.flash[this.sequence[i]] = Math.max(this.flash[this.sequence[i]], 0.05);
+        // each bulb sings its note as it lights up (once per lighting)
+        if (this.sung !== i) {
+          this.sung = i;
+          playNote(this.ctx.audio, BULBS[this.sequence[i]].note);
+        }
       }
     } else if (this.step === 'done' && this.stepT > 1.5) {
       this.finishMission();
