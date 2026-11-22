@@ -277,10 +277,77 @@ const SOUNDS = {
   brush(ctx, out, t) {
     noisePuff(ctx, out, { t, length: 0.25, level: 0.06, type: 'bandpass', from: 1600, to: 1100, q: 0.9, attack: 0.06 });
   },
+  /** An animal hops on board: a little springy "boing", then a note. */
+  hop(ctx, out, t) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(280, t);
+    osc.frequency.exponentialRampToValueAtTime(760, t + 0.12);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    osc.connect(g).connect(out);
+    osc.start(t);
+    osc.stop(t + 0.18);
+    musicBox(ctx, out, freqOf(COLLECT[collectStep]), t + 0.12, 0.3, 0.12);
+  },
+  /** The carollers' drum: a deep, round thump with the skin's slap. */
+  drum(ctx, out, t) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, t);
+    osc.frequency.exponentialRampToValueAtTime(55, t + 0.25);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.35, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+    osc.connect(g).connect(out);
+    osc.start(t);
+    osc.stop(t + 0.4);
+    noisePuff(ctx, out, { t, length: 0.05, level: 0.08, type: 'bandpass', from: 1200, q: 0.8, attack: 0.001 });
+  },
+  /** Something heavy set down (the tree on its wagon). */
+  thud(ctx, out, t) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(120, t);
+    osc.frequency.exponentialRampToValueAtTime(45, t + 0.18);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.3, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+    osc.connect(g).connect(out);
+    osc.start(t);
+    osc.stop(t + 0.3);
+    noisePuff(ctx, out, { t, length: 0.2, level: 0.08, type: 'lowpass', from: 700, to: 200 });
+  },
+  /** The snow plough going by: a long rumble with snow thrown aside. */
+  plough(ctx, out, t) {
+    noisePuff(ctx, out, { t, length: 3, level: 0.16, type: 'lowpass', from: 300, to: 500, q: 0.7, attack: 1 });
+    for (let i = 0; i < 8; i++) {
+      noisePuff(ctx, out, { t: t + 0.6 + i * 0.25 + Math.random() * 0.1, length: 0.14, level: 0.07, type: 'lowpass', from: 1800, to: 600 });
+    }
+  },
+  /** A small bell: the lantern's signal is seen. */
+  ding(ctx, out, t) {
+    handBell(ctx, out, freqOf('A5'), t, 0.12);
+  },
+  /** The train's doors open: a puff of air, then the doors slide. */
+  doorsOpen(ctx, out, t) {
+    noisePuff(ctx, out, { t, length: 0.5, level: 0.1, type: 'highpass', from: 2500, to: 4000, attack: 0.02 });
+    noisePuff(ctx, out, { t: t + 0.3, length: 0.6, level: 0.07, type: 'bandpass', from: 350, to: 250, q: 1.2, attack: 0.1 });
+  },
+  /** The doors close: they slide, shut with a soft bump, and the air hisses. */
+  doorsClose(ctx, out, t) {
+    noisePuff(ctx, out, { t, length: 0.55, level: 0.07, type: 'bandpass', from: 250, to: 350, q: 1.2, attack: 0.1 });
+    SOUNDS.thud(ctx, out, t + 0.55);
+    noisePuff(ctx, out, { t: t + 0.6, length: 0.4, level: 0.08, type: 'highpass', from: 3500, to: 2500, attack: 0.01 });
+  },
 };
 
 /**
- * Plays one of the missions' sounds (a recording with the same name, if
+ * Plays one of the game's sound effects (a recording with the same name, if
  * there is one, otherwise the synthesised version).
  * @param {import('./audio.js').AudioEngine | undefined} engine
  * @param {keyof typeof SOUNDS} name
@@ -291,7 +358,7 @@ export function missionSound(engine, name) {
   const last = lastPlayed.get(name) ?? -Infinity;
   if (now - last < (MIN_GAP[/** @type {keyof typeof MIN_GAP} */ (name)] ?? 0)) return;
   lastPlayed.set(name, now);
-  if (name === 'collect') collectStep = now - last > COLLECT_RUN ? 0 : Math.min(collectStep + 1, COLLECT.length - 1);
+  if (name === 'collect' || name === 'hop') collectStep = now - last > COLLECT_RUN ? 0 : Math.min(collectStep + 1, COLLECT.length - 1);
   if (engine.canPlay(name)) engine.play(name);
   else SOUNDS[name](engine.ctx, engine.master, now + 0.005);
 }
