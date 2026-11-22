@@ -16,3 +16,19 @@ simply silent for that sound.
 
 All are free to use under the Pixabay Content License. The other sounds of
 the game (the effects, the carols) are synthesised in code.
+
+## Compression
+
+The recordings are kept small, so the game loads fast on phones. Every new
+recording is compressed the same way before it is committed (mono, no
+metadata):
+
+```sh
+# sounds of places, heard softly in the background
+ffmpeg -i in.mp3 -vn -map_metadata -1 -ac 1 -ar 44100 -c:a libmp3lame -b:a 64k out.mp3
+# the train, the whistle, the brakes (heard clearly)
+ffmpeg -i in.mp3 -vn -map_metadata -1 -ac 1 -ar 44100 -c:a libmp3lame -b:a 128k out.mp3
+```
+
+The silence an MP3 has at both ends is trimmed when the game loads it, so
+the loops stay seamless.
