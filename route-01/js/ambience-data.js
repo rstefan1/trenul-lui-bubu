@@ -44,6 +44,8 @@ export const WINTER_PLACES = {
       // first the toaca (about 7 s), then the bell: never both at once at the start
       { sound: 'toaca', first: [2, 3], every: [45, 70] },
       { sound: 'distantBell', first: [11, 13], every: [22, 35] },
+      // a horse sleigh going by, its bells jingling (it crosses from one side to the other itself)
+      { sound: 'sleigh', first: [20, 26], every: [40, 60], spread: 0 },
     ],
   },
   /** Putna on Christmas morning: the birds wake up; the toaca and a bell far away */
@@ -54,6 +56,7 @@ export const WINTER_PLACES = {
       // first the bell (about 7 s), then the toaca
       { sound: 'toaca', first: [11, 14], every: [50, 80] },
       { sound: 'distantBell', first: [2, 3], every: [22, 35] },
+      { sound: 'sleigh', first: [20, 26], every: [40, 60], spread: 0 },
     ],
   },
   /** Putna while the child rings the big bell: only the birds (no other bell to confuse it) */
