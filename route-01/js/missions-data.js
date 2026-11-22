@@ -221,6 +221,7 @@ export const WINTER_MISSIONS = {
 
   stations: {
     timisoara: {
+      ambience: 'station',
       type: 'departure',
       config: {
         id: 'departure-timisoara',
@@ -265,6 +266,7 @@ export const WINTER_MISSIONS = {
     },
 
     arad: {
+      ambience: 'town',
       type: 'rotate-puzzle',
       config: {
         id: 'puzzle-arad',
@@ -278,6 +280,7 @@ export const WINTER_MISSIONS = {
     },
 
     deva: {
+      ambience: 'fortress',
       type: 'lantern',
       config: {
         id: 'lanterns-deva',
@@ -292,6 +295,7 @@ export const WINTER_MISSIONS = {
     },
 
     'alba-iulia': {
+      ambience: 'fortress',
       type: 'maze',
       config: {
         id: 'maze-alba-iulia',
@@ -304,6 +308,7 @@ export const WINTER_MISSIONS = {
     },
 
     'cluj-napoca': {
+      ambience: 'town',
       type: 'circuit',
       config: {
         id: 'circuit-cluj',
@@ -315,6 +320,7 @@ export const WINTER_MISSIONS = {
     },
 
     dej: {
+      ambience: 'yard',
       type: 'switches',
       config: {
         id: 'switches-dej',
@@ -341,6 +347,7 @@ export const WINTER_MISSIONS = {
       },
     },
     'vatra-dornei': {
+      ambience: 'fair',
       type: 'fair',
       config: {
         id: 'fair-vatra-dornei',
@@ -356,6 +363,7 @@ export const WINTER_MISSIONS = {
       },
     },
     mestecanis: {
+      ambience: 'forest',
       type: 'eyes',
       config: {
         id: 'eyes-mestecanis',
@@ -378,6 +386,7 @@ export const WINTER_MISSIONS = {
       },
     },
     'gura-humorului': {
+      ambience: 'monastery',
       type: 'paint',
       config: {
         id: 'paint-voronet',
@@ -388,6 +397,7 @@ export const WINTER_MISSIONS = {
       },
     },
     suceava: {
+      ambience: 'station',
       type: 'change-train',
       config: {
         id: 'change-suceava',
@@ -407,6 +417,7 @@ export const WINTER_MISSIONS = {
       },
     },
     radauti: {
+      ambience: 'street',
       type: 'costume',
       config: {
         id: 'costume-radauti',
@@ -417,6 +428,7 @@ export const WINTER_MISSIONS = {
       },
     },
     putna: {
+      ambience: 'monastery',
       type: 'putna',
       config: {
         id: 'christmas-putna',

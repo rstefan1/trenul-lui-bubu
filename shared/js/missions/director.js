@@ -39,6 +39,7 @@ import { starDelay } from '../ui/mission-hud.js';
  * @typedef {object} StationMissionPlan
  * @property {string} type
  * @property {import('./mission.js').MissionConfig & Record<string, unknown>} config
+ * @property {string} [ambience]  the sound of the place (a key of the journey's places)
  *
  * @typedef {object} Moment
  * @property {number} segment
