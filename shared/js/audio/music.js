@@ -6,7 +6,11 @@
  * stays exact even if the game stutters), and the song loops. Only one song
  * plays at a time; switching songs fades the old one out and starts the new
  * one from its beginning. What plays, and how loud, is decided every frame
- * by the game (carols on the menus and at stations, silence on the way).
+ * by the game (carols on the menus, silence on the way).
+ *
+ * A song can also be heard "from afar" — from a Christmas fair or a town
+ * square down the street: it is then muffled (the high notes are lost on
+ * the way, as in real life) and comes in more slowly.
  */
 
 import { freqOf, musicBox } from './instruments.js';
@@ -15,6 +19,9 @@ import { freqOf, musicBox } from './instruments.js';
 const LOOKAHEAD = 0.35;
 /** Seconds to fade between songs or to a new volume. */
 const FADE = 1.2;
+/** Coming from afar: the muffling (low-pass, Hz) and the slower fade (seconds). */
+const FAR_CUTOFF = 1400;
+const FAR_FADE = 3.5;
 
 export class Music {
   /** @param {import('./audio.js').AudioEngine} engine */
@@ -25,26 +32,50 @@ export class Music {
     /** @type {AudioBuffer | null} */
     this.noise = null;
     this.level = 0;
+    /** @type {BiquadFilterNode | null} muffles the music heard from afar */
+    this.tone = null;
+    this.far = false;
   }
 
   /**
    * Called every frame: which song should be heard, and how loud.
    * @param {import('./songs.js').Song | null} song
    * @param {number} level  0..1
+   * @param {{far?: boolean}} [o]  far: heard from afar (muffled, slower to come in)
    */
-  update(song, level) {
+  update(song, level, o = {}) {
     const e = this.engine;
     if (!e.ctx || !e.musicBus || e.ctx.state !== 'running') return;
     const ctx = e.ctx;
     const audible = e.ready && !e.musicOff;
     const target = audible && song ? level : 0;
+    const far = !!o.far;
+    if (far !== this.far) {
+      this.far = far;
+      this.output().frequency.setTargetAtTime(far ? FAR_CUTOFF : 20000, ctx.currentTime, 0.3);
+    }
     if (song && (!this.current || this.current.song !== song)) this.start(song);
     if (!this.current) return;
     if (Math.abs(target - this.level) > 0.001) {
       this.level = target;
-      this.current.gain.gain.setTargetAtTime(target, ctx.currentTime, FADE / 3);
+      this.current.gain.gain.setTargetAtTime(target, ctx.currentTime, (far ? FAR_FADE : FADE) / 3);
     }
     this.schedule();
+  }
+
+  /**
+   * Where the songs go: through the muffling filter to the music bus.
+   * @private
+   */
+  output() {
+    if (!this.tone) {
+      const ctx = /** @type {AudioContext} */ (this.engine.ctx);
+      this.tone = ctx.createBiquadFilter();
+      this.tone.type = 'lowpass';
+      this.tone.frequency.value = 20000;
+      this.tone.connect(/** @type {GainNode} */ (this.engine.musicBus));
+    }
+    return this.tone;
   }
 
   /**
@@ -60,7 +91,7 @@ export class Music {
     }
     const gain = ctx.createGain();
     gain.gain.value = 0;
-    gain.connect(/** @type {GainNode} */ (this.engine.musicBus));
+    gain.connect(this.output());
     this.current = { song, gain, index: 0, time: ctx.currentTime + 0.1, beat: 0 };
     this.level = 0;
   }
