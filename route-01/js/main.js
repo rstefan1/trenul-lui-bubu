@@ -149,7 +149,7 @@ document.addEventListener('click', e => {
 });
 const music = new Music(audio);
 // the places are matched to the running train: never louder than the journey
-const ambience = new Ambience(audio, { sound: 'train', volume: RAIL_VOLUME });
+const ambience = new Ambience(audio, { sound: 'train', volume: RAIL_VOLUME }, (name, o) => playSound(audio, /** @type {any} */ (name), o));
 /** The carols the stations take turns with, so the same one does not come back too soon. */
 const STATION_SONGS = [O_BRAD_FRUMOS, CLOPOTEI, NOAPTE_DE_VIS, FA_LA_LA, CRACIUN_FERICIT];
 /** When the train last reached a station, and how long the carol waits for the chime (ms). */

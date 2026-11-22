@@ -37,6 +37,26 @@ export const WINTER_PLACES = {
   yard: { layers: [{ sound: 'freight-train', level: 0.7 }] },
   /** the forest in the mountains */
   forest: { layers: [{ sound: 'winter-wind', level: 0.8 }] },
-  /** a monastery in the hills: almost silent, a light wind */
-  monastery: { layers: [{ sound: 'winter-wind', level: 0.35 }] },
+  /** Voroneț before sunrise: a light wind, the toaca and a bell far away */
+  monastery: {
+    layers: [{ sound: 'winter-wind', level: 0.35 }],
+    events: [
+      { sound: 'toaca', first: [2, 5], every: [45, 70] },
+      { sound: 'distantBell', first: [14, 22], every: [30, 50] },
+    ],
+  },
+  /** Putna on Christmas morning: the birds wake up; the toaca and a bell far away */
+  putna: {
+    layers: [{ sound: 'winter-wind', level: 0.15 }],
+    events: [
+      { sound: 'birdsong', first: [1, 3], every: [1.5, 5], spread: 0.8 },
+      { sound: 'toaca', first: [4, 8], every: [50, 80] },
+      { sound: 'distantBell', first: [25, 35], every: [45, 75] },
+    ],
+  },
+  /** Putna while the child rings the big bell: only the birds (no other bell to confuse it) */
+  putnaBell: {
+    layers: [{ sound: 'winter-wind', level: 0.15 }],
+    events: [{ sound: 'birdsong', first: [1, 3], every: [1.5, 5], spread: 0.8 }],
+  },
 };

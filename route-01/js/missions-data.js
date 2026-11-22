@@ -428,7 +428,7 @@ export const WINTER_MISSIONS = {
       },
     },
     putna: {
-      ambience: 'monastery',
+      ambience: 'putna',
       type: 'putna',
       config: {
         id: 'christmas-putna',
