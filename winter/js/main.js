@@ -60,8 +60,7 @@ import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
 import { Hud } from '../../shared/js/ui/hud.js';
 import { MissionHud } from '../../shared/js/ui/mission-hud.js';
 import { AudioEngine, setupSoundButton } from '../../shared/js/audio/audio.js';
-import { clickSound, finaleSound, missionSound } from '../../shared/js/audio/effects.js';
-import { stationChime } from '../../shared/js/audio/instruments.js';
+import { balanceSounds, chimeSound, clickSound, finaleSound, playSound } from '../../shared/js/audio/effects.js';
 import { Music } from '../../shared/js/audio/music.js';
 import { RailSound } from '../../shared/js/audio/rail-sound.js';
 import { WindSound } from '../../shared/js/audio/wind-sound.js';
@@ -130,6 +129,8 @@ audio.register('train', '../shared/assets/sounds/train.mp3');
 audio.register('whistle', '../shared/assets/sounds/whistle.mp3', { normalize: true });
 audio.register('brakes', '../shared/assets/sounds/brakes.mp3', { normalize: true });
 setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
+// every effect is measured once, so they can all be heard equally well
+audio.on('unlock', () => setTimeout(() => balanceSounds(audio), 1500));
 const railSound = new RailSound(audio, 'train', 'brakes');
 const windSound = new WindSound(audio);
 /** The train sounds its whistle this far before a tunnel (stage units); the tunnel it last whistled for. */
@@ -186,8 +187,8 @@ journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Stat
   // the doors open once the brakes have gone quiet, then the station's
   // chime (the carol waits for it)
   arrivedAt = performance.now();
-  setTimeout(() => missionSound(audio, 'doorsOpen'), 500);
-  setTimeout(() => stationChime(audio), 1500);
+  setTimeout(() => playSound(audio, 'doorsOpen'), 500);
+  setTimeout(() => chimeSound(audio), 1500);
   // passengers brought on board by a mission get off at the next station
   if (world.train.passengers.length) setTimeout(() => world.train.leaveAll(), 700);
 });
@@ -217,6 +218,16 @@ const loop = new GameLoop(dt => {
   canvas.style.cursor = director.wantsPointer ? 'pointer' : 'default';
 });
 
+/**
+ * How much the place echoes: a big station hall more than a small halt, a
+ * tunnel most, the open fields almost not at all.
+ */
+function roomNow() {
+  if (world.features.placeAt(journey.distance) === 'tunnel') return 0.45;
+  if (journey.state !== 'running') return route.stations[journey.stationIndex]?.size === 'large' ? 0.3 : 0.18;
+  return 0.06;
+}
+
 /** The sound problem already reported in the console (reported only once). */
 let soundError = '';
 
@@ -242,6 +253,7 @@ function updateSound() {
       }
     },
     () => music.update(...musicNow()),
+    () => audio.setSpace(roomNow()),
   ];
   for (const part of parts) {
     try {
