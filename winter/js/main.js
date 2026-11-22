@@ -136,6 +136,9 @@ document.addEventListener('click', e => {
 const music = new Music(audio);
 /** The carols the stations take turns with, so the same one does not come back too soon. */
 const STATION_SONGS = [O_BRAD_FRUMOS, CLOPOTEI, NOAPTE_DE_VIS, FA_LA_LA, CRACIUN_FERICIT];
+/** When the train last reached a station, and how long the carol waits for the chime (ms). */
+let arrivedAt = -Infinity;
+const CHIME_QUIET = 4000;
 /** The overlays (menu, intro, chapter end, finale): "O, brad frumos" plays over them. */
 const overlays = [...document.querySelectorAll('.overlay')];
 
@@ -150,6 +153,8 @@ function musicNow() {
   if (overlays.some(o => !o.hidden)) return [O_BRAD_FRUMOS, 0.5];
   if (journey.state === 'running') return [null, 0];
   if (director.active.some(m => m.quietMusic)) return [null, 0];
+  // the station's chime first, then the carol
+  if (performance.now() - arrivedAt < CHIME_QUIET) return [null, 0];
   return [STATION_SONGS[journey.stationIndex % STATION_SONGS.length], 0.35];
 }
 
@@ -172,8 +177,9 @@ state.on('change', (/** @type {string} */ what) => {
 });
 journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Station} */ station) => {
   hud.showStation(station.name);
-  // the station's chime, once the brakes have gone quiet
-  setTimeout(() => stationChime(audio), 500);
+  // the station's chime, once the brakes have gone quiet (the carol waits for it)
+  arrivedAt = performance.now();
+  setTimeout(() => stationChime(audio), 900);
   // passengers brought on board by a mission get off at the next station
   if (world.train.passengers.length) setTimeout(() => world.train.leaveAll(), 700);
 });

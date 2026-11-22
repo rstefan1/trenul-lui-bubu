@@ -93,7 +93,7 @@ function chimeBar(ctx, out, f, t, level) {
   g.gain.exponentialRampToValueAtTime(level, t + 0.012);
   g.gain.exponentialRampToValueAtTime(0.0001, t + ring);
   g.connect(out);
-  for (const [ratio, amount, decay] of [[1, 1, ring], [4, 0.12, 0.5], [10, 0.03, 0.15]]) {
+  for (const [ratio, amount, decay] of [[1, 1, ring], [2, 0.25, 1.2], [4, 0.15, 0.5], [10, 0.03, 0.15]]) {
     const osc = ctx.createOscillator();
     osc.type = 'sine';
     osc.frequency.value = f * ratio;
@@ -107,16 +107,16 @@ function chimeBar(ctx, out, f, t, level) {
 }
 
 /** The three rising notes of the station chime, and the time between them. */
-const CHIME = ['G4', 'B4', 'D5'];
+const CHIME = ['G5', 'B5', 'D6'];
 const CHIME_STEP = 0.42;
 
 /**
  * The "ding-ding-dong" heard in a station before an announcement. A
  * recording registered as "station-chime" is played instead, if there is one.
  * @param {import('./audio.js').AudioEngine | undefined} engine
- * @param {number} [level=0.22]
+ * @param {number} [level=0.4]
  */
-export function stationChime(engine, level = 0.22) {
+export function stationChime(engine, level = 0.4) {
   if (!engine?.ready || !engine.ctx || !engine.master) return;
   if (engine.canPlay('station-chime')) {
     engine.play('station-chime');
