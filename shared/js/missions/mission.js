@@ -59,9 +59,10 @@ export class Mission {
      * The sound of the place where the mission is right now (a key of the
      * journey's places), for missions that move between places; undefined
      * keeps the sound of the station.
+     * (Named so that it cannot clash with a mission's own methods.)
      * @type {string | undefined}
      */
-    this.place = undefined;
+    this.soundOfPlace = undefined;
     /** @type {MissionPhase} */
     this.phase = 'idle';
     this.stars = 0;
