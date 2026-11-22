@@ -199,6 +199,7 @@ export class LanternMission extends SceneMission {
         this.lit[i] = true;
         this.heat[i] = 0;
         this.particles.burst(t.x, t.y - 14, ['#ffd54f', '#ff9a2e', '#ffffff'], 18, 200);
+        this.sound('flame');
       }
     });
     const count = this.lit.filter(Boolean).length;
@@ -209,6 +210,7 @@ export class LanternMission extends SceneMission {
       this.lit[i] = false;
       const t = torches[i];
       this.particles.burst(t.x, t.y - 10, ['#d7dce8', '#ffffff'], 14, 160);
+      this.sound('gust');
       this.ctx.hud.instruct(this.config.title, this.config.windText);
     }
     if (count === torches.length) {

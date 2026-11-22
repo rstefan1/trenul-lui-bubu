@@ -275,9 +275,11 @@ export class DeliveryMission extends Mission {
       best.servedAt = this.time;
       this.delivered += 1;
       this.particles.burst(g.x, YARD_Y - 70 - this.ctx.world.cameraY, [...SPARKS, g.color], 22, 260);
+      this.sound('collect');
     } else {
       // a puff of snow (or grass) where it fell
       this.particles.burst(g.x, YARD_Y - 20 - this.ctx.world.cameraY, ['#ffffff', '#e3ecf8'], 10, 120);
+      this.sound('crunch');
     }
     this.updateCounter();
   }
@@ -289,6 +291,7 @@ export class DeliveryMission extends Mission {
     this.sack -= 1;
     const w = this.ctx.world;
     const bubu = w.trainToStage(w.train.bubuPosition);
+    this.sound('whoosh');
     this.gifts.push({
       x: bubu.x,
       y: bubu.y - 10,

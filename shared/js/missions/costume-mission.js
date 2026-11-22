@@ -79,6 +79,7 @@ export class CostumeMission extends SceneMission {
     this.hatT = 0;
     const b = this.bubu;
     this.particles.burst(b.x, b.y - b.size * 0.4, SPARKS, 14, 180);
+    this.sound('sparkle');
     if (this.ready) this.ready.disabled = false;
   }
 

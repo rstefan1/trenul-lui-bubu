@@ -180,6 +180,7 @@ export class MemoryMission extends SceneMission {
     if (this.cards[a] === this.cards[b]) {
       this.matched.add(a);
       this.matched.add(b);
+      this.sound('collect');
       this.buttons[a].classList.add('is-matched');
       this.buttons[b].classList.add('is-matched');
       this.open = [];

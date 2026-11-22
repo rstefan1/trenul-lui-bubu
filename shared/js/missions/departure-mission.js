@@ -255,6 +255,7 @@ export class DepartureMission extends Mission {
         train.setBubuVisible(true, true);
         const b = this.ctx.world.trainToStage(train.bubuPosition);
         this.particles.burst(b.x, b.y, SPARKS, 24, 260);
+        this.sound('collect');
         this.doneAt = this.time;
       }
     }

@@ -109,6 +109,7 @@ export class RotatePuzzleMission extends Mission {
     if (this.solved) return;
     this.taps += 1;
     this.turns[i] += 1;
+    this.sound('tock');
     // the angle keeps growing, so the animation always turns the same way
     tile.style.transform = `rotate(${this.turns[i] * 90}deg)`;
     if (this.turns.every(t => t % 4 === 0)) this.solve();

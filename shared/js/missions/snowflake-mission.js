@@ -91,6 +91,7 @@ export class SnowflakeMission extends Mission {
       best.caught = 0.01;
       this.caught += 1;
       this.particles.burst(best.x, best.y, SPARKS, 18, 220);
+      this.sound('collect');
       this.ctx.hud.setCounter('❄️', this.caught, this.config.goal);
       const per = Math.ceil(this.config.goal / Math.max(1, this.config.models));
       if (this.caught < this.config.goal && this.caught % per === 0) this.changeModel();

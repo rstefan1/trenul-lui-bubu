@@ -110,6 +110,7 @@ export class ConnectStarsMission extends Mission {
       this.joined += 1;
       const q = this.at(best);
       this.particles.burst(q.x, q.y, ['#ffd54f', '#ffffff'], 8, 140);
+      this.sound('collect');
       if (this.joined === this.points.length) this.finishShape();
     } else if (best > this.joined) {
       this.mistakes += 1;
@@ -124,6 +125,7 @@ export class ConnectStarsMission extends Mission {
     this.stepT = 0;
     const b = this.box;
     this.particles.burst(b.x + b.size / 2, b.y + b.size / 2, SPARKS, 36, 300);
+    this.sound('sparkle');
     this.ctx.hud.setCounter('⭐', this.shape + 1, this.config.shapes.length);
   }
 

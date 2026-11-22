@@ -158,6 +158,7 @@ export class CandlesMission extends Mission {
         this.ctx.hud.setCounter('🕯️', this.lit, this.children);
         const [wx, wy, ww, wh] = h.windows[0] ?? [HOUSE_W * 0.3, -HOUSE_H * 0.6, 30, 30];
         this.particles.burst(x + wx + ww / 2, GROUND + wy + wh / 2 - this.ctx.world.cameraY, SPARKS, 22, 240);
+        this.sound('flame');
       } else if (!h.child) {
         this.misses.push({ x: p.x, y: p.y, t: 0 });
       }

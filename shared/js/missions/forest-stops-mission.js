@@ -194,6 +194,7 @@ export class ForestStopsMission extends Mission {
         this.ctx.world.train.addPassenger(h.emoji, h.seat);
         const seat = this.seatAt(h);
         this.particles.burst(seat.x, seat.y, SPARKS, 16, 200);
+        this.sound('collect');
         this.ctx.hud.setCounter('🚂', this.halts.filter(x => x.state === 'aboard').length, this.halts.length);
       }
     }

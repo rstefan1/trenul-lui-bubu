@@ -139,6 +139,7 @@ export class PaintMission extends SceneMission {
         this.painted.add(part.id);
         this.since.set(part.id, 0);
         this.particles.burst(p.x, p.y, [COLORS[this.brush].color, '#ffffff'], 14, 180);
+        this.sound('brush');
         this.ctx.hud.setCounter('🎨', this.painted.size, PARTS.length);
         if (this.painted.size === PARTS.length) this.doneT = 0;
       } else {

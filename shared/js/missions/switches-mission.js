@@ -156,6 +156,7 @@ export class SwitchesMission extends SceneMission {
     if (!best) return;
     this.switches.set(best, this.switches.get(best) ? 0 : 1);
     this.flip = { key: best, t: 0 };
+    this.sound('tock');
   }
 
   /** @private Starts the locomotive. */
@@ -296,6 +297,7 @@ export class SwitchesMission extends SceneMission {
       this.message = `Corect! Vagonul a ajuns pe linia ${reached + 1}.`;
       const end = this.route[this.route.length - 1];
       this.particles.burst(end.x, end.y, SPARKS, 30, 280);
+      this.sound('sparkle');
     } else {
       this.mistakes += 1;
       this.oops();

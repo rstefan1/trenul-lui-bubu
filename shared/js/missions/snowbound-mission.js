@@ -140,6 +140,7 @@ export class SnowboundMission extends Mission {
    */
   clear(amount, p) {
     this.snow = Math.max(PLOUGH_AT - 0.01, this.snow - amount);
+    this.sound('crunch');
     if (Math.random() < 0.6) this.particles.burst(p.x, p.y, ['#ffffff', '#e3ecf8'], 5, 220);
     if (this.snow <= PLOUGH_AT) this.setStep('signal');
   }

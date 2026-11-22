@@ -279,6 +279,7 @@ export class CircuitMission extends SceneMission {
     this.solved = true;
     const extra = this.taps - this.minimum;
     this.particles.burst(this.tree.x, this.tree.y - this.tree.h * 0.9, SPARKS, 40, 320);
+    this.sound('sparkle');
     this.showEnding({
       doneText: this.config.doneText,
       fact: this.config.fact,
@@ -297,6 +298,7 @@ export class CircuitMission extends SceneMission {
     const tile = this.tiles[cy * this.cols + cx];
     if (!tile) return;
     tile.turns += 1;
+    this.sound('tock');
     this.taps += 1;
     this.updatePower();
   }

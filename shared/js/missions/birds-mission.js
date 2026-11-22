@@ -106,6 +106,7 @@ export class BirdsMission extends Mission {
         f.fedT = 0;
         this.fed += 1;
         this.particles.burst(x, y, ['#d7b46a', '#f3dfa2', '#8d6e63'], 16, 160);
+        this.sound('chirp');
         this.ctx.hud.setCounter('🐦', this.fed, this.hungryCount);
       } else if (f.full) {
         this.mistakes += 1;

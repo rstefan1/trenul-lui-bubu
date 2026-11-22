@@ -168,6 +168,7 @@ export class PhotoMission extends Mission {
     this.album.push(thumb);
     this.flash = 1;
     this.particles.burst(q.x, q.y, SPARKS, 18, 220);
+    this.sound('shutter');
     this.ctx.hud.setCounter('📷', this.album.length, this.sightings.length);
   }
 

@@ -111,6 +111,7 @@ export class PutnaMission extends SceneMission {
       if (this.hung >= SPOTS.length) return;
       const [u, v] = SPOTS[this.hung];
       this.particles.burst(t.x + u * t.h, t.y - t.h + v * t.h, SPARKS, 10, 160);
+      this.sound('collect');
       this.hung += 1;
       this.ctx.hud.setCounter('🎄', this.hung, SPOTS.length);
       if (this.hung >= SPOTS.length) this.finish();
