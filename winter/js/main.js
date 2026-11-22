@@ -132,13 +132,17 @@ const music = new Music(audio);
 const overlays = [...document.querySelectorAll('.overlay')];
 
 /**
- * The music for what is on screen: "O, brad frumos" on the menu and the
- * chapter screens, "Clopoței" softly under the train, very softly at stations.
- * @returns {[import('../../shared/js/audio/songs.js').Song, number]}
+ * The music for what is on screen: carols on the menu, on the chapter
+ * screens and while the train waits at a station (the stations take turns
+ * between the two songs); nothing while the train runs (only the train is
+ * heard), and nothing during missions with sounds of their own.
+ * @returns {[import('../../shared/js/audio/songs.js').Song | null, number]}
  */
 function musicNow() {
   if (overlays.some(o => !o.hidden)) return [O_BRAD_FRUMOS, 0.5];
-  return [CLOPOTEI, journey.state === 'running' ? 0.16 : 0.07];
+  if (journey.state === 'running') return [null, 0];
+  if (director.active.some(m => m.quietMusic)) return [null, 0];
+  return [journey.stationIndex % 2 ? CLOPOTEI : O_BRAD_FRUMOS, 0.35];
 }
 
 const director = new MissionDirector(

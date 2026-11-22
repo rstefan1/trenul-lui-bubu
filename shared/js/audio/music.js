@@ -5,8 +5,8 @@
  * The notes are scheduled a little ahead on the audio clock (so the rhythm
  * stays exact even if the game stutters), and the song loops. Only one song
  * plays at a time; switching songs fades the old one out and starts the new
- * one from its beginning. The volume follows what is on screen (louder on
- * the menu and the chapter screens, very soft while the train runs).
+ * one from its beginning. What plays, and how loud, is decided every frame
+ * by the game (carols on the menus and at stations, silence on the way).
  */
 
 /** How far ahead notes are scheduled (seconds). */

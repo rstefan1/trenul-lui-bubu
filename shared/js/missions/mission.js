@@ -48,6 +48,8 @@ export class Mission {
   constructor(ctx, config) {
     this.ctx = ctx;
     this.config = config;
+    /** The background music stays silent while this mission runs (it has sounds of its own). */
+    this.quietMusic = false;
     /** @type {MissionPhase} */
     this.phase = 'idle';
     this.stars = 0;

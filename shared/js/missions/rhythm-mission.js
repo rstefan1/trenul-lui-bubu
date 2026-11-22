@@ -46,6 +46,8 @@ export class RhythmMission extends SceneMission {
    */
   constructor(ctx, config) {
     super(ctx, config);
+    // the carollers' song has its own beat: no other music meanwhile
+    this.quietMusic = true;
     this.config = config;
     const beat = 60 / config.tempo;
     /** @type {Note[]} */
