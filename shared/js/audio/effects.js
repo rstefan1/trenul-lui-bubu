@@ -1,15 +1,28 @@
 /**
- * @file The game's short sound effects: a mission won, each star, a gentle
- * "oops", a button click and the little fanfares at the end of a chapter
- * and of the journey.
+ * @file The game's sound effects: a mission won, the stars, a gentle
+ * "oops", a button click, the fanfares, the station chime, and the sounds
+ * of the missions (things collected, a camera, a match, the wind…).
  *
- * They are all played on the same music box and hand bell as the carols, so
- * every sound in the game belongs to the same family of small metal bells.
- * A recording registered with the effect's name (e.g. "success") is played
- * instead, if there is one, so any effect can later be replaced by a file.
+ * The bell-like sounds are played on the same music box and hand bell as
+ * the carols, so they all belong to one family; the others are made of
+ * short puffs of filtered noise. A recording registered with an effect's
+ * name (e.g. "success") is played instead, if there is one.
+ *
+ * What makes them sound finished, as in a professional game:
+ *
+ *   variation   every time a sound plays, its pitch and volume change a
+ *               tiny bit at random, so a sound heard twenty times in a row
+ *               never sounds mechanical;
+ *   balance     the first time sound is allowed, every effect is rendered
+ *               once, silently, and its loudness measured; each one is then
+ *               scaled so that all have the loudness written in MIX —
+ *               the mix is decided in one table, not by guessing volumes;
+ *   panning     a sound can come from where it happens on screen (left or
+ *               right speaker);
+ *   ducking     the important sounds lower the music for a moment.
  */
 
-import { churchBell, freqOf, handBell, musicBox } from './instruments.js';
+import { churchBell, freqOf, handBell, musicBox, stationChime } from './instruments.js';
 
 /**
  * A melody for the music box: [note, start beat, length in beats].
@@ -33,121 +46,59 @@ const FINALE = [
   ['G5', 5, 1], ['C6', 6, 1], ['E6', 7, 2],
   ['D6', 9, 1], ['C6', 10, 1], ['G5', 11, 1], ['C6', 12, 4],
 ];
-
-/**
- * Whether the engine can make a sound now; plays the recording instead
- * when there is one.
- * @param {import('./audio.js').AudioEngine | undefined} engine
- * @param {string} name
- * @returns {engine is import('./audio.js').AudioEngine & {ctx: AudioContext, master: GainNode}}
- *   true when the synthesised version should be played
- */
-function synthesise(engine, name) {
-  if (!engine?.ready || !engine.ctx || !engine.master) return false;
-  if (engine.canPlay(name)) {
-    engine.play(name);
-    return false;
-  }
-  return true;
-}
-
-/**
- * Plays a phrase on the music box.
- * @param {AudioContext} ctx
- * @param {AudioNode} out
- * @param {Phrase} phrase
- * @param {number} beat   seconds per beat
- * @param {number} level
- */
-function playPhrase(ctx, out, phrase, beat, level) {
-  const t = ctx.currentTime + 0.01;
-  for (const [note, at, length] of phrase) musicBox(ctx, out, freqOf(note), t + at * beat, length * beat, level);
-}
-
-/**
- * A mission is won.
- * @param {import('./audio.js').AudioEngine | undefined} engine
- */
-export function successSound(engine) {
-  if (synthesise(engine, 'success')) playPhrase(engine.ctx, engine.master, SUCCESS, 0.09, 0.2);
-}
-
-/**
- * One star of the result (0 = the first), each a little higher.
- * @param {import('./audio.js').AudioEngine | undefined} engine
- * @param {number} index
- */
-export function starSound(engine, index) {
-  if (!synthesise(engine, 'star')) return;
-  const note = STAR_NOTES[Math.min(index, STAR_NOTES.length - 1)];
-  handBell(engine.ctx, engine.master, freqOf(note), engine.ctx.currentTime + 0.005, 0.12);
-}
-
-/**
- * A gentle "oops" for a wrong choice.
- * @param {import('./audio.js').AudioEngine | undefined} engine
- */
-export function oopsSound(engine) {
-  if (synthesise(engine, 'oops')) playPhrase(engine.ctx, engine.master, OOPS, 0.13, 0.16);
-}
-
-/**
- * A soft click for a button: a tiny wooden "tock".
- * @param {import('./audio.js').AudioEngine | undefined} engine
- */
-export function clickSound(engine) {
-  if (!synthesise(engine, 'click')) return;
-  const ctx = engine.ctx;
-  const t = ctx.currentTime + 0.005;
-  const osc = ctx.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(1500, t);
-  osc.frequency.exponentialRampToValueAtTime(700, t + 0.04);
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.12, t + 0.003);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
-  osc.connect(g).connect(engine.master);
-  osc.start(t);
-  osc.stop(t + 0.08);
-}
-
-/**
- * A chapter is finished.
- * @param {import('./audio.js').AudioEngine | undefined} engine
- */
-export function chapterSound(engine) {
-  if (synthesise(engine, 'chapter-end')) playPhrase(engine.ctx, engine.master, CHAPTER, 0.16, 0.22);
-}
-
-/**
- * The whole journey is over: a longer fanfare, crowned by the bells.
- * @param {import('./audio.js').AudioEngine | undefined} engine
- */
-export function finaleSound(engine) {
-  if (!synthesise(engine, 'finale')) return;
-  const beat = 0.16;
-  playPhrase(engine.ctx, engine.master, FINALE, beat, 0.22);
-  const t = engine.ctx.currentTime + 0.01 + 12 * beat;
-  for (const [note, dt] of [['C6', 0], ['G5', 0.35], ['C5', 0.7]]) {
-    handBell(engine.ctx, engine.master, freqOf(note), t + Number(dt), 0.14);
-  }
-}
-
-// ------------------------------------------------------------ mission sounds
-
 /** The ladder of notes a run of things collected climbs (a pentatonic scale). */
 const COLLECT = ['C6', 'D6', 'E6', 'G6', 'A6', 'C7', 'D7', 'E7'];
 /** A run of collected things ends after this pause (seconds): back to the first note. */
 const COLLECT_RUN = 2.5;
+
+/**
+ * The mix: how loud every effect is, in decibels around the reference
+ * (0 dB = as loud as the "mission won" sound). Quiet, frequent sounds sit
+ * low; the big moments sit high.
+ * @type {Record<string, number>}
+ */
+const MIX = {
+  // the interface: discreet
+  click: -12, tock: -8,
+  // small feedback, heard often
+  collect: -3, oops: -5, star: -2, chirp: -8, crunch: -10, brush: -12, shutter: -3,
+  hop: -4, flame: -5, whoosh: -6, ding: -5, drum: -2, thud: -5,
+  // things around the train
+  doorsOpen: -9, doorsClose: -9, gust: -6, plough: -4,
+  // the big moments
+  success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 3,
+};
+/** The effects that lower the music while they play, and for how long (seconds). */
+const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, churchBell: 2.5, star: 0.5 };
 /** Least time between two of the same sound (rubbing snow would make dozens a second). */
 const MIN_GAP = { crunch: 0.11, tock: 0.04, brush: 0.15 };
+/** Random variation of every sound: pitch (± share) and volume (± dB). */
+const VARY_PITCH = 0.04;
+const VARY_DB = 1.5;
+/** Effects whose pitch must not vary (melodies that go with the music, or notes in a scale). */
+const FIXED_PITCH = new Set(['success', 'chapterEnd', 'finale', 'chime', 'collect', 'star', 'hop']);
 
 /** @type {WeakMap<BaseAudioContext, AudioBuffer>} one second of white noise per context */
 const noiseBuffers = new WeakMap();
 /** @type {Map<string, number>} when each sound was last played */
 const lastPlayed = new Map();
+/** @type {Map<string, number>} the gain that brings each effect to its loudness in MIX */
+const balance = new Map();
 let collectStep = 0;
+let starIndex = 0;
+/** The pitch factor of the sound being made (varies a little at every play). */
+let pitch = 1;
+
+/**
+ * Frequency of a note, with the current pitch variation.
+ * @param {string} note
+ */
+const fq = note => freqOf(note) * pitch;
+/**
+ * A frequency in hertz, with the current pitch variation.
+ * @param {number} f
+ */
+const hz = f => f * pitch;
 
 /** @param {BaseAudioContext} ctx */
 function noiseOf(ctx) {
@@ -163,7 +114,7 @@ function noiseOf(ctx) {
 
 /**
  * A puff of filtered noise (the raw material of whooshes, crunches, wind…).
- * @param {AudioContext} ctx
+ * @param {BaseAudioContext} ctx
  * @param {AudioNode} out
  * @param {object} o
  * @param {number} o.t          start time
@@ -181,8 +132,8 @@ function noisePuff(ctx, out, { t, length, level, type, from, to = from, q = 1, a
   const f = ctx.createBiquadFilter();
   f.type = type;
   f.Q.value = q;
-  f.frequency.setValueAtTime(from, t);
-  f.frequency.exponentialRampToValueAtTime(to, t + length);
+  f.frequency.setValueAtTime(hz(from), t);
+  f.frequency.exponentialRampToValueAtTime(hz(to), t + length);
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(level, t + attack);
@@ -192,31 +143,97 @@ function noisePuff(ctx, out, { t, length, level, type, from, to = from, q = 1, a
 }
 
 /**
- * The sounds, each made from the music box, the hand bell or a puff of noise.
- * @type {Record<string, (ctx: AudioContext, out: AudioNode, t: number) => void>}
+ * A short tone whose pitch slides (clicks, tocks, drums, chirps, thuds).
+ * @param {BaseAudioContext} ctx
+ * @param {AudioNode} out
+ * @param {object} o
+ * @param {number} o.t
+ * @param {number} o.from     frequency at the start (Hz)…
+ * @param {number} o.to       …and at the end
+ * @param {number} o.slide    seconds of the slide
+ * @param {number} o.level
+ * @param {number} o.length   seconds until silent
+ * @param {OscillatorType} [o.type='sine']
+ * @param {number} [o.attack=0.003]
+ */
+function sweep(ctx, out, { t, from, to, slide, level, length, type = 'sine', attack = 0.003 }) {
+  const osc = ctx.createOscillator();
+  osc.type = type;
+  osc.frequency.setValueAtTime(hz(from), t);
+  osc.frequency.exponentialRampToValueAtTime(hz(to), t + slide);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(level, t + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + length);
+  osc.connect(g).connect(out);
+  osc.start(t);
+  osc.stop(t + length + 0.02);
+}
+
+/**
+ * Plays a phrase on the music box.
+ * @param {BaseAudioContext} ctx
+ * @param {AudioNode} out
+ * @param {number} t
+ * @param {Phrase} phrase
+ * @param {number} beat   seconds per beat
+ * @param {number} level
+ */
+function playPhrase(ctx, out, t, phrase, beat, level) {
+  for (const [note, at, length] of phrase) musicBox(ctx, out, fq(note), t + at * beat, length * beat, level);
+}
+
+/**
+ * Every effect, made from the instruments or from puffs of noise.
+ * @type {Record<string, (ctx: BaseAudioContext, out: AudioNode, t: number) => void>}
  */
 const SOUNDS = {
+  // ------------------------------------------------------------ general
+  /** A mission is won: a quick rising arpeggio. */
+  success(ctx, out, t) {
+    playPhrase(ctx, out, t, SUCCESS, 0.09, 0.2);
+  },
+  /** One star of the result, each one higher. */
+  star(ctx, out, t) {
+    handBell(ctx, out, fq(STAR_NOTES[Math.min(starIndex, STAR_NOTES.length - 1)]), t, 0.12);
+  },
+  /** A gentle "oops": two soft falling notes. */
+  oops(ctx, out, t) {
+    playPhrase(ctx, out, t, OOPS, 0.13, 0.16);
+  },
+  /** A button: a tiny wooden "tock". */
+  click(ctx, out, t) {
+    sweep(ctx, out, { t, from: 1500, to: 700, slide: 0.04, level: 0.12, length: 0.06 });
+  },
+  /** A chapter is finished: a small fanfare. */
+  chapterEnd(ctx, out, t) {
+    playPhrase(ctx, out, t, CHAPTER, 0.16, 0.22);
+  },
+  /** The whole journey is over: a longer fanfare, crowned by the bells. */
+  finale(ctx, out, t) {
+    const beat = 0.16;
+    playPhrase(ctx, out, t, FINALE, beat, 0.22);
+    [['C6', 0], ['G5', 0.35], ['C5', 0.7]].forEach(([note, dt]) => {
+      handBell(ctx, out, fq(String(note)), t + 12 * beat + Number(dt), 0.14);
+    });
+  },
+  /** A station: the chime before the announcements. */
+  chime(ctx, out, t) {
+    stationChime(ctx, out, t, 0.4, pitch);
+  },
+
+  // ------------------------------------------------------------ missions
   /** Something collected: one note higher for every thing in a quick run. */
   collect(ctx, out, t) {
-    musicBox(ctx, out, freqOf(COLLECT[collectStep]), t, 0.3, 0.15);
+    musicBox(ctx, out, fq(COLLECT[collectStep]), t, 0.3, 0.15);
   },
   /** A bigger moment inside a mission (a shape finished, the right train). */
   sparkle(ctx, out, t) {
-    ['G6', 'C7', 'E7', 'G7'].forEach((n, i) => musicBox(ctx, out, freqOf(n), t + i * 0.05, 0.25, 0.1));
+    ['G6', 'C7', 'E7', 'G7'].forEach((n, i) => musicBox(ctx, out, fq(n), t + i * 0.05, 0.25, 0.1));
   },
   /** A piece turned, a switch thrown: a small wooden tock. */
   tock(ctx, out, t) {
-    const osc = ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(900, t);
-    osc.frequency.exponentialRampToValueAtTime(420, t + 0.05);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.16, t + 0.003);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
-    osc.connect(g).connect(out);
-    osc.start(t);
-    osc.stop(t + 0.1);
+    sweep(ctx, out, { t, from: 900, to: 420, slide: 0.05, level: 0.16, length: 0.08 });
   },
   /** A gift thrown: a short whoosh. */
   whoosh(ctx, out, t) {
@@ -226,43 +243,21 @@ const SOUNDS = {
   flame(ctx, out, t) {
     noisePuff(ctx, out, { t, length: 0.06, level: 0.08, type: 'highpass', from: 3500 });
     noisePuff(ctx, out, { t: t + 0.05, length: 0.5, level: 0.07, type: 'bandpass', from: 700, to: 450, q: 0.8, attack: 0.08 });
-    musicBox(ctx, out, freqOf('E6'), t + 0.08, 0.3, 0.08);
+    musicBox(ctx, out, fq('E6'), t + 0.08, 0.3, 0.08);
   },
-  /** A photo: the camera's double click. */
+  /** A photo: "click" (the shutter opens, the mirror slaps up) … "clack" (it closes). */
   shutter(ctx, out, t) {
-    // "click" (the shutter opens, the mirror slaps up) … "clack" (it closes)
     for (const [at, level, freq] of [[0, 0.5, 3200], [0.09, 0.4, 2400]]) {
       noisePuff(ctx, out, { t: t + at, length: 0.025, level, type: 'highpass', from: freq, attack: 0.001 });
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(220, t + at);
-      osc.frequency.exponentialRampToValueAtTime(90, t + at + 0.05);
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.0001, t + at);
-      g.gain.exponentialRampToValueAtTime(level * 0.6, t + at + 0.002);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + at + 0.06);
-      osc.connect(g).connect(out);
-      osc.start(t + at);
-      osc.stop(t + at + 0.08);
+      sweep(ctx, out, { t: t + at, from: 220, to: 90, slide: 0.05, level: level * 0.6, length: 0.06, attack: 0.002 });
     }
   },
   /** A bird fed: two or three quick chirps. */
   chirp(ctx, out, t) {
     const n = 2 + Math.round(Math.random());
     for (let i = 0; i < n; i++) {
-      const s = t + i * 0.11;
       const base = 3000 + Math.random() * 600;
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(base, s);
-      osc.frequency.exponentialRampToValueAtTime(base * 1.45, s + 0.05);
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.0001, s);
-      g.gain.exponentialRampToValueAtTime(0.06, s + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, s + 0.07);
-      osc.connect(g).connect(out);
-      osc.start(s);
-      osc.stop(s + 0.08);
+      sweep(ctx, out, { t: t + i * 0.11, from: base, to: base * 1.45, slide: 0.05, level: 0.06, length: 0.07, attack: 0.01 });
     }
   },
   /** Snow dug or a gift landing in the snow: a soft crunch. */
@@ -279,47 +274,17 @@ const SOUNDS = {
   },
   /** An animal hops on board: a little springy "boing", then a note. */
   hop(ctx, out, t) {
-    const osc = ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(280, t);
-    osc.frequency.exponentialRampToValueAtTime(760, t + 0.12);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
-    osc.connect(g).connect(out);
-    osc.start(t);
-    osc.stop(t + 0.18);
-    musicBox(ctx, out, freqOf(COLLECT[collectStep]), t + 0.12, 0.3, 0.12);
+    sweep(ctx, out, { t, from: 280, to: 760, slide: 0.12, level: 0.12, length: 0.16, attack: 0.01 });
+    musicBox(ctx, out, fq(COLLECT[collectStep]), t + 0.12, 0.3, 0.12);
   },
   /** The carollers' drum: a deep, round thump with the skin's slap. */
   drum(ctx, out, t) {
-    const osc = ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(150, t);
-    osc.frequency.exponentialRampToValueAtTime(55, t + 0.25);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.35, t + 0.004);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
-    osc.connect(g).connect(out);
-    osc.start(t);
-    osc.stop(t + 0.4);
+    sweep(ctx, out, { t, from: 150, to: 55, slide: 0.25, level: 0.35, length: 0.35, attack: 0.004 });
     noisePuff(ctx, out, { t, length: 0.05, level: 0.08, type: 'bandpass', from: 1200, q: 0.8, attack: 0.001 });
   },
   /** Something heavy set down (the tree on its wagon). */
   thud(ctx, out, t) {
-    const osc = ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(120, t);
-    osc.frequency.exponentialRampToValueAtTime(45, t + 0.18);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.3, t + 0.005);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
-    osc.connect(g).connect(out);
-    osc.start(t);
-    osc.stop(t + 0.3);
+    sweep(ctx, out, { t, from: 120, to: 45, slide: 0.18, level: 0.3, length: 0.25, attack: 0.005 });
     noisePuff(ctx, out, { t, length: 0.2, level: 0.08, type: 'lowpass', from: 700, to: 200 });
   },
   /** The snow plough going by: a long rumble with snow thrown aside. */
@@ -331,11 +296,11 @@ const SOUNDS = {
   },
   /** The big bell of a monastery's bell tower. */
   churchBell(ctx, out, t) {
-    churchBell(ctx, out, freqOf('G3'), t);
+    churchBell(ctx, out, fq('G3'), t);
   },
   /** A small bell: the lantern's signal is seen. */
   ding(ctx, out, t) {
-    handBell(ctx, out, freqOf('A5'), t, 0.12);
+    handBell(ctx, out, fq('A5'), t, 0.12);
   },
   /** The train's doors open: a puff of air, then the doors slide. */
   doorsOpen(ctx, out, t) {
@@ -350,19 +315,124 @@ const SOUNDS = {
   },
 };
 
+/** @typedef {keyof typeof SOUNDS} SoundName */
+
 /**
- * Plays one of the game's sound effects (a recording with the same name, if
- * there is one, otherwise the synthesised version).
+ * Plays one of the game's sound effects.
  * @param {import('./audio.js').AudioEngine | undefined} engine
- * @param {keyof typeof SOUNDS} name
+ * @param {SoundName} name
+ * @param {{pan?: number}} [o]  pan: -1 (left speaker) … 1 (right speaker)
  */
-export function missionSound(engine, name) {
+export function playSound(engine, name, o = {}) {
   if (!engine?.ready || !engine.ctx || !engine.master) return;
   const now = engine.ctx.currentTime;
   const last = lastPlayed.get(name) ?? -Infinity;
   if (now - last < (MIN_GAP[/** @type {keyof typeof MIN_GAP} */ (name)] ?? 0)) return;
   lastPlayed.set(name, now);
   if (name === 'collect' || name === 'hop') collectStep = now - last > COLLECT_RUN ? 0 : Math.min(collectStep + 1, COLLECT.length - 1);
-  if (engine.canPlay(name)) engine.play(name);
-  else SOUNDS[name](engine.ctx, engine.master, now + 0.005);
+
+  const varyDb = (Math.random() * 2 - 1) * VARY_DB;
+  const rate = FIXED_PITCH.has(name) ? 1 : 1 + (Math.random() * 2 - 1) * VARY_PITCH;
+  const volume = dB((MIX[name] ?? 0) + varyDb) * (balance.get(name) ?? 1);
+  const hold = DUCK[/** @type {keyof typeof DUCK} */ (name)];
+  if (hold) engine.duck(hold);
+  if (engine.canPlay(name)) {
+    engine.play(name, volume, { rate, pan: o.pan });
+    return;
+  }
+  pitch = rate;
+  try {
+    SOUNDS[name](engine.ctx, engine.voice(volume, o.pan), now + 0.005);
+  } finally {
+    pitch = 1;
+  }
+}
+
+/**
+ * Measures every effect once, silently, and works out the gain that gives
+ * each the same loudness (then MIX sets them apart on purpose). Runs once,
+ * when sound becomes possible; until it is done the effects play as made.
+ * @param {import('./audio.js').AudioEngine} engine
+ */
+export async function balanceSounds(engine) {
+  const Offline = window.OfflineAudioContext || /** @type {any} */ (window).webkitOfflineAudioContext;
+  if (!Offline || !engine.ctx) return;
+  const rate = 22050;
+  /** @type {Map<string, number>} */
+  const loudness = new Map();
+  for (const name of Object.keys(SOUNDS)) {
+    try {
+      const off = new Offline(1, rate * 4, rate);
+      SOUNDS[name](off, off.destination, 0.01);
+      loudness.set(name, measure(await off.startRendering()));
+    } catch {
+      // a sound that cannot be measured keeps its own volume
+    }
+  }
+  // recordings that replace an effect are measured too
+  for (const name of Object.keys(SOUNDS)) {
+    const b = engine.buffers.get(name);
+    if (b) loudness.set(name, measure(b));
+  }
+  const reference = loudness.get('success');
+  if (!reference) return;
+  for (const [name, l] of loudness) {
+    if (l > 1e-5) balance.set(name, Math.max(0.2, Math.min(5, reference / l)));
+  }
+}
+
+/**
+ * Loudness of a sound, as the ear judges a short sound: the loudest moment
+ * of its energy, measured over windows of 100 ms. The lowest notes count a
+ * little less (small speakers and the ear both hear them less), by
+ * measuring after a gentle high-pass.
+ * @param {AudioBuffer} buffer
+ */
+function measure(buffer) {
+  const d = buffer.getChannelData(0);
+  const win = Math.max(1, Math.round(buffer.sampleRate * 0.1));
+  const k = Math.exp((-2 * Math.PI * 120) / buffer.sampleRate);   // one-pole high-pass at 120 Hz
+  let prevIn = 0;
+  let prevOut = 0;
+  let sum = 0;
+  let best = 0;
+  const ring = new Float64Array(win);
+  for (let i = 0; i < d.length; i++) {
+    const y = k * (prevOut + d[i] - prevIn);
+    prevIn = d[i];
+    prevOut = y;
+    const e = y * y;
+    sum += e - ring[i % win];
+    ring[i % win] = e;
+    if (sum > best) best = sum;
+  }
+  return Math.sqrt(best / win);
+}
+
+/** @param {number} db */
+const dB = db => 10 ** (db / 20);
+
+// ------------------------------------------------------------ shortcuts
+
+/** @param {import('./audio.js').AudioEngine | undefined} engine */
+export const successSound = engine => playSound(engine, 'success');
+/** @param {import('./audio.js').AudioEngine | undefined} engine */
+export const oopsSound = engine => playSound(engine, 'oops');
+/** @param {import('./audio.js').AudioEngine | undefined} engine */
+export const clickSound = engine => playSound(engine, 'click');
+/** @param {import('./audio.js').AudioEngine | undefined} engine */
+export const chapterSound = engine => playSound(engine, 'chapterEnd');
+/** @param {import('./audio.js').AudioEngine | undefined} engine */
+export const finaleSound = engine => playSound(engine, 'finale');
+/** @param {import('./audio.js').AudioEngine | undefined} engine */
+export const chimeSound = engine => playSound(engine, 'chime');
+
+/**
+ * One star of the result (0 = the first), each a little higher.
+ * @param {import('./audio.js').AudioEngine | undefined} engine
+ * @param {number} index
+ */
+export function starSound(engine, index) {
+  starIndex = index;
+  playSound(engine, 'star');
 }

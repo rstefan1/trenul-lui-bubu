@@ -152,19 +152,15 @@ const CHIME = ['G5', 'B5', 'D6'];
 const CHIME_STEP = 0.42;
 
 /**
- * The "ding-ding-dong" heard in a station before an announcement. A
- * recording registered as "station-chime" is played instead, if there is one.
- * @param {import('./audio.js').AudioEngine | undefined} engine
+ * The "ding-ding-dong" heard in a station before an announcement.
+ * @param {BaseAudioContext} ctx
+ * @param {AudioNode} out
+ * @param {number} t
  * @param {number} [level=0.4]
+ * @param {number} [pitch=1]  a factor on every note
  */
-export function stationChime(engine, level = 0.4) {
-  if (!engine?.ready || !engine.ctx || !engine.master) return;
-  if (engine.canPlay('station-chime')) {
-    engine.play('station-chime');
-    return;
-  }
-  const t = engine.ctx.currentTime + 0.01;
-  CHIME.forEach((note, i) => chimeBar(/** @type {AudioContext} */ (engine.ctx), /** @type {GainNode} */ (engine.master), freqOf(note), t + i * CHIME_STEP, level));
+export function stationChime(ctx, out, t, level = 0.4, pitch = 1) {
+  CHIME.forEach((note, i) => chimeBar(ctx, out, freqOf(note) * pitch, t + i * CHIME_STEP, level));
 }
 
 /**
