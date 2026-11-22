@@ -60,6 +60,7 @@ import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
 import { Hud } from '../../shared/js/ui/hud.js';
 import { MissionHud } from '../../shared/js/ui/mission-hud.js';
 import { AudioEngine, setupSoundButton } from '../../shared/js/audio/audio.js';
+import { stationChime } from '../../shared/js/audio/instruments.js';
 import { Music } from '../../shared/js/audio/music.js';
 import { RailSound } from '../../shared/js/audio/rail-sound.js';
 import { CLOPOTEI, CRACIUN_FERICIT, FA_LA_LA, NOAPTE_DE_VIS, O_BRAD_FRUMOS } from '../../shared/js/audio/songs.js';
@@ -166,6 +167,8 @@ state.on('change', (/** @type {string} */ what) => {
 });
 journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Station} */ station) => {
   hud.showStation(station.name);
+  // the station's chime, once the brakes have gone quiet
+  setTimeout(() => stationChime(audio), 500);
   // passengers brought on board by a mission get off at the next station
   if (world.train.passengers.length) setTimeout(() => world.train.leaveAll(), 700);
 });
