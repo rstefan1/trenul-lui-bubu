@@ -66,7 +66,7 @@ const MIX = {
   // things around the train
   doorsOpen: -9, doorsClose: -9, gust: -6, plough: -4,
   // the big moments
-  success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 6,
+  success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 10,
   // the sounds of places (heard now and then, far away, under everything)
   birdsong: -16, sleigh: -11,
 };
