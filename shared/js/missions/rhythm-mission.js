@@ -12,6 +12,7 @@
  *
  * Configuration (besides id/title/text):
  *   beats      when each note reaches the drum, in beats from the start
+ *   melody     the note of the carol each one plays when caught
  *   tempo      beats per minute
  *   doneText, fact
  */
@@ -20,6 +21,7 @@ import { TAU, clamp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { drawFir, fillCircle, fillRoundRect, fillStar, glow } from '../gfx/shapes.js';
 import { drawBubu } from '../train/bubu.js';
+import { playNote } from '../audio/instruments.js';
 import { SceneMission } from './scene-mission.js';
 
 /** Seconds a note needs to glide from the right edge to the drum. */
@@ -35,8 +37,9 @@ const LEAD_IN = 2.5;
  * @property {number} time     when it reaches the drum (seconds from the start)
  * @property {'waiting' | 'hit' | 'missed'} state
  * @property {number} t        seconds since hit or missed
+ * @property {string | null} pitch  its note in the carol (played when caught)
  *
- * @typedef {import('./mission.js').MissionConfig & {beats: number[], tempo: number, doneText: string, fact: string}} RhythmConfig
+ * @typedef {import('./mission.js').MissionConfig & {beats: number[], melody?: string[], tempo: number, doneText: string, fact: string}} RhythmConfig
  */
 
 export class RhythmMission extends SceneMission {
@@ -51,7 +54,7 @@ export class RhythmMission extends SceneMission {
     this.config = config;
     const beat = 60 / config.tempo;
     /** @type {Note[]} */
-    this.notes = config.beats.map(b => ({ time: LEAD_IN + TRAVEL + b * beat, state: 'waiting', t: 0 }));
+    this.notes = config.beats.map((b, i) => ({ time: LEAD_IN + TRAVEL + b * beat, state: 'waiting', t: 0, pitch: config.melody?.[i] ?? null }));
     this.songTime = 0;
     this.time = 0;
     this.hits = 0;
@@ -109,6 +112,8 @@ export class RhythmMission extends SceneMission {
     if (!best) return;
     best.state = 'hit';
     best.t = 0;
+    // the caught note sings its note of the carol: together they play the song
+    if (best.pitch) playNote(this.ctx.audio, best.pitch, { length: 0.6, level: 0.35 });
     this.hits += 1;
     this.jump = 1;
     this.feedback = { text: bestDist < PERFECT ? 'Perfect!' : 'Bine!', t: 0 };

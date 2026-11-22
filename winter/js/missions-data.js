@@ -331,8 +331,10 @@ export const WINTER_MISSIONS = {
         id: 'carollers-ilva',
         title: 'Colindătorii din gară',
         text: 'E noaptea de Crăciun, iar în gara Ilva Mică au venit colindătorii! Ține ritmul colindului: atinge ecranul (sau apasă Space) când nota ajunge în cercul tobei.',
-        tempo: 84,
-        beats: [0, 2, 4, 5, 6, 8, 10, 12, 13, 14, 16, 18, 20, 21, 22, 24, 26, 28],
+        // the notes caught play "Clopoței, clopoței" (the tune of "Jingle Bells")
+        tempo: 80,
+        beats: [0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 30],
+        melody: ['E5', 'E5', 'E5', 'E5', 'E5', 'E5', 'E5', 'G5', 'C5', 'D5', 'E5', 'F5', 'F5', 'F5', 'F5', 'F5', 'E5', 'E5', 'E5', 'D5', 'D5', 'E5', 'D5', 'G5'],
         doneText: 'Colindătorii i-au dăruit lui Bubu un colac cald!',
         fact: 'În noaptea de Ajun, copiii merg cu colindul din casă în casă, iar gazdele le dau colaci, mere și nuci. Steaua purtată de colindători amintește de steaua care i-a călăuzit pe magi.',
       },
