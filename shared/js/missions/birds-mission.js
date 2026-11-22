@@ -124,7 +124,7 @@ export class BirdsMission extends Mission {
     this.particles.update(dt);
     if (this.pace) {
       const stage = this.ctx.stage;
-      this.pace.slowNear(this.feeders.filter(f => f.hungry && f.fedT < 0).map(f => this.toScreen(f.worldX)), { left: stage.viewLeft, right: stage.viewRight });
+      this.pace.slowNear(this.feeders.filter(f => f.hungry && f.fedT < 0).map(f => this.toScreen(f.worldX)), { left: stage.viewLeft, right: stage.viewRight, front: this.ctx.world.anchorX });
     }
     for (const f of this.feeders) if (f.fedT >= 0) f.fedT += dt;
     // over when every hungry feeder is filled (and the birds have flown down),
