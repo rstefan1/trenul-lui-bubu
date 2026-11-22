@@ -68,7 +68,7 @@ const MIX = {
   // the big moments
   success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 6,
   // the sounds of places (heard now and then, far away, under everything)
-  distantBell: -7, toaca: -15, birdsong: -16, sleigh: -11,
+  distantBell: -7, birdsong: -16, sleigh: -11, snowSteps: -12,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
 const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, churchBell: 3.5, star: 0.5 };
@@ -318,42 +318,6 @@ const SOUNDS = {
     for (let i = 0; i < 3; i++) churchBell(ctx, far, fq('A3'), t + i * 2.6, 0.3);
   },
   /**
-   * The toaca: a long wooden plank struck with two mallets, in the old
-   * rhythm of the Bucovina monasteries — slow strokes that get faster and
-   * faster, a quick run, then a few last strokes. The two mallets hit two
-   * spots of the plank, so the strokes alternate between two pitches.
-   */
-  toaca(ctx, out, t) {
-    const far = ctx.createBiquadFilter();
-    far.type = 'lowpass';
-    far.frequency.value = 2600;
-    far.connect(out);
-    let at = t;
-    let gap = 0.55;
-    let i = 0;
-    const strike = (/** @type {number} */ when, /** @type {number} */ level) => {
-      const f = i++ % 2 ? 560 : 730;
-      sweep(ctx, far, { t: when, from: f * 1.05, to: f, slide: 0.02, level: 0.3 * level, length: 0.11, attack: 0.002 });
-      noisePuff(ctx, far, { t: when, length: 0.03, level: 0.12 * level, type: 'bandpass', from: f * 2.2, q: 2, attack: 0.001 });
-    };
-    // slow, then faster and faster
-    while (gap > 0.12) {
-      strike(at, 0.8);
-      at += gap;
-      gap *= 0.88;
-    }
-    // the quick run
-    for (let k = 0; k < 10; k++) {
-      strike(at, 1);
-      at += 0.12;
-    }
-    // the last strokes: "ta-ta… tam"
-    at += 0.25;
-    strike(at, 0.9);
-    strike(at + 0.2, 0.9);
-    strike(at + 0.65, 1);
-  },
-  /**
    * A horse sleigh going by: its bells (zurgălăi) jingle at the horse's trot,
    * coming from one side, passing in front and going away on the other,
    * with the soft steps of the hooves in the snow.
@@ -387,6 +351,29 @@ const SOUNDS = {
         // the hoof in the snow
         noisePuff(ctx, pass, { t: s, length: 0.09, level: 0.06, type: 'lowpass', from: 500, to: 250, attack: 0.004 });
       }
+    }
+  },
+  /**
+   * Someone walking past on fresh snow: a few steps, each one the squeaky
+   * crunch of snow pressed under a boot — many tiny crackles in a quick
+   * burst, over a soft thud.
+   */
+  snowSteps(ctx, out, t) {
+    const steps = 4 + Math.floor(Math.random() * 5);
+    const pace = 0.5 + Math.random() * 0.15;
+    for (let k = 0; k < steps; k++) {
+      const s = t + k * pace + Math.random() * 0.04;
+      const loud = 0.7 + 0.3 * Math.sin((k / Math.max(1, steps - 1)) * Math.PI);   // nearer in the middle
+      // the crunch: a quick run of tiny crackles
+      const grains = 8 + Math.floor(Math.random() * 6);
+      for (let g = 0; g < grains; g++) {
+        noisePuff(ctx, out, {
+          t: s + (g / grains) * 0.16 + Math.random() * 0.012, length: 0.018, level: 0.09 * loud,
+          type: 'bandpass', from: 1400 + Math.random() * 2600, q: 3, attack: 0.001,
+        });
+      }
+      // the boot itself
+      noisePuff(ctx, out, { t: s, length: 0.1, level: 0.05 * loud, type: 'lowpass', from: 400, to: 200, attack: 0.005 });
     }
   },
   /** A bird of the winter morning: a great tit ("ti-tu ti-tu"), a sparrow, or a robin's little trill. */
