@@ -851,6 +851,7 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   transition: transform .12s, opacity .12s;
 }
 .gear-btn__icon { font-size: 1.3em; }
+.gear-btn__kmh { display: block; font-size: .62em; font-weight: 700; opacity: .85; line-height: 1; }
 .gear-btn[aria-pressed="true"] { background: var(--gear); border-color: #fff; opacity: 1; transform: scale(1.06); }
 
 /* ---------- Program panel (Dej switches) ---------- */

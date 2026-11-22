@@ -2,9 +2,9 @@
  * @file Travel mission "the bells on the line": the child drives the train.
  *
  * Bells hang from the overhead wire. Each has a sign saying how fast the
- * train must pass under it for the pantograph to ring it: slowly, medium or
- * fast. The child chooses the speed with three big buttons (slow, medium,
- * fast); the train reaches it smoothly and keeps it. A box in the middle of
+ * train must pass under it for the pantograph to ring it: slowly (70 km/h)
+ * or fast (110 km/h). The child chooses the speed with two big buttons; the
+ * train reaches it smoothly and keeps it. A box in the middle of
  * the screen, above the train, shows the next bells, so the child knows in
  * advance which speed will be needed; a small speedometer shows the speed. A bell passed at the right speed rings (it swings
  * and sends up golden notes); otherwise it only goes "clonk".
@@ -32,14 +32,16 @@ import { leave } from '../ui/panel.js';
 const KMH = 0.2;
 
 /**
- * The three speed bands, in world units per second.
- * @type {Readonly<Record<'slow' | 'medium' | 'fast', {min: number, max: number, target: number, label: string, icon: string, color: string}>>}
+ * The two speed bands, in world units per second (the target is the speed
+ * the train keeps: 70 and 110 km/h).
+ * @type {Readonly<Record<Gear, {min: number, max: number, target: number, label: string, icon: string, color: string}>>}
  */
 const BANDS = Object.freeze({
-  slow: { min: 90, max: 260, target: 170, label: 'ÎNCET', icon: '🐢', color: '#2f7fd8' },
-  medium: { min: 280, max: 430, target: 355, label: 'MEDIU', icon: '🚂', color: '#2e9d57' },
-  fast: { min: 450, max: MANUAL.maxSpeed, target: 540, label: 'REPEDE', icon: '🐇', color: '#e0472e' },
+  slow: { min: 280, max: 430, target: 70 / KMH, label: 'ÎNCET', icon: '🐢', color: '#2f7fd8' },
+  fast: { min: 470, max: MANUAL.maxSpeed, target: 110 / KMH, label: 'REPEDE', icon: '🐇', color: '#e0472e' },
 });
+
+/** @typedef {'slow' | 'fast'} Gear */
 
 /** The pantograph is this far behind the front of the train (train units). */
 const PANTOGRAPH_X = -200;
@@ -47,7 +49,7 @@ const PANTOGRAPH_X = -200;
 /**
  * @typedef {object} Bell
  * @property {number} worldX
- * @property {'slow' | 'medium' | 'fast'} band
+ * @property {Gear} band
  * @property {'waiting' | 'rung' | 'missed'} state
  * @property {number} t   seconds since it was passed
  */
@@ -74,15 +76,14 @@ export class BellsMission extends Mission {
     this.particles = new Particles();
     /** @type {import('../journey/journey.js').Controls | null} */
     this.controls = null;
-    /** @type {HTMLElement | null} the three speed buttons */
+    /** @type {HTMLElement | null} the two speed buttons */
     this.gearbox = null;
-    /** @type {'slow' | 'medium' | 'fast'} */
+    /** @type {Gear} */
     this.gear = 'fast';
     /** @type {(e: KeyboardEvent) => void} */
     this.onKey = e => {
-      const order = /** @type {const} */ (['slow', 'medium', 'fast']);
-      const i = order.indexOf(this.gear);
-      const pick = { Digit1: 0, Digit2: 1, Digit3: 2, ArrowDown: Math.max(0, i - 1), ArrowUp: Math.min(2, i + 1) }[e.code];
+      const order = /** @type {const} */ (['slow', 'fast']);
+      const pick = { Digit1: 0, Digit2: 1, ArrowDown: 0, ArrowUp: 1 }[e.code];
       if (pick === undefined) return;
       e.preventDefault();
       this.setGear(order[pick]);
@@ -101,19 +102,22 @@ export class BellsMission extends Mission {
     const first = j.distance + 3200;
     const n = this.config.bells;
     const spacing = Math.max(2200, (end - first) / Math.max(1, n - 1));
-    /** @type {Array<'slow' | 'medium' | 'fast'>} */
-    const pattern = ['slow', 'fast', 'medium', 'slow', 'medium', 'fast', 'slow', 'fast', 'medium', 'slow', 'fast', 'medium'];
+    /** @type {Array<Gear>} */
+    const pattern = ['slow', 'fast', 'slow', 'slow', 'fast', 'fast', 'slow', 'fast', 'fast', 'slow'];
     for (let i = 0; i < n; i++) {
       this.bells.push({ worldX: first + i * spacing, band: pattern[i % pattern.length], state: 'waiting', t: 0 });
     }
 
-    // the gearbox: three big buttons (and the keys 1, 2, 3 or the arrows)
-    const buttons = /** @type {const} */ (['fast', 'medium', 'slow']).map(gear => {
+    // the gearbox: two big buttons (and the keys 1, 2 or the arrows)
+    const buttons = /** @type {const} */ (['fast', 'slow']).map(gear => {
       const band = BANDS[gear];
       const b = el('button', {
         class: `gear-btn gear-btn--${gear}`, type: 'button', 'aria-pressed': 'false',
         style: `--gear:${band.color}`, 'aria-label': `Viteză ${band.label.toLowerCase()}`,
-      }, [el('span', { class: 'gear-btn__icon', 'aria-hidden': 'true' }, [band.icon]), el('span', {}, [band.label])]);
+      }, [
+        el('span', { class: 'gear-btn__icon', 'aria-hidden': 'true' }, [band.icon]),
+        el('span', {}, [band.label, el('small', { class: 'gear-btn__kmh' }, [`${Math.round(band.target * KMH)} km/h`])]),
+      ]);
       b.dataset.gear = gear;
       b.addEventListener('pointerdown', e => {
         e.preventDefault();
@@ -133,7 +137,7 @@ export class BellsMission extends Mission {
 
   /**
    * Chooses the speed of the train.
-   * @param {'slow' | 'medium' | 'fast'} gear
+   * @param {Gear} gear
    */
   setGear(gear) {
     this.gear = gear;
