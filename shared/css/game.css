@@ -1078,7 +1078,7 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 /* ---------- Leaving ---------- */
 /* Last in the file and doubled, so it wins over every box's own animation
    (e.g. a pulsing button). */
-.is-leaving.is-leaving { animation: panel-out .25s ease-in forwards; pointer-events: none; }
+.is-leaving.is-leaving { animation: panel-out .25s ease-in forwards; pointer-events: none !important; }
 
 /* ---------- Reduced motion ---------- */
 /* Boxes appear and disappear without springing or shrinking. */
