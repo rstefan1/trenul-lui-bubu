@@ -14,10 +14,10 @@ with no libraries and no build step.
 ```
 index.html       entry page (redirects to the first journey for now)
 shared/          code and assets shared by every journey of the game
-winter/          the first journey
+route-01/          the first journey
 ```
 
-Every new journey gets a folder of its own, next to `winter/`, and reuses
+Every new journey gets a folder of its own, next to `route-01/`, and reuses
 `shared/`.
 
 ## Playing
@@ -28,7 +28,7 @@ device), so it can be continued another day with “Continuă călătoria”.
 Finished chapters can be replayed for more stars.
 
 The teacher can open every chapter with `?profesor`, e.g.
-`winter/?profesor`.
+`route-01/?profesor`.
 
 ## Running locally
 
@@ -41,10 +41,10 @@ always loaded fresh:
 python3 serve.py
 ```
 
-Then open <http://localhost:8000/winter/>.
+Then open <http://localhost:8000/route-01/>.
 
 To try it on a phone or tablet in the same Wi-Fi network, start it with
-`python3 serve.py 8000 0.0.0.0` and open `http://<computer IP>:8000/winter/`
+`python3 serve.py 8000 0.0.0.0` and open `http://<computer IP>:8000/route-01/`
 on the device.
 
 ## Testing helpers
@@ -61,7 +61,7 @@ do not save anything):
 | `?debug`         | expose the game objects as `window.trenulDebug`           |
 
 They can be combined: `?from=ilva-mica&speed=3` shows the viaducts quickly.
-Station ids are listed in `winter/js/route-data.js`.
+Station ids are listed in `route-01/js/route-data.js`.
 
 ## Code overview
 
@@ -74,5 +74,5 @@ shared/js/journey/   route model, motion planning, journey state machine
 shared/js/game/      player state (name, stars, ornaments)
 shared/js/missions/  mission base class, director and mission types
 shared/js/ui/        HUD, mission HUD and overlays
-winter/js/           winter route, winter missions and entry point
+route-01/js/           winter route, winter missions and entry point
 ```

@@ -1,7 +1,7 @@
 /**
  * @file The mission director: decides which mission runs when.
  *
- * The plan of a journey (see winter/js/missions-data.js) lists the travel
+ * The plan of a journey (see route-01/js/missions-data.js) lists the travel
  * missions of every segment and the mission of every station. The director
  * watches the journey and:
  *

@@ -1,7 +1,7 @@
 /**
  * @file The route: stations, timetable and what lies between the stations.
  *
- * A route is described declaratively (see winter/js/route-data.js): a list
+ * A route is described declaratively (see route-01/js/route-data.js): a list
  * of stations with their timetable and, for every pair of consecutive
  * stations, a segment with its play duration, landscapes, structures and
  * weather. This module validates that description and turns it into
