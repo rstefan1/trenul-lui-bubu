@@ -68,7 +68,7 @@ const MIX = {
   // the big moments
   success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 6,
   // the sounds of places (heard now and then, far away, under everything)
-  distantBell: -7, birdsong: -16, sleigh: -11, snowSteps: -12,
+  birdsong: -16, sleigh: -11, snowSteps: -12,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
 const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, churchBell: 3.5, star: 0.5 };
@@ -78,7 +78,7 @@ const MIN_GAP = { crunch: 0.11, tock: 0.04, brush: 0.15 };
 const VARY_PITCH = 0.04;
 const VARY_DB = 1.5;
 /** Effects whose pitch must not vary (melodies that go with the music, or notes in a scale). */
-const FIXED_PITCH = new Set(['success', 'chapterEnd', 'finale', 'chime', 'collect', 'star', 'hop', 'churchBell', 'distantBell']);
+const FIXED_PITCH = new Set(['success', 'chapterEnd', 'finale', 'chime', 'collect', 'star', 'hop', 'churchBell']);
 
 /** @type {WeakMap<BaseAudioContext, AudioBuffer>} one second of white noise per context */
 const noiseBuffers = new WeakMap();
@@ -308,14 +308,6 @@ const SOUNDS = {
   doorsOpen(ctx, out, t) {
     noisePuff(ctx, out, { t, length: 0.5, level: 0.1, type: 'highpass', from: 2500, to: 4000, attack: 0.02 });
     noisePuff(ctx, out, { t: t + 0.3, length: 0.6, level: 0.07, type: 'bandpass', from: 350, to: 250, q: 1.2, attack: 0.1 });
-  },
-  /** A monastery bell far away, tolling three times: muffled by the distance. */
-  distantBell(ctx, out, t) {
-    const far = ctx.createBiquadFilter();
-    far.type = 'lowpass';
-    far.frequency.value = 2200;
-    far.connect(out);
-    for (let i = 0; i < 3; i++) churchBell(ctx, far, fq('A3'), t + i * 2.6, 0.3);
   },
   /**
    * A horse sleigh going by: its bells (zurgălăi) jingle at the horse's trot,
