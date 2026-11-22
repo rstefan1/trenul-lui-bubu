@@ -9,6 +9,10 @@
  * (a recording) until the train stands still. It also goes quiet while the
  * game waits for the player.
  *
+ * Where the train runs changes its sound: in a tunnel it is muffled, louder
+ * and echoes off the walls; on a bridge or a viaduct the wheels ring hollow
+ * and metallic.
+ *
  * So that the loop never hitches, the recording is prepared once: the bits
  * of silence an MP3 has at both ends are cut off, and the end is blended
  * into the beginning for a few hundredths of a second.
@@ -29,6 +33,19 @@ const SMOOTH = 0.4;
 /** Volume of the brakes' squeal (heard over the train, softer than the whistle). */
 const SQUEAL_VOLUME = 0.35;
 
+/**
+ * How each place colours the sound: low-pass cut-off (Hz), metallic ring
+ * (dB at 2.4 kHz), hollow boom (dB under 180 Hz), loudness and echo.
+ * @type {Record<'open' | 'tunnel' | 'bridge', {cut: number, ring: number, boom: number, loud: number, echo: number}>}
+ */
+const PLACES = {
+  open: { cut: 16000, ring: 0, boom: 0, loud: 1, echo: 0 },
+  tunnel: { cut: 1100, ring: 0, boom: 6, loud: 1.7, echo: 0.55 },
+  bridge: { cut: 16000, ring: 7, boom: 5, loud: 1.3, echo: 0.08 },
+};
+/** Seconds the sound takes to change when the train enters or leaves a place. */
+const PLACE_SMOOTH = 0.25;
+
 export class RailSound {
   /**
    * @param {import('./audio.js').AudioEngine} engine
@@ -47,12 +64,17 @@ export class RailSound {
     this.squeal = null;
     /** The squeal already played on the way into this stop. */
     this.squealed = false;
+    /** @type {{cut: BiquadFilterNode, ring: BiquadFilterNode, boom: BiquadFilterNode, echo: GainNode} | null} */
+    this.tone = null;
+    /** @type {keyof typeof PLACES | null} */
+    this.place = null;
   }
 
   /**
    * @param {number} speed  stage units per second
-   * @param {{paused: boolean, toStop: number}} view
-   *        toStop: distance to where the train will stop next (∞ if it is not stopping)
+   * @param {{paused: boolean, toStop: number, place?: keyof typeof PLACES}} view
+   *        toStop: distance to where the train will stop next (∞ if it is not stopping);
+   *        place: what the train runs through
    */
   update(speed, view) {
     const e = this.engine;
@@ -68,16 +90,17 @@ export class RailSound {
       const src = ctx.createBufferSource();
       src.buffer = makeSeamless(ctx, buffer);
       src.loop = true;
-      src.connect(this.gate);
+      this.tone = this.makeTone(ctx, src, this.gate);
       src.start();
     }
+    this.setPlace(view.place ?? 'open', now);
     const moving = !view.paused && speed > MIN_SPEED;
     if (moving && this.since === null) this.since = now;
     if (!moving) this.since = null;
     // swell in after setting off, fade out on the way into the stop
     let level = 0;
     if (moving && this.since !== null) {
-      level = VOLUME * Math.min(1, (now - this.since) / FADE_IN);
+      level = VOLUME * PLACES[this.place ?? 'open'].loud * Math.min(1, (now - this.since) / FADE_IN);
       if (view.toStop < FADE_OUT) level *= Math.max(0, view.toStop / FADE_OUT);
     }
     this.gate.gain.setTargetAtTime(level, now, SMOOTH);
@@ -92,6 +115,56 @@ export class RailSound {
       this.squeal.stop();
       this.squeal = null;
     }
+  }
+
+  /**
+   * The filters that colour the sound by place: source → low-pass →
+   * metallic ring → hollow boom → out, plus an echo (a short delay feeding
+   * back into itself) mixed in for tunnels.
+   * @private
+   * @param {AudioContext} ctx
+   * @param {AudioNode} src
+   * @param {AudioNode} out
+   */
+  makeTone(ctx, src, out) {
+    const cut = ctx.createBiquadFilter();
+    cut.type = 'lowpass';
+    cut.frequency.value = PLACES.open.cut;
+    const ring = ctx.createBiquadFilter();
+    ring.type = 'peaking';
+    ring.frequency.value = 2400;
+    ring.Q.value = 1.4;
+    ring.gain.value = 0;
+    const boom = ctx.createBiquadFilter();
+    boom.type = 'lowshelf';
+    boom.frequency.value = 180;
+    boom.gain.value = 0;
+    src.connect(cut).connect(ring).connect(boom).connect(out);
+    const delay = ctx.createDelay(1);
+    delay.delayTime.value = 0.11;
+    const feedback = ctx.createGain();
+    feedback.gain.value = 0.45;
+    const echo = ctx.createGain();
+    echo.gain.value = 0;
+    boom.connect(delay).connect(feedback).connect(delay);
+    delay.connect(echo).connect(out);
+    return { cut, ring, boom, echo };
+  }
+
+  /**
+   * Moves the sound's colour towards the place the train is in.
+   * @private
+   * @param {keyof typeof PLACES} place
+   * @param {number} now
+   */
+  setPlace(place, now) {
+    if (place === this.place || !this.tone) return;
+    this.place = place;
+    const p = PLACES[place];
+    this.tone.cut.frequency.setTargetAtTime(p.cut, now, PLACE_SMOOTH);
+    this.tone.ring.gain.setTargetAtTime(p.ring, now, PLACE_SMOOTH);
+    this.tone.boom.gain.setTargetAtTime(p.boom, now, PLACE_SMOOTH);
+    this.tone.echo.gain.setTargetAtTime(p.echo, now, PLACE_SMOOTH);
   }
 
   /**

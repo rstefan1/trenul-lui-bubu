@@ -139,6 +139,29 @@ export class TrackFeatures {
   }
 
   /**
+   * What the locomotive is running through, for the sound of the train.
+   * @param {number} distance  front of the train
+   * @returns {'tunnel' | 'bridge' | 'open'}
+   */
+  placeAt(distance) {
+    for (const f of this.features) {
+      if (f.type === 'station' || distance < f.x0 || distance > f.x1) continue;
+      return f.type === 'tunnel' ? 'tunnel' : 'bridge';
+    }
+    return 'open';
+  }
+
+  /**
+   * Where the next tunnel ahead begins (∞ if there is none).
+   * @param {number} distance
+   */
+  nextTunnel(distance) {
+    let next = Infinity;
+    for (const f of this.features) if (f.type === 'tunnel' && f.x0 > distance) next = Math.min(next, f.x0);
+    return next;
+  }
+
+  /**
    * Screen rectangles of the tunnel tubes on screen (for clipping lights).
    * @param {FeatureView} v
    * @returns {Array<[number, number, number, number]>}
