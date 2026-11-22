@@ -61,6 +61,7 @@ import { Hud } from '../../shared/js/ui/hud.js';
 import { MissionHud } from '../../shared/js/ui/mission-hud.js';
 import { AudioEngine, setupSoundButton } from '../../shared/js/audio/audio.js';
 import { balanceSounds, chimeSound, clickSound, finaleSound, playSound } from '../../shared/js/audio/effects.js';
+import { Ambience } from '../../shared/js/audio/ambience.js';
 import { Music } from '../../shared/js/audio/music.js';
 import { RailSound } from '../../shared/js/audio/rail-sound.js';
 import { WindSound } from '../../shared/js/audio/wind-sound.js';
@@ -70,6 +71,7 @@ import { keepScreenAwake } from '../../shared/js/ui/wake-lock.js';
 import { WorldView } from '../../shared/js/world/world-view.js';
 import { WINTER_CHAPTERS } from './chapters-data.js';
 import { WINTER_MISSIONS } from './missions-data.js';
+import { WINTER_PLACES } from './ambience-data.js';
 import { WINTER_ROUTE } from './route-data.js';
 
 /** Mission types used by the winter journey. */
@@ -128,6 +130,11 @@ const audio = new AudioEngine();
 audio.register('train', '../shared/assets/sounds/train.mp3');
 audio.register('whistle', '../shared/assets/sounds/whistle.mp3', { normalize: true });
 audio.register('brakes', '../shared/assets/sounds/brakes.mp3', { normalize: true });
+// the sounds of the places (see ambience-data.js)
+for (const [name, file] of [
+  ['station-platform', 'railway-station-platform'], ['station-crowd', 'station-crowd'], ['town-square', 'town-square'],
+  ['winter-wind', 'winter-wind'], ['freight-train', 'freight-train-passing'],
+]) audio.register(name, `../shared/assets/sounds/${file}.mp3`, { normalize: true });
 setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
 // every effect is measured once, so they can all be heard equally well
 audio.on('unlock', () => setTimeout(() => balanceSounds(audio), 1500));
@@ -141,6 +148,7 @@ document.addEventListener('click', e => {
   if (e.target instanceof Element && e.target.closest('button')) clickSound(audio);
 });
 const music = new Music(audio);
+const ambience = new Ambience(audio);
 /** The carols the stations take turns with, so the same one does not come back too soon. */
 const STATION_SONGS = [O_BRAD_FRUMOS, CLOPOTEI, NOAPTE_DE_VIS, FA_LA_LA, CRACIUN_FERICIT];
 /** When the train last reached a station, and how long the carol waits for the chime (ms). */
@@ -150,19 +158,34 @@ const CHIME_QUIET = 4500;
 const overlays = [...document.querySelectorAll('.overlay')];
 
 /**
- * The music for what is on screen: carols on the menu, on the chapter
- * screens and while the train waits at a station (the stations take turns
- * through five carols); nothing while the train runs (only the train is
- * heard), and nothing during missions with sounds of their own.
- * @returns {[import('../../shared/js/audio/songs.js').Song | null, number]}
+ * The place the train waits at, for its sounds (null while it runs, on the
+ * menus, and at stations without a place).
+ * @returns {import('./ambience-data.js').WinterPlace | null}
+ */
+function placeNow() {
+  if (overlays.some(o => !o.hidden) || journey.state === 'running') return null;
+  const station = route.stations[journey.stationIndex];
+  const key = station && WINTER_MISSIONS.stations[station.id]?.ambience;
+  return key ? WINTER_PLACES[key] ?? null : null;
+}
+
+/**
+ * The music for what is on screen: carols on the menu and on the chapter
+ * screens; at a station only where a carol would really be heard (a
+ * Christmas market, a festive square), from afar; nothing while the train
+ * runs (only the train is heard), and nothing during missions with sounds
+ * of their own.
+ * @returns {[import('../../shared/js/audio/songs.js').Song | null, number, {far?: boolean}]}
  */
 function musicNow() {
-  if (overlays.some(o => !o.hidden)) return [O_BRAD_FRUMOS, 0.5];
-  if (journey.state === 'running') return [null, 0];
-  if (director.active.some(m => m.quietMusic)) return [null, 0];
+  if (overlays.some(o => !o.hidden)) return [O_BRAD_FRUMOS, 0.5, {}];
+  if (journey.state === 'running') return [null, 0, {}];
+  if (director.active.some(m => m.quietMusic)) return [null, 0, {}];
   // the station's chime first, then the carol
-  if (performance.now() - arrivedAt < CHIME_QUIET) return [null, 0];
-  return [STATION_SONGS[journey.stationIndex % STATION_SONGS.length], 0.35];
+  if (performance.now() - arrivedAt < CHIME_QUIET) return [null, 0, { far: true }];
+  const place = placeNow();
+  if (!place?.carol) return [null, 0, { far: true }];
+  return [place.song ?? STATION_SONGS[journey.stationIndex % STATION_SONGS.length], 0.2, { far: true }];
 }
 
 const director = new MissionDirector(
@@ -256,6 +279,7 @@ function updateSound() {
       }
     },
     () => music.update(...musicNow()),
+    () => ambience.update(placeNow()),
     () => audio.setSpace(roomNow()),
   ];
   for (const part of parts) {
