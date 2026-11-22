@@ -68,7 +68,7 @@ const MIX = {
   // the big moments
   success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 6,
   // the sounds of places (heard now and then, far away, under everything)
-  birdsong: -16, sleigh: -11, littleBells: -12,
+  birdsong: -16, sleigh: -11,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
 const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, churchBell: 3.5, star: 0.5 };
@@ -343,20 +343,6 @@ const SOUNDS = {
         // the hoof in the snow
         noisePuff(ctx, pass, { t: s, length: 0.09, level: 0.06, type: 'lowpass', from: 500, to: 250, attack: 0.004 });
       }
-    }
-  },
-  /**
-   * A little shake of small bells, as on a carol singer's staff or by a
-   * monastery gate: a few tiny bells in a quick, uneven run, on the notes of
-   * a pentatonic scale (so they always sound pleasant together).
-   */
-  littleBells(ctx, out, t) {
-    const notes = ['G6', 'A6', 'C7', 'D7', 'E7', 'G7'];
-    const n = 3 + Math.floor(Math.random() * 4);
-    let at = t;
-    for (let k = 0; k < n; k++) {
-      handBell(ctx, out, fq(notes[Math.floor(Math.random() * notes.length)]), at, 0.07);
-      at += 0.07 + Math.random() * 0.14;
     }
   },
   /** A bird of the winter morning: a great tit ("ti-tu ti-tu"), a sparrow, or a robin's little trill. */

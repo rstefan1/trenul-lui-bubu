@@ -15,8 +15,7 @@
  * as the reference. Recordings made louder or softer need no new numbers.
  *
  * A place can also have events: short sounds that happen now and then, at
- * random moments and from a random side — a sleigh going by, little
- * bells, a bird. They are played by the game's sound effects (the ambience
+ * random moments and from a random side — a sleigh going by, a bird. They are played by the game's sound effects (the ambience
  * only decides when).
  */
 
