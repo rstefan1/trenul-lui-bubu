@@ -169,7 +169,7 @@ export const WINTER_MISSIONS = {
         text: 'Iarna, păsărelele găsesc greu mâncare. Atinge căsuțele goale lângă care așteaptă păsări flămânde, ca Bubu să le umple cu semințe.',
         feeders: 6,
         full: 2,
-        pace: { far: 480, slow: 100 },
+        pace: { far: 520, slow: 110, brake: 450, near: { ahead: 60, behind: 420 } },
       },
     },
     {
