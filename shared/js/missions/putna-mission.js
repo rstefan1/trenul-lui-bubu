@@ -99,6 +99,7 @@ export class PutnaMission extends SceneMission {
       this.swingV += this.swing > 0 ? -2.6 : 2.6;
       if (Math.abs(this.swingV) < 1) this.swingV = 2.6;
       this.rings += 1;
+      this.sound('churchBell');
       this.waves.push(0);
       this.ctx.hud.setCounter('🔔', this.rings, this.config.rings);
       if (this.rings >= this.config.rings) {

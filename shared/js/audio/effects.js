@@ -9,7 +9,7 @@
  * instead, if there is one, so any effect can later be replaced by a file.
  */
 
-import { freqOf, handBell, musicBox } from './instruments.js';
+import { churchBell, freqOf, handBell, musicBox } from './instruments.js';
 
 /**
  * A melody for the music box: [note, start beat, length in beats].
@@ -328,6 +328,10 @@ const SOUNDS = {
     for (let i = 0; i < 8; i++) {
       noisePuff(ctx, out, { t: t + 0.6 + i * 0.25 + Math.random() * 0.1, length: 0.14, level: 0.07, type: 'lowpass', from: 1800, to: 600 });
     }
+  },
+  /** The big bell of a monastery's bell tower. */
+  churchBell(ctx, out, t) {
+    churchBell(ctx, out, freqOf('G3'), t);
   },
   /** A small bell: the lantern's signal is seen. */
   ding(ctx, out, t) {
