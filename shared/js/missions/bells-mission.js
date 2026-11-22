@@ -23,6 +23,7 @@ import { fillCircle, fillRoundRect, glow, roundRectPath } from '../gfx/shapes.js
 import { WIRE_Y } from '../world/track.js';
 import { MANUAL } from '../journey/journey.js';
 import { el } from '../ui/dom.js';
+import { ringBell } from '../audio/instruments.js';
 import { Mission } from './mission.js';
 
 /** Train speed (world units/s) → the km/h shown to the child. */
@@ -52,6 +53,9 @@ const PANTOGRAPH_X = -200;
 /**
  * @typedef {import('./mission.js').MissionConfig & {bells: number}} BellsConfig
  */
+
+/** Notes of the bells, in the order they are rung (a pentatonic tune). */
+const BELL_NOTES = ['C6', 'D6', 'E6', 'G6', 'A6', 'G6', 'E6', 'D6', 'C6'];
 
 export class BellsMission extends Mission {
   /**
@@ -169,6 +173,8 @@ export class BellsMission extends Mission {
       b.state = ok ? 'rung' : 'missed';
       b.t = 0;
       if (ok) {
+        // the bell rings as the pantograph brushes it, each one a note higher
+        ringBell(this.ctx.audio, BELL_NOTES[this.rung % BELL_NOTES.length]);
         this.rung += 1;
         const x = this.toScreen(b.worldX);
         this.particles.burst(x, WIRE_Y + 40 - this.ctx.world.cameraY, ['#ffd54f', '#fff3c4', '#ffffff'], 18, 220);
