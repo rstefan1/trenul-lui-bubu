@@ -60,6 +60,7 @@ import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
 import { Hud } from '../../shared/js/ui/hud.js';
 import { MissionHud } from '../../shared/js/ui/mission-hud.js';
 import { AudioEngine, setupSoundButton } from '../../shared/js/audio/audio.js';
+import { finaleSound } from '../../shared/js/audio/effects.js';
 import { stationChime } from '../../shared/js/audio/instruments.js';
 import { Music } from '../../shared/js/audio/music.js';
 import { RailSound } from '../../shared/js/audio/rail-sound.js';
@@ -219,6 +220,7 @@ function render() {
 // ------------------------------------------------------------ test mode
 async function startTest() {
   director.on('complete', () => setTimeout(async () => {
+    finaleSound(audio);
     await showOverlay(byId('finale'), byId('btnAgain'));
     location.reload();
   }, 2500));
@@ -250,7 +252,7 @@ if (testMode) {
     journey, director, world, state, hud, missionHud,
     store: new SaveStore('trenul-lui-bubu/winter'),
     book: new ChapterBook(route, WINTER_CHAPTERS, WINTER_MISSIONS),
-    screens: new ChapterScreens(),
+    screens: new ChapterScreens(audio),
     teacher: params.has('profesor'),
   });
   campaign.open();

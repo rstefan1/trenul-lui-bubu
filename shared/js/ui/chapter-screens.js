@@ -6,6 +6,7 @@
  * campaign (game/campaign.js) decides what happens next.
  */
 
+import { chapterSound, finaleSound } from '../audio/effects.js';
 import { el } from './dom.js';
 import { showOverlay } from './screens.js';
 
@@ -38,6 +39,11 @@ function byId(id) {
 }
 
 export class ChapterScreens {
+  /** @param {import('../audio/audio.js').AudioEngine} [audio]  for the fanfares */
+  constructor(audio) {
+    this.audio = audio;
+  }
+
   /**
    * Shows the main menu and resolves with the player's choice.
    * @param {MenuModel} model
@@ -144,6 +150,7 @@ export class ChapterScreens {
       go.onclick = () => done('next');
       pause.onclick = () => done('menu');
       const overlay = byId('chapterEnd');
+      chapterSound(this.audio);
       overlay.hidden = false;
       requestAnimationFrame(() => overlay.classList.add('is-visible'));
     });
@@ -163,6 +170,7 @@ export class ChapterScreens {
     const line = byId('finaleStars');
     line.hidden = stars === undefined;
     line.textContent = stars === undefined ? '' : `Ai adunat ${stars} stele din ${max} în toată călătoria!`;
+    finaleSound(this.audio);
     return showOverlay(byId('finale'), byId('btnAgain'));
   }
 }
