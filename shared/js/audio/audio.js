@@ -23,6 +23,8 @@ const MUTE_KEY = 'trenul-lui-bubu/muted';
 const MUSIC_KEY = 'trenul-lui-bubu/music-off';
 /** Overall volume when the sound is on. */
 const VOLUME = 0.8;
+/** Milliseconds to fade out before the engine pauses when the sound is turned off. */
+const MUTE_FADE_MS = 300;
 /** Seconds of the reverb's tail. */
 const REVERB_TAIL = 2.4;
 /** How much of the music goes into the room, compared with the effects. */
@@ -106,6 +108,8 @@ export class AudioEngine {
       this.ducker.connect(musicRoom).connect(room);
       for (const [name, file] of this.files) this.fetch(name, file.url, file.normalize);
       this.emit('unlock');
+      // the sound was left off last time: the engine waits, paused, until it is turned on
+      if (this.muted) ctx.suspend();
     }
     // "suspended" after a pause, "interrupted" on iOS after a call or an alarm
     if (this.ctx.state !== 'running' && !this.muted && !document.hidden) this.ctx.resume();
@@ -246,14 +250,26 @@ export class AudioEngine {
   }
 
   /**
-   * Turns all sound off or on (and remembers the choice).
+   * Turns all sound off or on (and remembers the choice). With the sound
+   * off, the whole sound engine is paused (after a quick fade), so it costs
+   * no processor time and no battery; it goes on from where it was when the
+   * sound is turned on again.
    * @param {boolean} muted
    */
   setMuted(muted) {
     this.muted = muted;
     writeFlag(MUTE_KEY, muted);
-    if (this.out && this.ctx) this.out.gain.setTargetAtTime(muted ? 0 : VOLUME, this.ctx.currentTime, 0.05);
-    if (this.ctx && !muted && this.ctx.state === 'suspended') this.ctx.resume();
+    if (!this.out || !this.ctx) return;
+    const ctx = this.ctx;
+    this.out.gain.setTargetAtTime(muted ? 0 : VOLUME, ctx.currentTime, 0.05);
+    if (!muted) {
+      if (ctx.state !== 'running' && !document.hidden) ctx.resume();
+      return;
+    }
+    // pause once the fade is over, unless the sound was turned on again meanwhile
+    setTimeout(() => {
+      if (this.muted && ctx.state === 'running') ctx.suspend();
+    }, MUTE_FADE_MS);
   }
 }
 
