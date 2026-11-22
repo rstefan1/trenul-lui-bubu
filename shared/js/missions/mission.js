@@ -19,7 +19,7 @@
  * never be lost: the worst result is one star.
  */
 
-import { oopsSound } from '../audio/effects.js';
+import { missionSound, oopsSound } from '../audio/effects.js';
 
 /**
  * Everything a mission may use.
@@ -115,6 +115,15 @@ export class Mission {
    */
   oops() {
     oopsSound(this.ctx.audio);
+  }
+
+  /**
+   * Plays one of the missions' sound effects.
+   * @protected
+   * @param {Parameters<typeof missionSound>[1]} name
+   */
+  sound(name) {
+    missionSound(this.ctx.audio, name);
   }
 
   /** Called by the director after the mission has finished (remove panels, listeners). */
