@@ -20,6 +20,7 @@
 import { clamp, easeInOut, lerp } from '../core/math.js';
 import { Particles } from '../gfx/particles.js';
 import { fillCircle, fillRoundRect, glow } from '../gfx/shapes.js';
+import { MANUAL } from '../journey/journey.js';
 import { drawBubu } from '../train/bubu.js';
 import { TRACK_Y } from '../world/track.js';
 import { Mission } from './mission.js';
@@ -78,7 +79,7 @@ export class SnowboundMission extends Mission {
     this.controls = j.takeControl();
     if (this.controls) this.controls.target = 0;
     // the drift is just beyond the place where the braking train stops
-    const stopping = (j.speed * j.speed) / (2 * 260);
+    const stopping = (j.speed * j.speed) / (2 * MANUAL.brake);
     this.driftX = j.distance + stopping + GAP;
   }
 
@@ -181,8 +182,10 @@ export class SnowboundMission extends Mission {
     this.particles.update(dt);
     const j = this.ctx.journey;
     // pan the view forward so the drift ahead of the train is fully on screen
+    // (measured from where the drift really is, not from where it should be)
     const w = this.ctx.world;
-    w.panTarget = this.step === 'back' || this.step === 'go' ? 0 : Math.max(0, w.baseAnchorX + GAP + DRIFT_W + 60 - this.ctx.stage.viewRight);
+    const driftRight = this.driftX - j.distance + w.baseAnchorX + DRIFT_W + 60;
+    w.panTarget = this.step === 'back' || this.step === 'go' ? 0 : Math.max(0, driftRight - this.ctx.stage.viewRight);
     if (this.step === 'stopping' && j.speed < 1) this.setStep('out');
     if (this.step === 'out' && this.stepT >= HOP_TIME) this.setStep('dig');
     if (this.step === 'back' && this.stepT >= HOP_TIME) this.setStep('go');
