@@ -60,10 +60,11 @@ import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
 import { Hud } from '../../shared/js/ui/hud.js';
 import { MissionHud } from '../../shared/js/ui/mission-hud.js';
 import { AudioEngine, setupSoundButton } from '../../shared/js/audio/audio.js';
-import { clickSound, finaleSound } from '../../shared/js/audio/effects.js';
+import { clickSound, finaleSound, missionSound } from '../../shared/js/audio/effects.js';
 import { stationChime } from '../../shared/js/audio/instruments.js';
 import { Music } from '../../shared/js/audio/music.js';
 import { RailSound } from '../../shared/js/audio/rail-sound.js';
+import { WindSound } from '../../shared/js/audio/wind-sound.js';
 import { CLOPOTEI, CRACIUN_FERICIT, FA_LA_LA, NOAPTE_DE_VIS, O_BRAD_FRUMOS } from '../../shared/js/audio/songs.js';
 import { setupFullscreen, showOverlay } from '../../shared/js/ui/screens.js';
 import { keepScreenAwake } from '../../shared/js/ui/wake-lock.js';
@@ -130,6 +131,10 @@ audio.register('whistle', '../shared/assets/sounds/whistle.mp3', { normalize: tr
 audio.register('brakes', '../shared/assets/sounds/brakes.mp3', { normalize: true });
 setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
 const railSound = new RailSound(audio, 'train', 'brakes');
+const windSound = new WindSound(audio);
+/** The train sounds its whistle this far before a tunnel (stage units); the tunnel it last whistled for. */
+const HORN_AHEAD = 700;
+let hornedFor = -1;
 // every button clicks softly
 document.addEventListener('click', e => {
   if (e.target instanceof Element && e.target.closest('button')) clickSound(audio);
@@ -139,7 +144,7 @@ const music = new Music(audio);
 const STATION_SONGS = [O_BRAD_FRUMOS, CLOPOTEI, NOAPTE_DE_VIS, FA_LA_LA, CRACIUN_FERICIT];
 /** When the train last reached a station, and how long the carol waits for the chime (ms). */
 let arrivedAt = -Infinity;
-const CHIME_QUIET = 4000;
+const CHIME_QUIET = 4500;
 /** The overlays (menu, intro, chapter end, finale): "O, brad frumos" plays over them. */
 const overlays = [...document.querySelectorAll('.overlay')];
 
@@ -178,9 +183,11 @@ state.on('change', (/** @type {string} */ what) => {
 });
 journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Station} */ station) => {
   hud.showStation(station.name);
-  // the station's chime, once the brakes have gone quiet (the carol waits for it)
+  // the doors open once the brakes have gone quiet, then the station's
+  // chime (the carol waits for it)
   arrivedAt = performance.now();
-  setTimeout(() => stationChime(audio), 900);
+  setTimeout(() => missionSound(audio, 'doorsOpen'), 500);
+  setTimeout(() => stationChime(audio), 1500);
   // passengers brought on board by a mission get off at the next station
   if (world.train.passengers.length) setTimeout(() => world.train.leaveAll(), 700);
 });
@@ -209,7 +216,15 @@ const loop = new GameLoop(dt => {
   railSound.update(journey.speed, {
     paused: missionHud.paused,
     toStop: journey.toStop,
+    place: world.features.placeAt(journey.distance),
   });
+  windSound.update(world.snow.intensity, missionHud.paused);
+  // a whistle before every tunnel
+  const tunnel = world.features.nextTunnel(journey.distance);
+  if (journey.state === 'running' && tunnel - journey.distance < HORN_AHEAD && tunnel !== hornedFor) {
+    hornedFor = tunnel;
+    audio.play('whistle', 0.6);
+  }
   music.update(...musicNow());
   canvas.style.cursor = director.wantsPointer ? 'pointer' : 'default';
 });
