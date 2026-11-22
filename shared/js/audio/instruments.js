@@ -78,6 +78,47 @@ export function handBell(ctx, out, f, t, level = 0.25) {
 }
 
 /**
+ * A big church bell: the deep hum, the strike note and the overtones of a
+ * real bell (with its minor third, which gives the bell its typical
+ * sound), the low ones ringing for many seconds.
+ * @param {BaseAudioContext} ctx
+ * @param {AudioNode} out
+ * @param {number} f  frequency of the strike note ("prime")
+ * @param {number} t
+ * @param {number} [level=0.35]
+ */
+export function churchBell(ctx, out, f, t, level = 0.35) {
+  const g = ctx.createGain();
+  g.gain.value = level;
+  g.connect(out);
+  // [ratio to the prime, amount, seconds to fade]
+  const partials = [[0.5, 0.6, 7], [1, 0.8, 5], [1.19, 0.45, 4], [1.5, 0.3, 3], [2, 0.7, 3.5], [2.52, 0.25, 2], [3, 0.2, 1.6], [4.2, 0.12, 0.9]];
+  for (const [ratio, amount, decay] of partials) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = f * ratio;
+    const pg = ctx.createGain();
+    pg.gain.setValueAtTime(0.0001, t);
+    pg.gain.exponentialRampToValueAtTime(amount, t + 0.006);
+    pg.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+    osc.connect(pg).connect(g);
+    osc.start(t);
+    osc.stop(t + decay + 0.05);
+  }
+  // the clapper's strike: a short metallic clang
+  const clang = ctx.createOscillator();
+  clang.type = 'triangle';
+  clang.frequency.value = f * 5.3;
+  const cg = ctx.createGain();
+  cg.gain.setValueAtTime(0.0001, t);
+  cg.gain.exponentialRampToValueAtTime(0.15, t + 0.002);
+  cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+  clang.connect(cg).connect(g);
+  clang.start(t);
+  clang.stop(t + 0.2);
+}
+
+/**
  * One bar of a station chime: a soft vibraphone tone (a pure note with the
  * high fourth and tenth partials of a metal bar) that rings for a while.
  * @param {BaseAudioContext} ctx
