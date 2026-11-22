@@ -6,6 +6,9 @@
  * (that wandering is what makes it "howl"), with a second, deeper layer of
  * rushing air. A recording registered as "wind" is looped instead, if
  * there is one.
+ *
+ * The wind is only built while a storm can be heard: once it has died away
+ * it is taken apart, and built again at the next storm.
  */
 
 /** Snowfall intensity (0..2) from which the wind can be heard, and where it is loudest. */
@@ -24,8 +27,12 @@ export class WindSound {
     this.gain = null;
     /** @type {BiquadFilterNode | null} the howl's filter (its pitch wanders) */
     this.howl = null;
+    /** @type {AudioBufferSourceNode | null} */
+    this.src = null;
     this.level = -1;
     this.nextGust = 0;
+    /** Audio time when the wind will have died away (null while it blows). */
+    this.silentAt = /** @type {number | null} */ (null);
   }
 
   /**
@@ -47,12 +54,32 @@ export class WindSound {
     if (Math.abs(level - this.level) > 0.002) {
       this.level = level;
       gain.gain.setTargetAtTime(level, now, SMOOTH);
+      // setTargetAtTime is practically silent after about five time constants
+      this.silentAt = level > 0 ? null : now + SMOOTH * 5;
+    }
+    if (this.silentAt !== null && now >= this.silentAt) {
+      this.takeApart();
+      return;
     }
     // the howl's pitch drifts to a new note every few seconds
     if (this.howl && now > this.nextGust) {
       this.nextGust = now + 1.5 + Math.random() * 2.5;
       this.howl.frequency.setTargetAtTime(380 + Math.random() * 520, now, 0.9);
     }
+  }
+
+  /**
+   * The wind has died away: stop it and let its parts go.
+   * @private
+   */
+  takeApart() {
+    this.src?.stop();
+    this.gain?.disconnect();
+    this.src = null;
+    this.gain = null;
+    this.howl = null;
+    this.level = -1;
+    this.silentAt = null;
   }
 
   /**
@@ -66,6 +93,7 @@ export class WindSound {
     this.gain.connect(out);
     const src = ctx.createBufferSource();
     src.loop = true;
+    this.src = src;
     const recording = this.engine.buffers.get('wind');
     if (recording) {
       src.buffer = recording;
