@@ -350,9 +350,13 @@ export class PutnaMission extends SceneMission {
       drawBauble(c, t.x + u * h, t.y - h + v * h, Math.max(6, h * 0.035), colors[i]);
     }
     if (this.hung >= SPOTS.length) {
+      // the star sits right on the tip of the tree (the fir stands on its pot,
+      // so its tip is at y − 1.08 h); its lower points rest on the tip
+      const R = 18;
+      const sy = t.y - h * 1.08 - R * 0.55;
       c.fillStyle = '#ffd23f';
-      glow(c, t.x, t.y - h - 8, 40, 'rgba(255,220,100,0.7)', 'rgba(255,220,100,0)');
-      fillStar(c, t.x, t.y - h - 8, 18, 8);
+      glow(c, t.x, sy, 40, 'rgba(255,220,100,0.7)', 'rgba(255,220,100,0)');
+      fillStar(c, t.x, sy, R, 8);
     }
   }
 }
