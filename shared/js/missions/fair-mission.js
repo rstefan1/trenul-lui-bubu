@@ -146,6 +146,7 @@ export class FairMission extends SceneMission {
     if (act === 'down') {
       this.ctx.hud.hideAnnouncement();
       if (this.config.flag) this.ctx.state.setFlag(this.config.flag);
+      this.sound('thud');   // the tree is set down on its wagon
     }
   }
 

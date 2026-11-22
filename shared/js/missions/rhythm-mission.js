@@ -114,6 +114,7 @@ export class RhythmMission extends SceneMission {
     best.t = 0;
     // the caught note sings its note of the carol: together they play the song
     if (best.pitch) playNote(this.ctx.audio, best.pitch, { length: 0.6, level: 0.35 });
+    this.sound('drum');
     this.hits += 1;
     this.jump = 1;
     this.feedback = { text: bestDist < PERFECT ? 'Perfect!' : 'Bine!', t: 0 };

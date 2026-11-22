@@ -103,7 +103,11 @@ export class SnowboundMission extends Mission {
       if (Math.hypot(p.x - l.x, p.y - (l.y - 40)) < Math.max(80, 50 / this.ctx.stage.scale)) {
         this.signals += 1;
         this.flash = 1;
-        if (this.signals >= 3) this.setStep('plough');
+        this.sound('ding');
+        if (this.signals >= 3) {
+          this.setStep('plough');
+          this.sound('plough');
+        }
       }
     }
   }
