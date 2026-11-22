@@ -60,7 +60,7 @@ import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
 import { Hud } from '../../shared/js/ui/hud.js';
 import { MissionHud } from '../../shared/js/ui/mission-hud.js';
 import { AudioEngine, setupSoundButton } from '../../shared/js/audio/audio.js';
-import { finaleSound } from '../../shared/js/audio/effects.js';
+import { clickSound, finaleSound } from '../../shared/js/audio/effects.js';
 import { stationChime } from '../../shared/js/audio/instruments.js';
 import { Music } from '../../shared/js/audio/music.js';
 import { RailSound } from '../../shared/js/audio/rail-sound.js';
@@ -129,6 +129,10 @@ audio.register('whistle', '../shared/assets/sounds/whistle.mp3', { normalize: tr
 audio.register('brakes', '../shared/assets/sounds/brakes.mp3', { normalize: true });
 setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
 const railSound = new RailSound(audio, 'train', 'brakes');
+// every button clicks softly
+document.addEventListener('click', e => {
+  if (e.target instanceof Element && e.target.closest('button')) clickSound(audio);
+});
 const music = new Music(audio);
 /** The carols the stations take turns with, so the same one does not come back too soon. */
 const STATION_SONGS = [O_BRAD_FRUMOS, CLOPOTEI, NOAPTE_DE_VIS, FA_LA_LA, CRACIUN_FERICIT];
