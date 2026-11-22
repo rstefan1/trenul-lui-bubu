@@ -22,6 +22,11 @@
  *
  * Performance. Tiles are painted once and cached (LRU); far tiles are
  * painted at reduced resolution since they are blurred by distance anyway.
+ * Every layer also has a highest resolution: on very sharp screens (Retina,
+ * 150–200 % scaling) a tile at full density would take 10–20 MB, while the
+ * landscape — behind the train and the text, which stay sharp — looks the
+ * same a little softer. The memory of a tile grows with the square of its
+ * resolution, so the cap saves most where it is invisible.
  */
 
 import { LruCache, createOffscreen } from '../core/canvas-cache.js';
@@ -39,13 +44,15 @@ import { NEAR_TILE_BOTTOM, TILE_WIDTH, paletteFor } from './biomes/terrain.js';
  * @property {number} parallaxY    vertical parallax factor for the camera
  * @property {number} haze         strength of the sky-coloured haze
  * @property {number} resolution   fraction of the full pixel density
+ * @property {number} maxRatio     highest density (device pixels per stage unit)
  */
 
 /** @type {ReadonlyArray<LayerSpec>} */
 export const LAYERS = Object.freeze([
-  { id: 'far', top: 250, bottom: 720, speed: 0.08, parallaxY: 0.3, haze: 0.32, resolution: 0.6 },
-  { id: 'mid', top: 400, bottom: 800, speed: 0.32, parallaxY: 0.6, haze: 0.12, resolution: 0.85 },
-  { id: 'near', top: 480, bottom: NEAR_TILE_BOTTOM, speed: 1, parallaxY: 1, haze: 0, resolution: 1 },
+  // the far mountains are in the haze: a low cap is invisible; the near layer keeps most of its detail
+  { id: 'far', top: 250, bottom: 720, speed: 0.08, parallaxY: 0.3, haze: 0.32, resolution: 0.6, maxRatio: 1 },
+  { id: 'mid', top: 400, bottom: 800, speed: 0.32, parallaxY: 0.6, haze: 0.12, resolution: 0.85, maxRatio: 1.3 },
+  { id: 'near', top: 480, bottom: NEAR_TILE_BOTTOM, speed: 1, parallaxY: 1, haze: 0, resolution: 1, maxRatio: 2 },
 ]);
 
 /** Horizontal screen position used as reference when assigning biomes. */
@@ -100,6 +107,27 @@ export class Landscape {
     /** @type {LruCache<Tile>} */
     this.cache = new LruCache(30);
     stage.on('resize', () => this.cache.clear());
+    /** Paint the tiles at the screen's full density, without the caps (for comparing, in ?debug). */
+    this.fullResolution = false;
+  }
+
+  /**
+   * Switches the resolution caps off (or on again); the tiles are painted anew.
+   * @param {boolean} full
+   */
+  setFullResolution(full) {
+    if (full === this.fullResolution) return;
+    this.fullResolution = full;
+    this.cache.clear();
+  }
+
+  /**
+   * Device pixels per stage unit a layer's tiles are painted at.
+   * @param {LayerSpec} layer
+   */
+  ratioOf(layer) {
+    const ratio = this.stage.pixelRatio * layer.resolution;
+    return this.fullResolution ? ratio : Math.min(ratio, layer.maxRatio);
   }
 
   /**
@@ -205,7 +233,7 @@ export class Landscape {
   tile(layer, biomeId, variant, snowy) {
     const key = `${layer.id}|${biomeId}|${variant}|${snowy ? 's' : 'b'}`;
     return this.cache.get(key, () => {
-      const ratio = this.stage.pixelRatio * layer.resolution;
+      const ratio = this.ratioOf(layer);
       const req = { x: 0, y: layer.top, width: TILE_WIDTH, height: layer.bottom - layer.top, ratio };
       const body = createOffscreen(req);
       /** @type {ReturnType<typeof createOffscreen> | null} */
