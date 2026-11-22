@@ -54,6 +54,7 @@ export class FairMission extends SceneMission {
     this.config = config;
     /** @type {'climb' | 'fair' | 'down'} */
     this.act = 'climb';
+    this.place = 'forest';
     this.actTime = 0;
     this.time = 0;
     this.coins = 0;
@@ -134,6 +135,8 @@ export class FairMission extends SceneMission {
   setAct(act) {
     this.act = act;
     this.actTime = 0;
+    // up and down the hill Bubu is in the forest; only the fair sounds like a fair
+    this.place = act === 'fair' ? 'fair' : 'forest';
     // the coins not caught stay behind on the hill
     this.items = [];
     if (act === 'fair') {
