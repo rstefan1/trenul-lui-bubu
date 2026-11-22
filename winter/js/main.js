@@ -60,7 +60,9 @@ import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
 import { Hud } from '../../shared/js/ui/hud.js';
 import { MissionHud } from '../../shared/js/ui/mission-hud.js';
 import { AudioEngine, setupSoundButton } from '../../shared/js/audio/audio.js';
+import { Music } from '../../shared/js/audio/music.js';
 import { RailSound } from '../../shared/js/audio/rail-sound.js';
+import { CLOPOTEI, O_BRAD_FRUMOS } from '../../shared/js/audio/songs.js';
 import { setupFullscreen, showOverlay } from '../../shared/js/ui/screens.js';
 import { WorldView } from '../../shared/js/world/world-view.js';
 import { WINTER_CHAPTERS } from './chapters-data.js';
@@ -125,6 +127,19 @@ audio.register('whistle', '../shared/assets/sounds/whistle.mp3', { normalize: tr
 audio.register('brakes', '../shared/assets/sounds/brakes.mp3', { normalize: true });
 setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
 const railSound = new RailSound(audio, 'train', 'brakes');
+const music = new Music(audio);
+/** The overlays (menu, intro, chapter end, finale): "O, brad frumos" plays over them. */
+const overlays = [...document.querySelectorAll('.overlay')];
+
+/**
+ * The music for what is on screen: "O, brad frumos" on the menu and the
+ * chapter screens, "Clopoței" softly under the train, very softly at stations.
+ * @returns {[import('../../shared/js/audio/songs.js').Song, number]}
+ */
+function musicNow() {
+  if (overlays.some(o => !o.hidden)) return [O_BRAD_FRUMOS, 0.5];
+  return [CLOPOTEI, journey.state === 'running' ? 0.16 : 0.07];
+}
 
 const director = new MissionDirector(
   { stage, journey, world, state, hud: missionHud, panel: byId('missionPanel'), audio },
@@ -173,6 +188,7 @@ const loop = new GameLoop(dt => {
     paused: missionHud.paused,
     toStop: journey.toStop,
   });
+  music.update(...musicNow());
   canvas.style.cursor = director.wantsPointer ? 'pointer' : 'default';
 });
 
