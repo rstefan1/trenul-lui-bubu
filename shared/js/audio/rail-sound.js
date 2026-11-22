@@ -22,7 +22,8 @@ import { makeSeamless } from './seamless.js';
 /** Below this speed the train is considered stopped. */
 const MIN_SPEED = 0.5;
 /** Volume of the running train: a soft sound in the background, so the whistle stands out. */
-const VOLUME = 0.2;
+export const RAIL_VOLUME = 0.2;
+const VOLUME = RAIL_VOLUME;
 /** Seconds the sound takes to swell in after the train sets off. */
 const FADE_IN = 4;
 /** Distance before a stop over which the sound fades out (stage units). */

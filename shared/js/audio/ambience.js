@@ -8,6 +8,11 @@
  * child hears where they are without noticing a sound "start". Every
  * recording is prepared once to loop without a seam, and starts from a
  * random point, so the same place never sounds exactly the same twice.
+ *
+ * The volumes are relative to a reference sound — the train running — so a
+ * place is never louder than the journey itself: each recording is measured
+ * (its average loudness, RMS) and scaled so that level 1 is exactly as loud
+ * as the reference. Recordings made louder or softer need no new numbers.
  */
 
 import { makeSeamless } from './seamless.js';
@@ -15,7 +20,7 @@ import { makeSeamless } from './seamless.js';
 /**
  * @typedef {object} AmbienceLayer
  * @property {string} sound   a recording registered with the engine
- * @property {number} level   0..1
+ * @property {number} level   1 = as loud as the reference (the running train)
  *
  * @typedef {object} Place
  * @property {AmbienceLayer[]} layers
@@ -28,9 +33,16 @@ const FADE_OUT = 2;
 const LOOP_BLEND = 1.5;
 
 export class Ambience {
-  /** @param {import('./audio.js').AudioEngine} engine */
-  constructor(engine) {
+  /**
+   * @param {import('./audio.js').AudioEngine} engine
+   * @param {{sound: string, volume: number}} reference  the sound the places are
+   *        matched to, and the volume it is played at (e.g. the running train)
+   */
+  constructor(engine, reference) {
     this.engine = engine;
+    this.reference = reference;
+    /** @type {Map<string, number>} the gain that makes each recording as loud as the reference */
+    this.match = new Map();
     /** @type {Place | null} the place being heard */
     this.place = null;
     /** @type {Array<{gain: GainNode, src: AudioBufferSourceNode}>} its layers while they play */
@@ -47,8 +59,8 @@ export class Ambience {
   update(place) {
     const e = this.engine;
     if (!e.ready || !e.ctx || !e.master || place === this.place) return;
-    // wait until every recording of the new place is loaded
-    if (place && !place.layers.every(l => e.buffers.has(l.sound))) return;
+    // wait until every recording of the new place (and the reference) is loaded
+    if (place && ![...place.layers.map(l => l.sound), this.reference.sound].every(s => e.buffers.has(s))) return;
     const ctx = e.ctx;
     const now = ctx.currentTime;
     for (const { gain, src } of this.playing) {
@@ -67,7 +79,7 @@ export class Ambience {
       src.loop = true;
       const gain = ctx.createGain();
       gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(layer.level, now + FADE_IN);
+      gain.gain.linearRampToValueAtTime(layer.level * (this.match.get(layer.sound) ?? 1), now + FADE_IN);
       src.connect(gain).connect(e.master);
       src.start(now, Math.random() * buffer.duration);
       this.playing.push({ gain, src });
@@ -85,7 +97,28 @@ export class Ambience {
     if (!b) {
       b = makeSeamless(ctx, /** @type {AudioBuffer} */ (this.engine.buffers.get(name)), LOOP_BLEND);
       this.loops.set(name, b);
+      const ref = /** @type {AudioBuffer} */ (this.engine.buffers.get(this.reference.sound));
+      const target = rms(ref) * this.reference.volume;
+      const own = rms(/** @type {AudioBuffer} */ (this.engine.buffers.get(name)));
+      if (own > 1e-6) this.match.set(name, Math.min(4, target / own));
     }
     return b;
   }
+}
+
+/**
+ * Average loudness of a recording (root mean square of all its samples).
+ * @param {AudioBuffer} buffer
+ */
+function rms(buffer) {
+  let sum = 0;
+  let n = 0;
+  for (let c = 0; c < buffer.numberOfChannels; c++) {
+    const d = buffer.getChannelData(c);
+    for (let i = 0; i < d.length; i += 4) {   // every 4th sample is plenty for an average
+      sum += d[i] * d[i];
+      n++;
+    }
+  }
+  return n ? Math.sqrt(sum / n) : 0;
 }
