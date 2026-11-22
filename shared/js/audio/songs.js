@@ -79,3 +79,49 @@ export const CLOPOTEI = {
   ],
   chords: ['C', 'C', 'C', 'C', 'F', 'C', 'G', 'G', 'C', 'C', 'C', 'C', 'F', 'C', 'G', 'C', 'C'],
 };
+
+/** "Noapte de vis" (the tune of "Stille Nacht" / "Silent Night", 1818), in 3/4. @type {Song} */
+export const NOAPTE_DE_VIS = {
+  title: 'Noapte de vis',
+  tempo: 84,
+  bar: 3,
+  pickup: 0,
+  notes: [
+    ['G4', 1.5], ['A4', 0.5], ['G4', 1], ['E4', 3],
+    ['G4', 1.5], ['A4', 0.5], ['G4', 1], ['E4', 3],
+    ['D5', 2], ['D5', 1], ['B4', 3],
+    ['C5', 2], ['C5', 1], ['G4', 3],
+    ['A4', 2], ['A4', 1], ['C5', 1.5], ['B4', 0.5], ['A4', 1],
+    ['G4', 1.5], ['A4', 0.5], ['G4', 1], ['E4', 3],
+    ['A4', 2], ['A4', 1], ['C5', 1.5], ['B4', 0.5], ['A4', 1],
+    ['G4', 1.5], ['A4', 0.5], ['G4', 1], ['E4', 3],
+    ['D5', 2], ['D5', 1], ['F5', 1.5], ['D5', 0.5], ['B4', 1],
+    ['C5', 3], ['E5', 3],
+    ['C5', 1], ['G4', 1], ['E4', 1], ['G4', 1.5], ['F4', 0.5], ['D4', 1],
+    ['C4', 3],
+    [null, 3],
+  ],
+  chords: ['C', 'C', 'C', 'C', 'G', 'G', 'C', 'C', 'F', 'F', 'C', 'C', 'F', 'F', 'C', 'C', 'G', 'G', 'C', 'C', 'C', 'G', 'C', 'C'],
+};
+
+/** "Vă dorim un Crăciun fericit" (the tune of "We Wish You a Merry Christmas"), in 3/4. @type {Song} */
+export const CRACIUN_FERICIT = {
+  title: 'Vă dorim un Crăciun fericit',
+  tempo: 132,
+  bar: 3,
+  pickup: 1,
+  notes: [
+    ['G4', 1],
+    // Vă dorim un Crăciun fericit
+    ['C5', 1], ['C5', 0.5], ['D5', 0.5], ['C5', 0.5], ['B4', 0.5],
+    ['A4', 1], ['A4', 1], ['A4', 1],
+    ['D5', 1], ['D5', 0.5], ['E5', 0.5], ['D5', 0.5], ['C5', 0.5],
+    ['B4', 1], ['G4', 1], ['G4', 1],
+    ['E5', 1], ['E5', 0.5], ['F5', 0.5], ['E5', 0.5], ['D5', 0.5],
+    ['C5', 1], ['A4', 1], ['G4', 0.5], ['G4', 0.5],
+    ['A4', 1], ['D5', 1], ['B4', 1],
+    ['C5', 2], [null, 1],
+    [null, 3],
+  ],
+  chords: ['C', 'F', 'D', 'G', 'E', 'F', 'G', 'C', 'C'],
+};
