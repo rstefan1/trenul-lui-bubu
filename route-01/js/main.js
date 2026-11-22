@@ -336,7 +336,19 @@ function fastForward(seconds) {
   }
 }
 
-if (params.has('debug')) Object.assign(window, { trenulDebug: { stage, journey, world, state, director, audio } });
+if (params.has('debug')) {
+  Object.assign(window, { trenulDebug: { stage, journey, world, state, director, audio } });
+  // compare the landscape at full and at capped resolution (key L or the button)
+  const button = document.createElement('button');
+  button.className = 'debug-btn';
+  button.type = 'button';
+  const label = () => { button.textContent = world.landscape.fullResolution ? 'Peisaj: rezoluție întreagă' : 'Peisaj: rezoluție redusă'; };
+  const toggle = () => { world.landscape.setFullResolution(!world.landscape.fullResolution); label(); };
+  button.addEventListener('click', toggle);
+  window.addEventListener('keydown', e => { if (e.code === 'KeyL') toggle(); });
+  label();
+  document.body.append(button);
+}
 
 loop.start();
 if (testMode) {
