@@ -243,9 +243,10 @@ export class PutnaMission extends SceneMission {
     c.quadraticCurveTo(x, y - 370 * k, x + 42 * k, y - 296 * k);
     c.closePath();
     c.fill();
+    // the cross stands on the top of the dome (the curve above peaks at y − 333 k)
     c.fillStyle = '#e3b23c';
-    c.fillRect(x - 3 * k, y - 400 * k, 6 * k, 44 * k);
-    c.fillRect(x - 14 * k, y - 388 * k, 28 * k, 6 * k);
+    c.fillRect(x - 3 * k, y - 377 * k, 6 * k, 46 * k);
+    c.fillRect(x - 14 * k, y - 365 * k, 28 * k, 6 * k);
     c.fillStyle = '#5d4037';
     for (const wx of [-110, -40, 40, 110]) {
       c.beginPath();

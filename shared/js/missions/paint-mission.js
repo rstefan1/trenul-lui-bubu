@@ -43,7 +43,8 @@ const PARTS = [
   { id: 'drum', n: 1, label: [68.4, 45], path: p => p.rect(52, 34, 20, 18) },
   { id: 'roof', n: 2, label: [86, 48], path: p => { p.moveTo(8, 58); p.lineTo(30, 42); p.lineTo(52, 42); p.lineTo(52, 52); p.lineTo(72, 52); p.lineTo(72, 42); p.lineTo(98, 42); p.lineTo(126, 62); p.lineTo(126, 64); p.lineTo(8, 60); p.closePath(); } },
   { id: 'cap', n: 2, label: [62, 27], path: p => { p.moveTo(48, 35); p.quadraticCurveTo(62, 10, 76, 35); p.closePath(); } },
-  { id: 'cross', n: 3, label: [70, 9], path: p => { p.rect(61, 3, 2.6, 15); p.rect(57.5, 7, 9.6, 2.6); } },
+  // the cross stands on the top of the cap (the curve above peaks at y 22.5)
+  { id: 'cross', n: 3, label: [70, 13], path: p => { p.rect(61, 8, 2.6, 15.5); p.rect(57.5, 12, 9.6, 2.6); } },
   { id: 'win1', n: 3, label: [60, 72], path: p => { p.moveTo(56, 80); p.lineTo(56, 70); p.quadraticCurveTo(59, 64, 62, 70); p.lineTo(62, 80); p.closePath(); } },
   { id: 'win2', n: 3, label: [84, 72], path: p => { p.moveTo(80, 80); p.lineTo(80, 70); p.quadraticCurveTo(83, 64, 86, 70); p.lineTo(86, 80); p.closePath(); } },
   { id: 'win3', n: 3, label: [62, 44], path: p => { p.moveTo(59.5, 48); p.lineTo(59.5, 41); p.quadraticCurveTo(62, 37, 64.5, 41); p.lineTo(64.5, 48); p.closePath(); } },
@@ -318,7 +319,8 @@ export class PaintMission extends SceneMission {
     c.closePath();
     c.fill();
     c.fillStyle = '#e3b23c';
-    c.fillRect(x - 0.8 * k, ground - 88 * k, 1.6 * k, 10 * k);
+    // the cross reaches a little into the tip of the roof, so it stands on it
+    c.fillRect(x - 0.8 * k, ground - 88 * k, 1.6 * k, 11 * k);
     c.fillRect(x - 3 * k, ground - 85 * k, 6 * k, 1.6 * k);
     c.fillStyle = '#6d4c41';
     fillRoundRect(c, x - 5 * k, ground - 18 * k, 10 * k, 18 * k, 4 * k, '#6d4c41');
