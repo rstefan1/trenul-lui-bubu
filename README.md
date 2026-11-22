@@ -12,13 +12,15 @@ with no libraries and no build step.
 ## Structure
 
 ```
-index.html       entry page (redirects to the first journey for now)
+index.html       home page: the list of journeys
+home/            the home page's script and style, and the list of journeys (routes.js)
 shared/          code and assets shared by every journey of the game
-route-01/          the first journey
+route-01/        the first journey (winter: Timișoara → Putna)
 ```
 
-Every new journey gets a folder of its own, next to `route-01/`, and reuses
-`shared/`.
+Every new journey gets a folder of its own (`route-02/`, `route-03/`, …),
+reuses `shared/`, and is added to `home/routes.js` with its season (winter,
+spring, summer or autumn), which gives it its picture on the home page.
 
 ## Playing
 
@@ -74,5 +76,5 @@ shared/js/journey/   route model, motion planning, journey state machine
 shared/js/game/      player state (name, stars, ornaments)
 shared/js/missions/  mission base class, director and mission types
 shared/js/ui/        HUD, mission HUD and overlays
-route-01/js/           winter route, winter missions and entry point
+route-01/js/         winter route, winter missions and entry point
 ```
