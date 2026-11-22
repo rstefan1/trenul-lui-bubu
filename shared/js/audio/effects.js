@@ -67,6 +67,8 @@ const MIX = {
   doorsOpen: -9, doorsClose: -9, gust: -6, plough: -4,
   // the big moments
   success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 3,
+  // the sounds of places (heard now and then, far away, under everything)
+  distantBell: -14, toaca: -15, birdsong: -16,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
 const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, churchBell: 2.5, star: 0.5 };
@@ -307,6 +309,91 @@ const SOUNDS = {
     noisePuff(ctx, out, { t, length: 0.5, level: 0.1, type: 'highpass', from: 2500, to: 4000, attack: 0.02 });
     noisePuff(ctx, out, { t: t + 0.3, length: 0.6, level: 0.07, type: 'bandpass', from: 350, to: 250, q: 1.2, attack: 0.1 });
   },
+  /** A monastery bell far away, tolling three times: muffled by the distance. */
+  distantBell(ctx, out, t) {
+    const far = ctx.createBiquadFilter();
+    far.type = 'lowpass';
+    far.frequency.value = 1100;
+    far.connect(out);
+    for (let i = 0; i < 3; i++) churchBell(ctx, far, fq('D3'), t + i * 2.6, 0.3);
+  },
+  /**
+   * The toaca: a long wooden plank struck with two mallets, in the old
+   * rhythm of the Bucovina monasteries — slow strokes that get faster and
+   * faster, a quick run, then a few last strokes. The two mallets hit two
+   * spots of the plank, so the strokes alternate between two pitches.
+   */
+  toaca(ctx, out, t) {
+    const far = ctx.createBiquadFilter();
+    far.type = 'lowpass';
+    far.frequency.value = 2600;
+    far.connect(out);
+    let at = t;
+    let gap = 0.55;
+    let i = 0;
+    const strike = (/** @type {number} */ when, /** @type {number} */ level) => {
+      const f = i++ % 2 ? 560 : 730;
+      sweep(ctx, far, { t: when, from: f * 1.05, to: f, slide: 0.02, level: 0.3 * level, length: 0.11, attack: 0.002 });
+      noisePuff(ctx, far, { t: when, length: 0.03, level: 0.12 * level, type: 'bandpass', from: f * 2.2, q: 2, attack: 0.001 });
+    };
+    // slow, then faster and faster
+    while (gap > 0.12) {
+      strike(at, 0.8);
+      at += gap;
+      gap *= 0.88;
+    }
+    // the quick run
+    for (let k = 0; k < 10; k++) {
+      strike(at, 1);
+      at += 0.12;
+    }
+    // the last strokes: "ta-ta… tam"
+    at += 0.25;
+    strike(at, 0.9);
+    strike(at + 0.2, 0.9);
+    strike(at + 0.65, 1);
+  },
+  /** A bird of the winter morning: a great tit ("ti-tu ti-tu"), a sparrow, or a robin's little trill. */
+  birdsong(ctx, out, t) {
+    const kind = Math.floor(Math.random() * 3);
+    if (kind === 0) {
+      // the great tit: a high note and a lower one, a few times
+      const hi = 5200 + Math.random() * 500;
+      const n = 2 + Math.floor(Math.random() * 3);
+      for (let k = 0; k < n; k++) {
+        sweep(ctx, out, { t: t + k * 0.32, from: hi, to: hi * 0.97, slide: 0.08, level: 0.05, length: 0.1, attack: 0.008 });
+        sweep(ctx, out, { t: t + k * 0.32 + 0.14, from: hi * 0.74, to: hi * 0.72, slide: 0.1, level: 0.05, length: 0.12, attack: 0.008 });
+      }
+    } else if (kind === 1) {
+      // the sparrow: quick, uneven chirps
+      const n = 3 + Math.floor(Math.random() * 4);
+      for (let k = 0; k < n; k++) {
+        const base = 3200 + Math.random() * 900;
+        sweep(ctx, out, { t: t + k * (0.12 + Math.random() * 0.1), from: base, to: base * 1.3, slide: 0.04, level: 0.045, length: 0.06, attack: 0.006 });
+      }
+    } else {
+      // the robin: a short, wavering trill that falls
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      const start = hz(6000 + Math.random() * 800);
+      osc.frequency.setValueAtTime(start, t);
+      osc.frequency.exponentialRampToValueAtTime(start * 0.6, t + 0.9);
+      const wobble = ctx.createOscillator();
+      wobble.frequency.value = 28;
+      const depth = ctx.createGain();
+      depth.gain.value = 400;
+      wobble.connect(depth).connect(osc.frequency);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.04, t + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      osc.connect(g).connect(out);
+      osc.start(t);
+      wobble.start(t);
+      osc.stop(t + 0.95);
+      wobble.stop(t + 0.95);
+    }
+  },
   /** The doors close: they slide, shut with a soft bump, and the air hisses. */
   doorsClose(ctx, out, t) {
     noisePuff(ctx, out, { t, length: 0.55, level: 0.07, type: 'bandpass', from: 250, to: 350, q: 1.2, attack: 0.1 });
@@ -321,7 +408,8 @@ const SOUNDS = {
  * Plays one of the game's sound effects.
  * @param {import('./audio.js').AudioEngine | undefined} engine
  * @param {SoundName} name
- * @param {{pan?: number}} [o]  pan: -1 (left speaker) … 1 (right speaker)
+ * @param {{pan?: number, gain?: number}} [o]  pan: -1 (left speaker) … 1 (right speaker);
+ *        gain: a factor on the effect's volume in the mix
  */
 export function playSound(engine, name, o = {}) {
   if (!engine?.ready || !engine.ctx || !engine.master) return;
@@ -333,7 +421,7 @@ export function playSound(engine, name, o = {}) {
 
   const varyDb = (Math.random() * 2 - 1) * VARY_DB;
   const rate = FIXED_PITCH.has(name) ? 1 : 1 + (Math.random() * 2 - 1) * VARY_PITCH;
-  const volume = dB((MIX[name] ?? 0) + varyDb) * (balance.get(name) ?? 1);
+  const volume = dB((MIX[name] ?? 0) + varyDb) * (balance.get(name) ?? 1) * (o.gain ?? 1);
   const hold = DUCK[/** @type {keyof typeof DUCK} */ (name)];
   if (hold) engine.duck(hold);
   if (engine.canPlay(name)) {
