@@ -62,7 +62,7 @@ import { MissionHud } from '../../shared/js/ui/mission-hud.js';
 import { AudioEngine, setupSoundButton } from '../../shared/js/audio/audio.js';
 import { Music } from '../../shared/js/audio/music.js';
 import { RailSound } from '../../shared/js/audio/rail-sound.js';
-import { CLOPOTEI, CRACIUN_FERICIT, NOAPTE_DE_VIS, O_BRAD_FRUMOS } from '../../shared/js/audio/songs.js';
+import { CLOPOTEI, CRACIUN_FERICIT, FA_LA_LA, NOAPTE_DE_VIS, O_BRAD_FRUMOS } from '../../shared/js/audio/songs.js';
 import { setupFullscreen, showOverlay } from '../../shared/js/ui/screens.js';
 import { WorldView } from '../../shared/js/world/world-view.js';
 import { WINTER_CHAPTERS } from './chapters-data.js';
@@ -129,14 +129,14 @@ setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
 const railSound = new RailSound(audio, 'train', 'brakes');
 const music = new Music(audio);
 /** The carols the stations take turns with, so the same one does not come back too soon. */
-const STATION_SONGS = [O_BRAD_FRUMOS, CLOPOTEI, NOAPTE_DE_VIS, CRACIUN_FERICIT];
+const STATION_SONGS = [O_BRAD_FRUMOS, CLOPOTEI, NOAPTE_DE_VIS, FA_LA_LA, CRACIUN_FERICIT];
 /** The overlays (menu, intro, chapter end, finale): "O, brad frumos" plays over them. */
 const overlays = [...document.querySelectorAll('.overlay')];
 
 /**
  * The music for what is on screen: carols on the menu, on the chapter
  * screens and while the train waits at a station (the stations take turns
- * through four carols); nothing while the train runs (only the train is
+ * through five carols); nothing while the train runs (only the train is
  * heard), and nothing during missions with sounds of their own.
  * @returns {[import('../../shared/js/audio/songs.js').Song | null, number]}
  */

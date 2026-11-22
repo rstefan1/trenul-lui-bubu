@@ -125,3 +125,35 @@ export const CRACIUN_FERICIT = {
   ],
   chords: ['C', 'F', 'D', 'G', 'E', 'F', 'G', 'C', 'C'],
 };
+
+/** "Fa-la-la" (the tune of "Deck the Halls", a traditional Welsh carol), in 4/4. @type {Song} */
+export const FA_LA_LA = {
+  title: 'Fa-la-la',
+  tempo: 120,
+  bar: 4,
+  pickup: 0,
+  notes: [
+    // Deck the halls with boughs of holly, fa-la-la-la-la, la-la-la-la
+    ['G5', 1.5], ['F5', 0.5], ['E5', 1], ['D5', 1],
+    ['C5', 1], ['D5', 1], ['E5', 1], ['C5', 1],
+    ['D5', 0.5], ['E5', 0.5], ['F5', 0.5], ['D5', 0.5], ['E5', 1.5], ['D5', 0.5],
+    ['C5', 1], ['B4', 1], ['C5', 2],
+    // (again)
+    ['G5', 1.5], ['F5', 0.5], ['E5', 1], ['D5', 1],
+    ['C5', 1], ['D5', 1], ['E5', 1], ['C5', 1],
+    ['D5', 0.5], ['E5', 0.5], ['F5', 0.5], ['D5', 0.5], ['E5', 1.5], ['D5', 0.5],
+    ['C5', 1], ['B4', 1], ['C5', 2],
+    // Don we now our gay apparel, fa-la-la, la-la-la, la-la-la
+    ['D5', 1.5], ['E5', 0.5], ['F5', 1], ['D5', 1],
+    ['E5', 1.5], ['F5', 0.5], ['G5', 1], ['D5', 1],
+    ['E5', 0.5], ['F#5', 0.5], ['G5', 1], ['A5', 0.5], ['B5', 0.5], ['C6', 1],
+    ['B5', 1], ['A5', 1], ['G5', 2],
+    // Troll the ancient Yuletide carol, fa-la-la-la-la, la-la-la-la
+    ['G5', 1.5], ['F5', 0.5], ['E5', 1], ['D5', 1],
+    ['C5', 1], ['D5', 1], ['E5', 1], ['C5', 1],
+    ['A5', 0.5], ['A5', 0.5], ['A5', 0.5], ['A5', 0.5], ['G5', 1.5], ['F5', 0.5],
+    ['E5', 1], ['D5', 1], ['C5', 2],
+    [null, 4],
+  ],
+  chords: ['C', 'C', 'G', 'C', 'C', 'C', 'G', 'C', 'G', 'C', 'D', 'G', 'C', 'C', 'F', 'C', 'C'],
+};
