@@ -314,7 +314,9 @@ async function startTest() {
   director.on('complete', () => setTimeout(async () => {
     finaleSound(audio);
     await showOverlay(byId('finale'), byId('btnAgain'));
-    location.reload();
+    // "Înapoi la meniu": the same page without the test parameters (a reload
+    // would only start the tested mission again)
+    location.href = location.pathname;
   }, 2500));
   if (params.has('at')) fastForward(Number(params.get('at')) || 0);
   else director.atStation(journey.station);
