@@ -12,6 +12,7 @@
  *   start    length of the first sequence
  */
 
+import { playNote } from '../audio/instruments.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillCircle, fillRoundRect, glow, roundRectPath } from '../gfx/shapes.js';
 import { WIRE_Y } from '../world/track.js';
