@@ -60,6 +60,32 @@ export const HANGING_BAUBLE_R = 11;
 /** Seconds a passenger needs to get off and walk away. */
 const PASSENGER_LEAVE = 2.6;
 
+/*
+ * The train has weight: its body rides on springs above the wheels. Every
+ * rail joint gives it a small knock (it dips and settles), and when the
+ * train brakes or sets off the body leans forward or back a little before
+ * the springs bring it back. Only the body moves; the wheels stay on the rail.
+ */
+/** Distance between two rail joints (stage units). */
+const RAIL_JOINT = 180;
+/** Spring stiffness and damping of the suspension. */
+const SPRING = 160;
+const DAMPING = 11;
+/** Knock of a rail joint at full speed (units/s pushed into the spring). */
+const JOINT_KNOCK = 22;
+/** How far the body leans per unit of acceleration, and at most (stage units). */
+const LEAN = 0.012;
+const LEAN_MAX = 3;
+
+/*
+ * Bubu is alive at her window: she breathes, looks where the child touches,
+ * hops for joy when a mission is won and droops a little after a mistake.
+ */
+/** Seconds Bubu's joy and her sadness last, and how long she keeps looking at a touch. */
+const JOY_TIME = 1.1;
+const SAD_TIME = 1.2;
+const LOOK_TIME = 1.6;
+
 export class TrainRenderer {
   /**
    * @param {import('../core/stage.js').Stage} stage
@@ -89,6 +115,12 @@ export class TrainRenderer {
     /** How far Bubu has appeared at her window (0 = not on the train yet). */
     this.bubuShown = 1;
     this.bubuTarget = 1;
+    /** The body on its springs: height (dy, with its speed vy) and lean (dx), in stage units. */
+    this.ride = { dy: 0, vy: 0, dx: 0, joint: 0, speed: 0 };
+    /** @type {{kind: 'joy' | 'sad' | null, t: number}} Bubu's feeling of the moment */
+    this.mood = { kind: null, t: 0 };
+    /** Where Bubu looks (screen x) and for how long already. */
+    this.look = { x: 0, t: Infinity };
     this.setSpec(spec);
     stage.on('resize', () => { this.body = null; });
   }
@@ -146,12 +178,59 @@ export class TrainRenderer {
     if (instant) this.bubuShown = this.bubuTarget;
   }
 
-  /** @param {number} dt */
-  update(dt) {
+  /**
+   * @param {number} dt
+   * @param {number} [speed=0]     of the train (for the suspension)
+   * @param {number} [distance=0]  travelled (for the rail joints)
+   */
+  update(dt, speed = 0, distance = 0) {
     this.time += dt;
     this.bubuShown = approach(this.bubuShown, this.bubuTarget, 7, dt);
+    this.updateRide(dt, speed, distance);
+    this.mood.t += dt;
+    this.look.t += dt;
     for (const p of this.passengers) if (p.leaving >= 0) p.leaving += dt;
     this.passengers = this.passengers.filter(p => p.leaving < PASSENGER_LEAVE);
+  }
+
+  /**
+   * @private
+   * @param {number} dt
+   * @param {number} speed
+   * @param {number} distance
+   */
+  updateRide(dt, speed, distance) {
+    const r = this.ride;
+    if (dt <= 0) return;
+    // a knock at every rail joint, stronger the faster the train goes
+    const joint = Math.floor(distance / RAIL_JOINT);
+    if (joint !== r.joint) {
+      r.joint = joint;
+      r.vy += JOINT_KNOCK * clamp(speed / 500, 0, 1);
+    }
+    // the spring pulls the body back, the damper calms it
+    r.vy += (-SPRING * r.dy - DAMPING * r.vy) * dt;
+    r.dy += r.vy * dt;
+    // braking leans the body forward (+x), setting off leans it back
+    const accel = (speed - r.speed) / dt;
+    r.speed = speed;
+    r.dx = approach(r.dx, clamp(-accel * LEAN, -LEAN_MAX, LEAN_MAX), 4, dt);
+  }
+
+  /**
+   * Bubu shows a feeling: joy (she hops) or sadness (she droops a little).
+   * @param {'joy' | 'sad'} kind
+   */
+  react(kind) {
+    this.mood = { kind, t: 0 };
+  }
+
+  /**
+   * Bubu turns towards something the child touched.
+   * @param {number} x  screen x
+   */
+  lookAt(x) {
+    this.look = { x, t: 0 };
   }
 
   /**
@@ -330,12 +409,15 @@ export class TrainRenderer {
    */
   drawBody(c, f) {
     this.ensureBody();
+    this.drawWheels(c, f);
+    c.save();
+    c.translate(this.ride.dx, this.ride.dy);
     const x0 = f.frontX + this.rearX - 20;
     c.drawImage(/** @type {HTMLCanvasElement} */ (this.body), x0, f.railY + TOP, -this.rearX + 40, BOTTOM - TOP);
-    this.drawWheels(c, f);
     this.drawDecorations(c, f);
     this.drawBubu(c, f);
     this.drawPassengers(c, f);
+    c.restore();
   }
 
   /**
@@ -425,6 +507,18 @@ export class TrainRenderer {
    */
   drawLights(c, f) {
     this.ensureBody();
+    c.save();
+    c.translate(this.ride.dx, this.ride.dy);
+    this.drawLightsOnBody(c, f);
+    c.restore();
+  }
+
+  /**
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {TrainFrame} f
+   */
+  drawLightsOnBody(c, f) {
     if (f.lights > 0.02) {
       c.globalAlpha = f.lights;
       for (const car of this.cars) {
@@ -532,14 +626,35 @@ export class TrainRenderer {
       const cx = f.frontX + car.left + r[0] + r[2] / 2;
       const sill = f.railY + r[1] + r[3];
       const sway = clamp(f.speed / 500, 0, 1);
-      const bob = Math.sin(f.time * 7) * 1.5 * sway + Math.sin(f.time * 1.3) * 1.2;
-      const tilt = Math.sin(f.time * 2.1) * 0.05 * (0.3 + sway);
+      let bob = Math.sin(f.time * 7) * 1.5 * sway + Math.sin(f.time * 1.3) * 1.2;
+      let tilt = Math.sin(f.time * 2.1) * 0.05 * (0.3 + sway);
+      // she breathes: a slow, tiny swell
+      let squash = Math.sin(f.time * 2.4) * 0.012;
+      // she looks towards what the child touched, then back
+      if (this.look.t < LOOK_TIME) {
+        const k = Math.sin(Math.min(1, this.look.t / LOOK_TIME) * Math.PI);
+        tilt += clamp((this.look.x - cx) / 500, -1, 1) * 0.16 * k;
+      }
+      const m = this.mood;
+      if (m.kind === 'joy' && m.t < JOY_TIME) {
+        // two happy hops, squashing as she lands
+        const hop = Math.abs(Math.sin((m.t / JOY_TIME) * Math.PI * 2));
+        const fade = 1 - m.t / JOY_TIME;
+        bob -= hop * 14 * fade;
+        squash += (0.5 - hop) * 0.12 * fade;
+      } else if (m.kind === 'sad' && m.t < SAD_TIME) {
+        // she sinks a little and leans her head
+        const k = Math.sin((m.t / SAD_TIME) * Math.PI);
+        bob += 6 * k;
+        tilt -= 0.14 * k;
+      }
+      const y = sill - BUBU_SIZE * 0.38 + bob + hidden;
       c.save();
       c.beginPath();
-      c.rect(cx - BUBU_SIZE, sill - BUBU_SIZE * 1.5, BUBU_SIZE * 2, BUBU_SIZE * 1.5);
+      c.rect(cx - BUBU_SIZE, sill - BUBU_SIZE * 1.5 - 20, BUBU_SIZE * 2, BUBU_SIZE * 1.5 + 20);
       c.clip();
-      drawBubu(c, cx, sill - BUBU_SIZE * 0.38 + bob + hidden, BUBU_SIZE, tilt);
-      drawBubuHat(c, this.hat, cx, sill - BUBU_SIZE * 0.38 + bob + hidden, BUBU_SIZE);
+      drawBubu(c, cx, y, BUBU_SIZE, tilt, squash);
+      drawBubuHat(c, this.hat, cx, y - BUBU_SIZE * squash * 0.5, BUBU_SIZE);
       c.restore();
     }
   }

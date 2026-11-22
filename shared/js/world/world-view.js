@@ -138,7 +138,7 @@ export class WorldView {
     this.time += dt;
     const j = this.journey;
     if (TRAINS[j.trainId] !== this.train.spec) this.train.setSpec(TRAINS[j.trainId]);
-    this.train.update(dt);
+    this.train.update(dt, j.speed, j.distance);
     const target = this.features.cameraLift(j.distance, this.train.length);
     this.cameraY = approach(this.cameraY, target, 1.6, dt);
     this.pan = approach(this.pan, this.panTarget, 1.6, dt);
