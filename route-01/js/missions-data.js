@@ -242,6 +242,7 @@ export const WINTER_MISSIONS = {
           { color: '#2f6fd0', label: 'albastră' },
           { color: '#7e57c2', label: 'mov' },
           { color: '#f08a24', label: 'portocalie' },
+          { color: '#e8559a', label: 'roz' },
         ],
         needed: [
           { id: 'scarf', icon: '🧣', label: 'Fularul' },
