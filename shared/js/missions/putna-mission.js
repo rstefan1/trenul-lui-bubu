@@ -39,6 +39,8 @@ export class PutnaMission extends SceneMission {
     this.config = config;
     /** @type {'bell' | 'tree' | 'done'} */
     this.step = 'bell';
+    /** The carol is silent while the bell rings over the hills. */
+    this.quietMusic = true;
     this.stepT = 0;
     this.time = 0;
     this.rings = 0;
@@ -123,6 +125,7 @@ export class PutnaMission extends SceneMission {
   toTree() {
     if (this.phase === 'finished') return;
     this.step = 'tree';
+    this.quietMusic = false;
     this.stepT = 0;
     this.ctx.hud.setCounter('🎄', 0, SPOTS.length);
     this.ctx.hud.instruct(this.config.title, this.config.treeText);
