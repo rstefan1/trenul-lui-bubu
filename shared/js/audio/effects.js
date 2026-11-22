@@ -68,7 +68,7 @@ const MIX = {
   // the big moments
   success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 6,
   // the sounds of places (heard now and then, far away, under everything)
-  distantBell: -7, toaca: -15, birdsong: -16,
+  distantBell: -7, toaca: -15, birdsong: -16, sleigh: -11,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
 const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, churchBell: 3.5, star: 0.5 };
@@ -352,6 +352,42 @@ const SOUNDS = {
     strike(at, 0.9);
     strike(at + 0.2, 0.9);
     strike(at + 0.65, 1);
+  },
+  /**
+   * A horse sleigh going by: its bells (zurgălăi) jingle at the horse's trot,
+   * coming from one side, passing in front and going away on the other,
+   * with the soft steps of the hooves in the snow.
+   */
+  sleigh(ctx, out, t) {
+    const length = 8;
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    const pass = ctx.createGain();
+    pass.gain.setValueAtTime(0.0001, t);
+    pass.gain.exponentialRampToValueAtTime(1, t + length * 0.5);
+    pass.gain.exponentialRampToValueAtTime(0.0001, t + length);
+    let last = pass;
+    if (ctx.createStereoPanner) {
+      const pan = ctx.createStereoPanner();
+      pan.pan.setValueAtTime(-0.8 * dir, t);
+      pan.pan.linearRampToValueAtTime(0.8 * dir, t + length);
+      pass.connect(pan);
+      last = pan;
+    }
+    last.connect(out);
+    // the trot: two quick steps, a pause… (about two and a half strides a second)
+    for (let at = 0; at < length; at += 0.42) {
+      for (const step of [0, 0.16]) {
+        const s = t + at + step + Math.random() * 0.02;
+        // the bells: a few tiny high bells struck together, and their rattle
+        for (let k = 0; k < 4; k++) {
+          const st = s + Math.random() * 0.03;
+          sweep(ctx, pass, { t: st, from: 4600 + Math.random() * 3400, to: 4500 + Math.random() * 3400, slide: 0.15, level: 0.07, length: 0.2, attack: 0.002 });
+        }
+        noisePuff(ctx, pass, { t: s, length: 0.08, level: 0.05, type: 'highpass', from: 6500, attack: 0.002 });
+        // the hoof in the snow
+        noisePuff(ctx, pass, { t: s, length: 0.09, level: 0.06, type: 'lowpass', from: 500, to: 250, attack: 0.004 });
+      }
+    }
   },
   /** A bird of the winter morning: a great tit ("ti-tu ti-tu"), a sparrow, or a robin's little trill. */
   birdsong(ctx, out, t) {
