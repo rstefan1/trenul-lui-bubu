@@ -120,7 +120,7 @@ export class WhistleMission extends Mission {
     this.whistleT += dt;
     this.particles.update(dt);
     const stage = this.ctx.stage;
-    this.pace?.slowNear(this.groups.filter(g => g.state === 'waiting').map(g => this.toScreen(g.worldX)), { left: stage.viewLeft, right: stage.viewRight });
+    this.pace?.slowNear(this.groups.filter(g => g.state === 'waiting').map(g => this.toScreen(g.worldX)), { left: stage.viewLeft, right: stage.viewRight, front: this.ctx.world.anchorX });
     for (const g of this.groups) {
       g.t += dt;
       if (g.state === 'waiting' && this.toScreen(g.worldX) - this.ctx.world.anchorX < -HEAR_BEHIND) {

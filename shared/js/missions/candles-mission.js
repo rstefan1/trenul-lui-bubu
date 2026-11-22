@@ -97,7 +97,7 @@ export class CandlesMission extends Mission {
     const xs = this.houses.filter(h => h.child && !h.lit).map(h => this.toScreen(h.worldX) + HOUSE_W / 2);
     if (this.spawned < this.config.houses && this.plan[this.spawned]) xs.push(this.toScreen(this.nextWorldX) + HOUSE_W / 2);
     const stage = this.ctx.stage;
-    this.pace.slowNear(xs, { left: stage.viewLeft, right: stage.viewRight });
+    this.pace.slowNear(xs, { left: stage.viewLeft, right: stage.viewRight, front: this.ctx.world.anchorX });
   }
 
   /** Screen x of a world position. */

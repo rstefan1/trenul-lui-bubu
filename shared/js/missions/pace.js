@@ -24,9 +24,10 @@ const BRAKE = 230;
  * @property {number} [slow] crawling speed while something waits on screen (slowNear)
  * @property {number} [brake] braking rate (stage units/s², at most the train's own):
  *   higher values brake later and harder
- * @property {number} [enter] slowNear: where (0 = left edge, 1 = right edge of
- *   the view) a thing to touch should already be crawling; smaller values
- *   slow the train down later (default: just inside the right edge)
+ * @property {{ahead: number, behind: number}} [near] slowNear: crawl only while a
+ *   thing to touch is close to the locomotive, from `ahead` stage units in
+ *   front of it to `behind` units behind it (default: from just inside the
+ *   right edge until it leaves the screen on the left)
  */
 
 export class TrainPace {
@@ -39,7 +40,7 @@ export class TrainPace {
     this.far = options.far;
     this.slow = options.slow ?? 100;
     this.brake = Math.min(options.brake ?? BRAKE, MANUAL.brake - 20);
-    this.enter = options.enter;
+    this.near = options.near;
     /** @type {import('../journey/journey.js').Controls | null} */
     this.controls = journey.takeControl();
   }
@@ -65,15 +66,18 @@ export class TrainPace {
    * Crawls while one of the things still to touch is on screen, brakes in
    * time for the next one, and goes fast otherwise.
    * @param {number[]} xs   screen x of every thing still to touch (also those not on screen yet)
-   * @param {{left: number, right: number}} view  the visible part of the stage
+   * @param {{left: number, right: number, front?: number}} view  the visible part
+   *   of the stage, and the screen x of the locomotive (needed with `near`)
    */
   slowNear(xs, view) {
     if (!this.controls) return;
-    // where a thing should already be crawling
-    const enter = this.enter === undefined ? view.right - 120 : view.left + (view.right - view.left) * this.enter;
+    const front = view.front ?? view.right;
+    // where a thing should already be crawling, and where it is left behind
+    const enter = this.near ? front + this.near.ahead : view.right - 120;
+    const gone = this.near ? Math.max(view.left + 80, front - this.near.behind) : view.left + 80;
     let target = this.far;
     for (const x of xs) {
-      if (x < view.left + 80) continue;   // gone by on the left
+      if (x < gone) continue;   // gone by
       const d = x - enter;
       const v = d <= 0 ? this.slow : Math.sqrt(this.slow * this.slow + 2 * this.brake * d);
       target = Math.min(target, v);
