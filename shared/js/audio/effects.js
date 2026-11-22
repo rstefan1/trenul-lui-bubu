@@ -68,7 +68,7 @@ const MIX = {
   // the big moments
   success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 6,
   // the sounds of places (heard now and then, far away, under everything)
-  birdsong: -16, sleigh: -11, snowSteps: -12,
+  birdsong: -16, sleigh: -11, littleBells: -12,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
 const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, churchBell: 3.5, star: 0.5 };
@@ -346,26 +346,17 @@ const SOUNDS = {
     }
   },
   /**
-   * Someone walking past on fresh snow: a few steps, each one the squeaky
-   * crunch of snow pressed under a boot — many tiny crackles in a quick
-   * burst, over a soft thud.
+   * A little shake of small bells, as on a carol singer's staff or by a
+   * monastery gate: a few tiny bells in a quick, uneven run, on the notes of
+   * a pentatonic scale (so they always sound pleasant together).
    */
-  snowSteps(ctx, out, t) {
-    const steps = 4 + Math.floor(Math.random() * 5);
-    const pace = 0.5 + Math.random() * 0.15;
-    for (let k = 0; k < steps; k++) {
-      const s = t + k * pace + Math.random() * 0.04;
-      const loud = 0.7 + 0.3 * Math.sin((k / Math.max(1, steps - 1)) * Math.PI);   // nearer in the middle
-      // the crunch: a quick run of tiny crackles
-      const grains = 8 + Math.floor(Math.random() * 6);
-      for (let g = 0; g < grains; g++) {
-        noisePuff(ctx, out, {
-          t: s + (g / grains) * 0.16 + Math.random() * 0.012, length: 0.018, level: 0.09 * loud,
-          type: 'bandpass', from: 1400 + Math.random() * 2600, q: 3, attack: 0.001,
-        });
-      }
-      // the boot itself
-      noisePuff(ctx, out, { t: s, length: 0.1, level: 0.05 * loud, type: 'lowpass', from: 400, to: 200, attack: 0.005 });
+  littleBells(ctx, out, t) {
+    const notes = ['G6', 'A6', 'C7', 'D7', 'E7', 'G7'];
+    const n = 3 + Math.floor(Math.random() * 4);
+    let at = t;
+    for (let k = 0; k < n; k++) {
+      handBell(ctx, out, fq(notes[Math.floor(Math.random() * notes.length)]), at, 0.07);
+      at += 0.07 + Math.random() * 0.14;
     }
   },
   /** A bird of the winter morning: a great tit ("ti-tu ti-tu"), a sparrow, or a robin's little trill. */
