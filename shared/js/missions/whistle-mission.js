@@ -109,7 +109,7 @@ export class WhistleMission extends Mission {
       g.t = 0;
       this.cheered += 1;
       this.particles.burst(this.toScreen(g.worldX), GROUND - 90 - w.cameraY, ['#ff8a80', '#ff5252', '#ffd23f'], 24, 220);
-      this.sound('sparkle');
+      this.sound('sparkle', this.toScreen(g.worldX));
       this.ctx.hud.setCounter('🎉', this.cheered, this.groups.length);
     }
   }

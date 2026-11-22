@@ -123,7 +123,7 @@ export class FairMission extends SceneMission {
     this.say = { text: 'Ce brad frumos! Îl ducem la tren.', t: 0, good: true };
     const t = this.treeSpot(i);
     this.particles.burst(t.x, t.y - t.h / 2, SPARKS, 30, 280);
-    this.sound('sparkle');
+    this.sound('sparkle', t.x);
     setTimeout(() => this.setAct('down'), 1800);
   }
 
@@ -180,7 +180,7 @@ export class FairMission extends SceneMission {
           this.coins += 1;
           this.ctx.hud.setCounter('🪙', this.coins, 0);
           this.particles.burst(it.x, it.y, ['#ffd54f', '#fff3c4'], 10, 160);
-          this.sound('collect');
+          this.sound('collect', it.x);
         }
       }
       this.items = this.items.filter(it => !it.taken && it.x > L.left - 60);

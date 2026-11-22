@@ -95,7 +95,7 @@ export class PhotoMission extends Mission {
       if (Math.hypot(q.x - p.x, q.y - p.y) < reach && this.ctx.world.cameraY > 60) {
         s.state = 'taken';
         this.pending = s;
-        this.sound('shutter');   // right at the touch (the snapshot itself is taken while drawing)
+        this.sound('shutter', q.x);   // right at the touch (the snapshot itself is taken while drawing)
         return;
       }
     }

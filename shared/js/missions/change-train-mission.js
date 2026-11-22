@@ -124,7 +124,7 @@ export class ChangeTrainMission extends SceneMission {
       if (d.ok) {
         this.picked = i;
         this.particles.burst(p.x, p.y, SPARKS, 20, 240);
-        this.sound('sparkle');
+        this.sound('sparkle', p.x);
         this.say = { text: `Da! Trenul spre ${d.to} pleacă la ${d.time}, de la linia ${d.platform}.`, t: 0 };
         setTimeout(() => this.toPlatforms(), 1600);
       } else {

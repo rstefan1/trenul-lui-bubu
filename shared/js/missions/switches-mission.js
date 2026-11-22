@@ -297,7 +297,7 @@ export class SwitchesMission extends SceneMission {
       this.message = `Corect! Vagonul a ajuns pe linia ${reached + 1}.`;
       const end = this.route[this.route.length - 1];
       this.particles.burst(end.x, end.y, SPARKS, 30, 280);
-      this.sound('sparkle');
+      this.sound('sparkle', end.x);
     } else {
       this.mistakes += 1;
       this.oops();

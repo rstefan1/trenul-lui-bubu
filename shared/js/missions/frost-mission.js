@@ -241,7 +241,7 @@ export class FrostMission extends Mission {
       b.melt = 0;
       this.cleared += 1;
       this.particles.burst(c0.x, c0.y, SPARKS, 30, 280);
-      this.sound('sparkle');
+      this.sound('sparkle', c0.x);
       this.ctx.hud.setCounter('❄️', this.cleared, this.config.pictures.length);
     }
   }

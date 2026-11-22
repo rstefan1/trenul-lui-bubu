@@ -279,7 +279,7 @@ export class CircuitMission extends SceneMission {
     this.solved = true;
     const extra = this.taps - this.minimum;
     this.particles.burst(this.tree.x, this.tree.y - this.tree.h * 0.9, SPARKS, 40, 320);
-    this.sound('sparkle');
+    this.sound('sparkle', this.tree.x);
     this.showEnding({
       doneText: this.config.doneText,
       fact: this.config.fact,

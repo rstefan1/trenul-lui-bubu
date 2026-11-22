@@ -181,7 +181,7 @@ export class CatchMission extends Mission {
     this.caught += 1;
     this.ctx.hud.setCounter('🎄', this.caught, this.goal);
     this.particles.burst(best.x, best.y, [best.color, '#ffffff', '#ffd54f'], 10, 180);
-    this.sound('collect');
+    this.sound('collect', best.x);
   }
 
   /** @param {CanvasRenderingContext2D} c */

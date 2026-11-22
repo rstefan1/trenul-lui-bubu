@@ -90,7 +90,7 @@ export class EyesMission extends SceneMission {
         h.found = true;
         h.t = 0;
         this.particles.burst(q.x, q.y, SPARKS, 18, 220);
-        this.sound('collect');
+        this.sound('collect', q.x);
         const n = this.hidden.filter(x => x.found).length;
         this.ctx.hud.setCounter('👀', n, this.hidden.length);
         if (n === this.hidden.length) this.finish();

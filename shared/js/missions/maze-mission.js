@@ -374,7 +374,7 @@ export class MazeMission extends SceneMission {
       this.found += 1;
       const c = this.centre(this.at);
       this.particles.burst(c.x, c.y, SPARKS, 20, 240);
-      this.sound('collect');
+      this.sound('collect', c.x);
       this.ctx.hud.setCounter('⭐', this.found, this.hiddenTotal);
     }
     if (this.at === this.goal) this.reach();

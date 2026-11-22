@@ -24,7 +24,7 @@
  * {@link MissionDirector#release} is called.
  */
 
-import { missionSound, starSound, successSound } from '../audio/effects.js';
+import { playSound, starSound, successSound } from '../audio/effects.js';
 import { Emitter } from '../core/emitter.js';
 import { starDelay } from '../ui/mission-hud.js';
 
@@ -133,7 +133,7 @@ export class MissionDirector extends Emitter {
       this.departIn = 0;
       return;
     }
-    missionSound(audio, 'doorsClose');
+    playSound(audio, 'doorsClose');
     this.departIn = DOORS_CLOSE;
     if (audio.canPlay('whistle')) {
       setTimeout(() => audio.play('whistle'), DOORS_CLOSE * 1000);

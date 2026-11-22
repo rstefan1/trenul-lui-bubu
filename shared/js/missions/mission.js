@@ -19,7 +19,10 @@
  * never be lost: the worst result is one star.
  */
 
-import { missionSound, oopsSound } from '../audio/effects.js';
+import { oopsSound, playSound } from '../audio/effects.js';
+
+/** How far to the sides the missions' sounds go (1 = fully into one speaker). */
+const PAN_WIDTH = 0.7;
 
 /**
  * Everything a mission may use.
@@ -118,12 +121,16 @@ export class Mission {
   }
 
   /**
-   * Plays one of the missions' sound effects.
+   * Plays one of the sound effects, from where it happens on screen.
    * @protected
-   * @param {Parameters<typeof missionSound>[1]} name
+   * @param {import('../audio/effects.js').SoundName} name
+   * @param {number} [x]  stage x of what makes the sound (centre if omitted)
    */
-  sound(name) {
-    missionSound(this.ctx.audio, name);
+  sound(name, x) {
+    const stage = this.ctx.stage;
+    const half = (stage.viewRight - stage.viewLeft) / 2;
+    const pan = x === undefined ? 0 : ((x - (stage.viewLeft + half)) / half) * PAN_WIDTH;
+    playSound(this.ctx.audio, name, { pan });
   }
 
   /** Called by the director after the mission has finished (remove panels, listeners). */
