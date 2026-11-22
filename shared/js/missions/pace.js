@@ -13,13 +13,20 @@
  * The controls go back to the timetable with release().
  */
 
-/** Braking rate the pace plans with (a little under the train's own, so it always manages). */
+import { MANUAL } from '../journey/journey.js';
+
+/** Default braking rate the pace plans with (well under the train's own, so it always manages). */
 const BRAKE = 230;
 
 /**
  * @typedef {object} PaceOptions
  * @property {number} far    speed between the things to touch
  * @property {number} [slow] crawling speed while something waits on screen (slowNear)
+ * @property {number} [brake] braking rate (stage units/s², at most the train's own):
+ *   higher values brake later and harder
+ * @property {number} [enter] slowNear: where (0 = left edge, 1 = right edge of
+ *   the view) a thing to touch should already be crawling; smaller values
+ *   slow the train down later (default: just inside the right edge)
  */
 
 export class TrainPace {
@@ -31,6 +38,8 @@ export class TrainPace {
     this.journey = journey;
     this.far = options.far;
     this.slow = options.slow ?? 100;
+    this.brake = Math.min(options.brake ?? BRAKE, MANUAL.brake - 20);
+    this.enter = options.enter;
     /** @type {import('../journey/journey.js').Controls | null} */
     this.controls = journey.takeControl();
   }
@@ -48,7 +57,7 @@ export class TrainPace {
    */
   stopAt(gap) {
     if (!this.controls) return;
-    this.controls.target = Math.min(this.far, Math.sqrt(2 * BRAKE * Math.max(0, gap)));
+    this.controls.target = Math.min(this.far, Math.sqrt(2 * this.brake * Math.max(0, gap)));
     this.controls.stopIn = Math.max(0, gap);
   }
 
@@ -60,13 +69,13 @@ export class TrainPace {
    */
   slowNear(xs, view) {
     if (!this.controls) return;
-    // where a thing should already be crawling: well inside the right edge
-    const enter = view.right - 120;
+    // where a thing should already be crawling
+    const enter = this.enter === undefined ? view.right - 120 : view.left + (view.right - view.left) * this.enter;
     let target = this.far;
     for (const x of xs) {
       if (x < view.left + 80) continue;   // gone by on the left
       const d = x - enter;
-      const v = d <= 0 ? this.slow : Math.sqrt(this.slow * this.slow + 2 * BRAKE * d);
+      const v = d <= 0 ? this.slow : Math.sqrt(this.slow * this.slow + 2 * this.brake * d);
       target = Math.min(target, v);
     }
     this.controls.target = target;

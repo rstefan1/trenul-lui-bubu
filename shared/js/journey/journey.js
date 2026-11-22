@@ -36,7 +36,7 @@ import { ACCELERATION, CRUISE_SPEED } from './route.js';
 const HURRY = 1.7;
 
 /** Speeds and accelerations while the child drives. */
-export const MANUAL = Object.freeze({ maxSpeed: 620, minSpeed: 0, accelerate: 230, brake: 260 });
+export const MANUAL = Object.freeze({ maxSpeed: 620, minSpeed: 0, accelerate: 230, brake: 340 });
 
 /**
  * @typedef {object} Controls

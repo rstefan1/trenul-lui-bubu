@@ -16,7 +16,7 @@
  *   empty    how many of them are dark and empty (decoys)
  *   spare    gifts in the sack beyond one per child
  *   where    where the villages are (for the result), e.g. "pe Valea Mureșului"
- *   pace     optional {far}: the mission drives the train itself — it stops
+ *   pace     optional {far, brake}: the mission drives the train itself — it stops
  *            with every waiting child right under the golden circle and goes
  *            on (at the speed `far`) once the child has the gift, so there is
  *            no timing at all; without it the route's own speed is kept
@@ -64,7 +64,7 @@ const THROW_COOLDOWN = 0.4;
  */
 
 /**
- * @typedef {import('./mission.js').MissionConfig & {houses: number, empty: number, spare: number, where?: string, pace?: {far: number}}} DeliveryConfig
+ * @typedef {import('./mission.js').MissionConfig & {houses: number, empty: number, spare: number, where?: string, pace?: import('./pace.js').PaceOptions}} DeliveryConfig
  */
 
 /** Where the front of the train stands during the mission (share of the screen's width). */
