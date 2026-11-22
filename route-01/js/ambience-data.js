@@ -5,6 +5,9 @@
  * A place with `carol` also lets a carol be heard from afar (muffled), as
  * from a Christmas fair or a square down the street; the other places have
  * no music, only their own sounds.
+ *
+ * The levels are relative to the running train (1 = just as loud): a place
+ * is a soft background, never louder than the journey.
  */
 
 import { CLOPOTEI } from '../../shared/js/audio/songs.js';
@@ -19,19 +22,19 @@ import { CLOPOTEI } from '../../shared/js/audio/songs.js';
 /** @type {Record<string, WinterPlace>} */
 export const WINTER_PLACES = {
   /** a station platform: people, footsteps, announcements far away */
-  station: { layers: [{ sound: 'station-platform', level: 0.3 }, { sound: 'station-crowd', level: 0.1 }] },
+  station: { layers: [{ sound: 'station-platform', level: 0.8 }, { sound: 'station-crowd', level: 0.4 }] },
   /** a town square on Christmas Eve, with a carol coming from the Christmas market */
-  town: { layers: [{ sound: 'town-square', level: 0.3 }], carol: true },
+  town: { layers: [{ sound: 'town-square', level: 0.85 }], carol: true },
   /** a quiet small town (no market) */
-  street: { layers: [{ sound: 'town-square', level: 0.22 }] },
+  street: { layers: [{ sound: 'town-square', level: 0.6 }] },
   /** the enchanted Christmas fair: a happy crowd and "Clopoței" from the stalls */
-  fair: { layers: [{ sound: 'station-crowd', level: 0.3 }], carol: true, song: CLOPOTEI },
+  fair: { layers: [{ sound: 'station-crowd', level: 0.9 }], carol: true, song: CLOPOTEI },
   /** a fortress at night: the wind on the walls */
-  fortress: { layers: [{ sound: 'winter-wind', level: 0.3 }] },
+  fortress: { layers: [{ sound: 'winter-wind', level: 0.8 }] },
   /** a railway yard at night: a freight train shunting far away, the wind */
-  yard: { layers: [{ sound: 'freight-train', level: 0.16 }, { sound: 'winter-wind', level: 0.12 }] },
+  yard: { layers: [{ sound: 'freight-train', level: 0.7 }, { sound: 'winter-wind', level: 0.4 }] },
   /** the forest in the mountains */
-  forest: { layers: [{ sound: 'winter-wind', level: 0.25 }] },
+  forest: { layers: [{ sound: 'winter-wind', level: 0.8 }] },
   /** a monastery in the hills: almost silent, a light wind */
-  monastery: { layers: [{ sound: 'winter-wind', level: 0.1 }] },
+  monastery: { layers: [{ sound: 'winter-wind', level: 0.35 }] },
 };

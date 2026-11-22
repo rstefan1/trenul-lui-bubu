@@ -63,7 +63,7 @@ import { AudioEngine, setupSoundButton } from '../../shared/js/audio/audio.js';
 import { balanceSounds, chimeSound, clickSound, finaleSound, playSound } from '../../shared/js/audio/effects.js';
 import { Ambience } from '../../shared/js/audio/ambience.js';
 import { Music } from '../../shared/js/audio/music.js';
-import { RailSound } from '../../shared/js/audio/rail-sound.js';
+import { RAIL_VOLUME, RailSound } from '../../shared/js/audio/rail-sound.js';
 import { WindSound } from '../../shared/js/audio/wind-sound.js';
 import { CLOPOTEI, CRACIUN_FERICIT, FA_LA_LA, NOAPTE_DE_VIS, O_BRAD_FRUMOS } from '../../shared/js/audio/songs.js';
 import { setupFullscreen, showOverlay } from '../../shared/js/ui/screens.js';
@@ -148,7 +148,8 @@ document.addEventListener('click', e => {
   if (e.target instanceof Element && e.target.closest('button')) clickSound(audio);
 });
 const music = new Music(audio);
-const ambience = new Ambience(audio);
+// the places are matched to the running train: never louder than the journey
+const ambience = new Ambience(audio, { sound: 'train', volume: RAIL_VOLUME });
 /** The carols the stations take turns with, so the same one does not come back too soon. */
 const STATION_SONGS = [O_BRAD_FRUMOS, CLOPOTEI, NOAPTE_DE_VIS, FA_LA_LA, CRACIUN_FERICIT];
 /** When the train last reached a station, and how long the carol waits for the chime (ms). */
