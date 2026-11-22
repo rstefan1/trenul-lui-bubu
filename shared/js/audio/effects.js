@@ -230,8 +230,21 @@ const SOUNDS = {
   },
   /** A photo: the camera's double click. */
   shutter(ctx, out, t) {
-    noisePuff(ctx, out, { t, length: 0.03, level: 0.14, type: 'bandpass', from: 2500, q: 2 });
-    noisePuff(ctx, out, { t: t + 0.08, length: 0.04, level: 0.12, type: 'bandpass', from: 1800, q: 2 });
+    // "click" (the shutter opens, the mirror slaps up) … "clack" (it closes)
+    for (const [at, level, freq] of [[0, 0.5, 3200], [0.09, 0.4, 2400]]) {
+      noisePuff(ctx, out, { t: t + at, length: 0.025, level, type: 'highpass', from: freq, attack: 0.001 });
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(220, t + at);
+      osc.frequency.exponentialRampToValueAtTime(90, t + at + 0.05);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t + at);
+      g.gain.exponentialRampToValueAtTime(level * 0.6, t + at + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + at + 0.06);
+      osc.connect(g).connect(out);
+      osc.start(t + at);
+      osc.stop(t + at + 0.08);
+    }
   },
   /** A bird fed: two or three quick chirps. */
   chirp(ctx, out, t) {
