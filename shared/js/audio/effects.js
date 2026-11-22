@@ -66,19 +66,19 @@ const MIX = {
   // things around the train
   doorsOpen: -9, doorsClose: -9, gust: -6, plough: -4,
   // the big moments
-  success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 3,
+  success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 6,
   // the sounds of places (heard now and then, far away, under everything)
   distantBell: -14, toaca: -15, birdsong: -16,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
-const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, churchBell: 2.5, star: 0.5 };
+const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, churchBell: 3.5, star: 0.5 };
 /** Least time between two of the same sound (rubbing snow would make dozens a second). */
 const MIN_GAP = { crunch: 0.11, tock: 0.04, brush: 0.15 };
 /** Random variation of every sound: pitch (± share) and volume (± dB). */
 const VARY_PITCH = 0.04;
 const VARY_DB = 1.5;
 /** Effects whose pitch must not vary (melodies that go with the music, or notes in a scale). */
-const FIXED_PITCH = new Set(['success', 'chapterEnd', 'finale', 'chime', 'collect', 'star', 'hop']);
+const FIXED_PITCH = new Set(['success', 'chapterEnd', 'finale', 'chime', 'collect', 'star', 'hop', 'churchBell', 'distantBell']);
 
 /** @type {WeakMap<BaseAudioContext, AudioBuffer>} one second of white noise per context */
 const noiseBuffers = new WeakMap();
@@ -298,7 +298,7 @@ const SOUNDS = {
   },
   /** The big bell of a monastery's bell tower. */
   churchBell(ctx, out, t) {
-    churchBell(ctx, out, fq('G3'), t);
+    churchBell(ctx, out, fq('E3'), t);
   },
   /** A small bell: the lantern's signal is seen. */
   ding(ctx, out, t) {
