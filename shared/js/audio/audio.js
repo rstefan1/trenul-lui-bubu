@@ -1,14 +1,15 @@
 /**
  * @file The game's sound engine: one Web Audio context, a master volume and
- * the "no sound" switch.
+ * the sound switches (no music, no sound at all).
  *
  * The sounds are recordings (see shared/assets/sounds): the engine loads
  * them once, then plays them through a master volume. Browsers only allow
  * sound after the player has touched the page, so the context starts on the
- * first touch, click or key. Muting is remembered on the device.
+ * first touch, click or key. The switches are remembered on the device.
  */
 
 const MUTE_KEY = 'trenul-lui-bubu/muted';
+const MUSIC_KEY = 'trenul-lui-bubu/music-off';
 
 export class AudioEngine {
   constructor() {
@@ -16,7 +17,9 @@ export class AudioEngine {
     this.ctx = null;
     /** @type {GainNode | null} */
     this.master = null;
-    this.muted = readMuted();
+    this.muted = readFlag(MUTE_KEY);
+    /** The music is off (the other sounds can still be on). */
+    this.musicOff = readFlag(MUSIC_KEY);
     /** @type {Map<string, {url: string, normalize: boolean}>} name → file of every sound */
     this.files = new Map();
     /** @type {Map<string, AudioBuffer>} sounds ready to play */
@@ -115,27 +118,47 @@ export class AudioEngine {
   }
 
   /**
+   * Turns the music off or on (and remembers the choice).
+   * @param {boolean} off
+   */
+  setMusicOff(off) {
+    this.musicOff = off;
+    writeFlag(MUSIC_KEY, off);
+  }
+
+  /**
    * Turns all sound off or on (and remembers the choice).
    * @param {boolean} muted
    */
   setMuted(muted) {
     this.muted = muted;
-    try {
-      localStorage.setItem(MUTE_KEY, muted ? '1' : '0');
-    } catch {
-      // private mode: the choice simply is not remembered
-    }
+    writeFlag(MUTE_KEY, muted);
     if (this.master && this.ctx) this.master.gain.setTargetAtTime(muted ? 0 : 0.8, this.ctx.currentTime, 0.05);
     if (this.ctx && !muted && this.ctx.state === 'suspended') this.ctx.resume();
   }
 }
 
-/** @returns {boolean} */
-function readMuted() {
+/**
+ * @param {string} key
+ * @returns {boolean}
+ */
+function readFlag(key) {
   try {
-    return localStorage.getItem(MUTE_KEY) === '1';
+    return localStorage.getItem(key) === '1';
   } catch {
     return false;
+  }
+}
+
+/**
+ * @param {string} key
+ * @param {boolean} on
+ */
+function writeFlag(key, on) {
+  try {
+    localStorage.setItem(key, on ? '1' : '0');
+  } catch {
+    // private mode: the choice simply is not remembered
   }
 }
 
@@ -158,20 +181,29 @@ function normalizeBuffer(buffer) {
 }
 
 /**
- * Connects the "no sound" button of the heads-up display.
+ * Connects the sound button of the heads-up display. It has three states,
+ * one after the other: everything on (🔊), no music (🔈: the train, the
+ * whistle and the brakes are still heard), no sound at all (🔇).
  * @param {AudioEngine} engine
  * @param {HTMLButtonElement} button
  */
 export function setupSoundButton(engine, button) {
   const refresh = () => {
-    button.textContent = engine.muted ? '🔇' : '🔊';
-    const label = engine.muted ? 'Pornește sunetul' : 'Fără sunet';
+    const state = engine.muted ? 'off' : engine.musicOff ? 'nomusic' : 'on';
+    button.textContent = { on: '🔊', nomusic: '🔈', off: '🔇' }[state];
+    const label = { on: 'Fără muzică', nomusic: 'Fără sunet', off: 'Pornește sunetul și muzica' }[state];
     button.title = label;
     button.setAttribute('aria-label', label);
-    button.setAttribute('aria-pressed', String(engine.muted));
   };
   button.addEventListener('click', () => {
-    engine.setMuted(!engine.muted);
+    if (engine.muted) {
+      engine.setMuted(false);
+      engine.setMusicOff(false);
+    } else if (engine.musicOff) {
+      engine.setMuted(true);
+    } else {
+      engine.setMusicOff(true);
+    }
     refresh();
   });
   refresh();
