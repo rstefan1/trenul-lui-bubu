@@ -25,6 +25,12 @@ const ANNOUNCE_SECONDS = 6;
 const BRIEFING_DELAY = 0.6;
 /** Seconds the result stays on screen. */
 const RESULT_SECONDS = 3.6;
+/**
+ * Seconds after the result appears when star `i` (1..3) pops in, leaving a
+ * moment for the "mission won" sound first.
+ * @param {number} i
+ */
+export const starDelay = i => 0.3 + 0.25 * i;
 
 export class MissionHud {
   /** @param {import('../game/state.js').GameState} state */
@@ -181,7 +187,7 @@ export class MissionHud {
       const s = document.createElement('span');
       s.className = i <= stars ? 'star is-won' : 'star';
       s.textContent = '★';
-      s.style.animationDelay = `${0.15 * i}s`;
+      s.style.animationDelay = `${starDelay(i)}s`;
       return s;
     }));
     resultText.textContent = text;
