@@ -28,13 +28,16 @@ export function loadBubu(url) {
  * @param {number} y
  * @param {number} size   width and height
  * @param {number} [tilt=0]  radians
+ * @param {number} [squash=0]  > 0 flatter and wider, < 0 taller and narrower (she stays on the same base)
  */
-export function drawBubu(c, x, y, size, tilt = 0) {
+export function drawBubu(c, x, y, size, tilt = 0, squash = 0) {
   c.save();
   c.translate(x, y);
   if (tilt) c.rotate(tilt);
   if (image.complete && image.naturalWidth) {
-    c.drawImage(image, -size / 2, -size / 2, size, size);
+    const w = size * (1 + squash);
+    const h = size * (1 - squash);
+    c.drawImage(image, -w / 2, size / 2 - h, w, h);
   } else {
     // fallback while loading: a simple red ladybug
     c.fillStyle = '#e53935';
