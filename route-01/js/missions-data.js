@@ -228,7 +228,7 @@ export const WINTER_MISSIONS = {
         title: 'Plecarea din Timișoara',
         text: 'Înainte de drum, completează biletul de tren al lui Bubu.',
         ticket: {
-          train: 'IR 1745',
+          train: 'IR 1765',
           from: 'Timișoara Nord',
           to: 'Putna',
           change: 'Suceava',
