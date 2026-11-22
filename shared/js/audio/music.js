@@ -8,6 +8,10 @@
  * one from its beginning. What plays, and how loud, is decided every frame
  * by the game (carols on the menus, silence on the way).
  *
+ * When the music falls silent (the train sets off, the music is switched
+ * off), the song stops being played once it has faded out: no notes are
+ * made for nobody. The next song starts from its beginning.
+ *
  * A song can also be heard "from afar" — from a Christmas fair or a town
  * square down the street: it is then muffled (the high notes are lost on
  * the way, as in real life) and comes in more slowly.
@@ -35,6 +39,8 @@ export class Music {
     /** @type {BiquadFilterNode | null} muffles the music heard from afar */
     this.tone = null;
     this.far = false;
+    /** Audio time when the current song will have faded out (null while it is heard). */
+    this.silentAt = /** @type {number | null} */ (null);
   }
 
   /**
@@ -54,13 +60,32 @@ export class Music {
       this.far = far;
       this.output().frequency.setTargetAtTime(far ? FAR_CUTOFF : 20000, ctx.currentTime, 0.3);
     }
-    if (song && (!this.current || this.current.song !== song)) this.start(song);
+    // a song is started only to be heard (never silently)
+    if (target > 0 && song && (!this.current || this.current.song !== song)) this.start(song);
     if (!this.current) return;
     if (Math.abs(target - this.level) > 0.001) {
       this.level = target;
-      this.current.gain.gain.setTargetAtTime(target, ctx.currentTime, (far ? FAR_FADE : FADE) / 3);
+      const fade = far ? FAR_FADE : FADE;
+      this.current.gain.gain.setTargetAtTime(target, ctx.currentTime, fade / 3);
+      // setTargetAtTime is practically silent after about five time constants
+      this.silentAt = target > 0 ? null : ctx.currentTime + fade * 5 / 3;
+    }
+    if (this.silentAt !== null && ctx.currentTime >= this.silentAt) {
+      this.stop();
+      return;
     }
     this.schedule();
+  }
+
+  /**
+   * Stops the current song (it has faded out already).
+   * @private
+   */
+  stop() {
+    this.current?.gain.disconnect();
+    this.current = null;
+    this.silentAt = null;
+    this.level = 0;
   }
 
   /**
@@ -94,6 +119,7 @@ export class Music {
     gain.connect(this.output());
     this.current = { song, gain, index: 0, time: ctx.currentTime + 0.1, beat: 0 };
     this.level = 0;
+    this.silentAt = null;
   }
 
   /** @private Schedules the notes that start within the next moment. */
