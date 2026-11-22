@@ -34,7 +34,7 @@ export class Music {
    */
   update(song, level) {
     const e = this.engine;
-    if (!e.ctx || !e.master || e.ctx.state !== 'running') return;
+    if (!e.ctx || !e.musicBus || e.ctx.state !== 'running') return;
     const ctx = e.ctx;
     const audible = e.ready && !e.musicOff;
     const target = audible && song ? level : 0;
@@ -60,7 +60,7 @@ export class Music {
     }
     const gain = ctx.createGain();
     gain.gain.value = 0;
-    gain.connect(/** @type {GainNode} */ (this.engine.master));
+    gain.connect(/** @type {GainNode} */ (this.engine.musicBus));
     this.current = { song, gain, index: 0, time: ctx.currentTime + 0.1, beat: 0 };
     this.level = 0;
   }
