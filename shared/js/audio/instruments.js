@@ -78,9 +78,17 @@ export function handBell(ctx, out, f, t, level = 0.25) {
 }
 
 /**
- * A big church bell: the deep hum, the strike note and the overtones of a
- * real bell (with its minor third, which gives the bell its typical
- * sound), the low ones ringing for many seconds.
+ * A big church bell, built the way a real bronze bell sounds:
+ *
+ *   - its partials: the deep hum (an octave below the strike note), the
+ *     prime, the minor third that gives every church bell its colour, the
+ *     fifth, the nominal (an octave above, the note one "hears" at the
+ *     strike) and the higher ones; the low ones ring for many seconds, the
+ *     high ones die away quickly, so the bell's colour darkens as it rings;
+ *   - every partial is a pair of tones a hair apart (a real bell is never
+ *     perfectly round), so the sound slowly "beats" — the warble of a bell;
+ *   - the clapper's strike: a short, bright metallic clang;
+ *   - the echo of the hills around it, coming back softer and darker.
  * @param {BaseAudioContext} ctx
  * @param {AudioNode} out
  * @param {number} f  frequency of the strike note ("prime")
@@ -91,31 +99,58 @@ export function churchBell(ctx, out, f, t, level = 0.35) {
   const g = ctx.createGain();
   g.gain.value = level;
   g.connect(out);
-  // [ratio to the prime, amount, seconds to fade]
-  const partials = [[0.5, 0.6, 7], [1, 0.8, 5], [1.19, 0.45, 4], [1.5, 0.3, 3], [2, 0.7, 3.5], [2.52, 0.25, 2], [3, 0.2, 1.6], [4.2, 0.12, 0.9]];
-  for (const [ratio, amount, decay] of partials) {
-    const osc = ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = f * ratio;
-    const pg = ctx.createGain();
-    pg.gain.setValueAtTime(0.0001, t);
-    pg.gain.exponentialRampToValueAtTime(amount, t + 0.006);
-    pg.gain.exponentialRampToValueAtTime(0.0001, t + decay);
-    osc.connect(pg).connect(g);
-    osc.start(t);
-    osc.stop(t + decay + 0.05);
+  // [ratio to the prime, amount, seconds to fade, beat (Hz) between the pair]
+  const partials = [
+    [0.5, 0.7, 9, 0.6], [1, 0.75, 6.5, 0.9], [1.19, 0.5, 5, 1.3], [1.5, 0.28, 3.5, 1.1],
+    [2, 0.8, 4, 1.6], [2.51, 0.3, 2.5, 2.1], [3, 0.25, 2, 2.4], [4.08, 0.16, 1.2, 3],
+    [5.43, 0.08, 0.7, 3.5], [6.83, 0.05, 0.4, 4],
+  ];
+  for (const [ratio, amount, decay, beat] of partials) {
+    for (const side of [-0.5, 0.5]) {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = f * ratio + side * beat;
+      const pg = ctx.createGain();
+      pg.gain.setValueAtTime(0.0001, t);
+      pg.gain.exponentialRampToValueAtTime(amount * 0.5, t + 0.004);
+      pg.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+      osc.connect(pg).connect(g);
+      osc.start(t);
+      osc.stop(t + decay + 0.05);
+    }
   }
-  // the clapper's strike: a short metallic clang
-  const clang = ctx.createOscillator();
-  clang.type = 'triangle';
-  clang.frequency.value = f * 5.3;
-  const cg = ctx.createGain();
-  cg.gain.setValueAtTime(0.0001, t);
-  cg.gain.exponentialRampToValueAtTime(0.15, t + 0.002);
-  cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-  clang.connect(cg).connect(g);
-  clang.start(t);
-  clang.stop(t + 0.2);
+  // the clapper's strike: a bright clang of metal, over in a moment
+  const length = Math.round(ctx.sampleRate * 0.12);
+  const noise = ctx.createBuffer(1, length, ctx.sampleRate);
+  const d = noise.getChannelData(0);
+  for (let i = 0; i < length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / length) ** 3;
+  const strike = ctx.createBufferSource();
+  strike.buffer = noise;
+  const ring = ctx.createBiquadFilter();
+  ring.type = 'bandpass';
+  ring.frequency.value = f * 8;
+  ring.Q.value = 6;
+  const sg = ctx.createGain();
+  sg.gain.value = 0.5;
+  strike.connect(ring).connect(sg).connect(g);
+  strike.start(t);
+  // the hills answer: a soft, darker echo that fades
+  const echo = ctx.createDelay(1);
+  echo.delayTime.value = 0.42;
+  const back = ctx.createGain();
+  back.gain.value = 0.32;
+  const dark = ctx.createBiquadFilter();
+  dark.type = 'lowpass';
+  dark.frequency.value = 1500;
+  g.connect(echo).connect(dark).connect(back).connect(echo);
+  const wet = ctx.createGain();
+  wet.gain.value = 0.5;
+  back.connect(wet).connect(out);
+  // the echo loop feeds itself: undo it once the bell has died away
+  setTimeout(() => {
+    g.disconnect();
+    back.disconnect();
+  }, (t - ctx.currentTime + 12) * 1000);
 }
 
 /**
