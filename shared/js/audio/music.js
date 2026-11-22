@@ -9,25 +9,12 @@
  * by the game (carols on the menus and at stations, silence on the way).
  */
 
+import { freqOf, musicBox } from './instruments.js';
+
 /** How far ahead notes are scheduled (seconds). */
 const LOOKAHEAD = 0.35;
 /** Seconds to fade between songs or to a new volume. */
 const FADE = 1.2;
-
-/** Semitones of the note names. */
-const STEPS = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-
-/**
- * Frequency of a note name like "C5" or "F#4".
- * @param {string} name
- */
-function freqOf(name) {
-  const m = /^([A-G])(#|b)?(-?\d)$/.exec(name);
-  if (!m) return 440;
-  const semis = STEPS[/** @type {keyof typeof STEPS} */ (m[1])] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
-  const midi = (Number(m[3]) + 1) * 12 + semis;
-  return 440 * 2 ** ((midi - 69) / 12);
-}
 
 export class Music {
   /** @param {import('./audio.js').AudioEngine} engine */
@@ -111,7 +98,7 @@ export class Music {
   }
 
   /**
-   * One note of the music box: a bright, bell-like tone that rings and fades.
+   * One note of the music box.
    * @private
    * @param {number} f
    * @param {number} t
@@ -119,23 +106,7 @@ export class Music {
    * @param {number} length  seconds the note is meant to last
    */
   bell(f, t, out, length) {
-    const ctx = /** @type {AudioContext} */ (this.engine.ctx);
-    const decay = Math.max(0.6, Math.min(2.2, length * 2.2));
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.22, t + 0.004);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
-    g.connect(out);
-    for (const [ratio, amount] of [[1, 1], [2, 0.32], [3, 0.1], [4.16, 0.06]]) {
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = f * ratio;
-      const pg = ctx.createGain();
-      pg.gain.value = amount;
-      osc.connect(pg).connect(g);
-      osc.start(t);
-      osc.stop(t + decay + 0.05);
-    }
+    musicBox(/** @type {AudioContext} */ (this.engine.ctx), out, f, t, length);
   }
 
   /**

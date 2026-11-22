@@ -1,0 +1,99 @@
+/**
+ * @file The game's little instruments, synthesised: the music box that
+ * plays the carols (and the notes of the missions), and a hand bell.
+ * Both are made of a few sine partials that ring and fade, so they sound
+ * like small metal bells and fit together.
+ */
+
+/** Semitones of the note names. */
+const STEPS = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+/**
+ * Frequency of a note name like "C5" or "F#4".
+ * @param {string} name
+ */
+export function freqOf(name) {
+  const m = /^([A-G])(#|b)?(-?\d)$/.exec(name);
+  if (!m) return 440;
+  const semis = STEPS[/** @type {keyof typeof STEPS} */ (m[1])] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
+  const midi = (Number(m[3]) + 1) * 12 + semis;
+  return 440 * 2 ** ((midi - 69) / 12);
+}
+
+/**
+ * One note of the music box: a bright, bell-like tone that rings and fades.
+ * @param {BaseAudioContext} ctx
+ * @param {AudioNode} out
+ * @param {number} f       frequency
+ * @param {number} t       start time
+ * @param {number} length  seconds the note is meant to last (longer notes ring longer)
+ * @param {number} [level=0.22]
+ */
+export function musicBox(ctx, out, f, t, length, level = 0.22) {
+  const decay = Math.max(0.6, Math.min(2.2, length * 2.2));
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(level, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+  g.connect(out);
+  for (const [ratio, amount] of [[1, 1], [2, 0.32], [3, 0.1], [4.16, 0.06]]) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = f * ratio;
+    const pg = ctx.createGain();
+    pg.gain.value = amount;
+    osc.connect(pg).connect(g);
+    osc.start(t);
+    osc.stop(t + decay + 0.05);
+  }
+}
+
+/**
+ * A hand bell: a clear strike with the slightly "out of tune" overtones of
+ * a real bell, ringing for a while.
+ * @param {BaseAudioContext} ctx
+ * @param {AudioNode} out
+ * @param {number} f  frequency of the strike note
+ * @param {number} t
+ * @param {number} [level=0.25]
+ */
+export function handBell(ctx, out, f, t, level = 0.25) {
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(level, t + 0.003);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+  g.connect(out);
+  for (const [ratio, amount, decay] of [[1, 1, 2.4], [2.0, 0.5, 1.6], [2.76, 0.35, 1.1], [5.4, 0.18, 0.6], [8.9, 0.08, 0.3]]) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = f * ratio;
+    const pg = ctx.createGain();
+    pg.gain.setValueAtTime(amount, t);
+    pg.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+    osc.connect(pg).connect(g);
+    osc.start(t);
+    osc.stop(t + decay + 0.05);
+  }
+}
+
+/**
+ * Plays a note on the music box right away (for the missions).
+ * @param {import('./audio.js').AudioEngine | undefined} engine
+ * @param {string} note       e.g. "E5"
+ * @param {{length?: number, level?: number}} [o]
+ */
+export function playNote(engine, note, o = {}) {
+  if (!engine?.ready || !engine.ctx || !engine.master) return;
+  musicBox(engine.ctx, engine.master, freqOf(note), engine.ctx.currentTime + 0.005, o.length ?? 0.5, o.level ?? 0.3);
+}
+
+/**
+ * Rings a hand bell right away (for the missions).
+ * @param {import('./audio.js').AudioEngine | undefined} engine
+ * @param {string} note
+ * @param {number} [level]
+ */
+export function ringBell(engine, note, level) {
+  if (!engine?.ready || !engine.ctx || !engine.master) return;
+  handBell(engine.ctx, engine.master, freqOf(note), engine.ctx.currentTime + 0.005, level);
+}
