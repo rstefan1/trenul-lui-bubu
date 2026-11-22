@@ -315,8 +315,7 @@ if (testMode) {
 } else {
   const campaign = new Campaign({
     journey, director, world, state, hud, missionHud,
-    // the key keeps its first name, so progress saved before the folder was renamed is not lost
-    store: new SaveStore('trenul-lui-bubu/winter'),
+    store: new SaveStore('trenul-lui-bubu/route-01'),
     book: new ChapterBook(route, WINTER_CHAPTERS, WINTER_MISSIONS),
     screens: new ChapterScreens(audio),
     teacher: params.has('profesor'),

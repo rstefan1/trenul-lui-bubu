@@ -37,7 +37,7 @@ export const ROUTES = [
     blurb: 'În noaptea de Ajun, Bubu traversează țara cu trenul, prin Transilvania și munții Bucovinei, ca să ajungă la Putna în dimineața de Crăciun.',
     chapters: 4,
     stations: 14,
-    saveKey: 'trenul-lui-bubu/winter',
+    saveKey: 'trenul-lui-bubu/route-01',
     season: 'winter',
   },
 ];
