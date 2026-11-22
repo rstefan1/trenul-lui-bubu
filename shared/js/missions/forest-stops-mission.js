@@ -22,6 +22,7 @@ import { fillRoundRect, glow } from '../gfx/shapes.js';
 import { TRACK_Y } from '../world/track.js';
 import { el } from '../ui/dom.js';
 import { Mission } from './mission.js';
+import { leave } from '../ui/panel.js';
 
 /** Cruising speed between the halts (stage units/s). */
 const DRIVE_SPEED = 400;
@@ -360,7 +361,7 @@ export class ForestStopsMission extends Mission {
   dispose() {
     this.ctx.world.panTarget = 0;
     if (this.controls) this.ctx.journey.releaseControl();
-    this.button?.remove();
+    leave(this.button);
     window.removeEventListener('keydown', this.onKey);
   }
 }

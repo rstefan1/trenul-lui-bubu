@@ -13,6 +13,7 @@
 import { approach } from '../core/math.js';
 import { el } from '../ui/dom.js';
 import { Mission } from './mission.js';
+import { showPanel } from '../ui/panel.js';
 
 /** Seconds of the fade between the world and the scene. */
 const FADE = 0.5;
@@ -88,11 +89,7 @@ export class SceneMission extends Mission {
    * @param {boolean} [bottom=true]  at the bottom (the scene stays visible) or in the middle
    */
   setPanel(node, bottom = true) {
-    const root = this.ctx.panel;
-    root.replaceChildren();
-    root.hidden = !node;
-    root.classList.toggle('is-bottom', !!node && bottom);
-    if (node) root.append(node);
+    showPanel(this.ctx.panel, node, { bottom });
   }
 
   dispose() {

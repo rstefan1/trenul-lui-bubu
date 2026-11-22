@@ -27,6 +27,7 @@ import { fillCircle, fillRoundRect, glow } from '../gfx/shapes.js';
 import { drawBubu } from '../train/bubu.js';
 import { el } from '../ui/dom.js';
 import { SceneMission } from './scene-mission.js';
+import { leave } from '../ui/panel.js';
 
 /** Seconds of Bubu's walk to the train. */
 const WALK = 1.6;
@@ -170,7 +171,7 @@ export class ChangeTrainMission extends SceneMission {
     this.updateFade(dt);
     if (this.step === 'walk' && this.stepT >= WALK) {
       this.step = 'done';
-      this.ticket?.remove();
+      leave(this.ticket);
       this.ctx.journey.boarded = this.config.train;
       const pl = this.platforms[this.target.platform - 1];
       this.particles.burst((pl.x0 + pl.x1) / 2, pl.y - 80, SPARKS, 30, 260);
@@ -314,7 +315,7 @@ export class ChangeTrainMission extends SceneMission {
 
   dispose() {
     super.dispose();
-    this.ticket?.remove();
+    leave(this.ticket);
   }
 }
 

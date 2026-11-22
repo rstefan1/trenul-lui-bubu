@@ -20,6 +20,7 @@ import { TRACK_Y } from '../world/track.js';
 import { el } from '../ui/dom.js';
 import { Mission } from './mission.js';
 import { TrainPace } from './pace.js';
+import { leave } from '../ui/panel.js';
 
 /** Seconds the whistle lasts on screen. */
 const WHISTLE_TIME = 1.4;
@@ -198,7 +199,7 @@ export class WhistleMission extends Mission {
 
   dispose() {
     this.pace?.release();
-    this.button?.remove();
+    leave(this.button);
     window.removeEventListener('keydown', this.onKey);
   }
 }

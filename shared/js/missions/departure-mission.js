@@ -22,6 +22,7 @@ import { drawBubu } from '../train/bubu.js';
 import { TRACK_Y } from '../world/track.js';
 import { el } from '../ui/dom.js';
 import { Mission, starsForMistakes } from './mission.js';
+import { leave, showPanel } from '../ui/panel.js';
 
 /**
  * @typedef {object} TicketData
@@ -299,10 +300,7 @@ export class DepartureMission extends Mission {
    * @param {HTMLElement | null} node
    */
   setPanel(node) {
-    const root = this.ctx.panel;
-    root.replaceChildren();
-    root.hidden = !node;
-    if (node) root.append(node);
+    showPanel(this.ctx.panel, node);
   }
 
   /** @private @param {number} mistakes */
@@ -315,7 +313,7 @@ export class DepartureMission extends Mission {
 
   dispose() {
     this.setPanel(null);
-    this.chip?.remove();
+    leave(this.chip);
     this.ctx.hud.hideAnnouncement();
   }
 }

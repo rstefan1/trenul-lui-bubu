@@ -26,6 +26,7 @@ import { el } from '../ui/dom.js';
 import { ringBell } from '../audio/instruments.js';
 import { Mission } from './mission.js';
 import { drawGlassBox } from '../gfx/ui-style.js';
+import { leave } from '../ui/panel.js';
 
 /** Train speed (world units/s) → the km/h shown to the child. */
 const KMH = 0.2;
@@ -392,7 +393,7 @@ export class BellsMission extends Mission {
 
   dispose() {
     this.releaseControls();
-    this.gearbox?.remove();
+    leave(this.gearbox);
     window.removeEventListener('keydown', this.onKey);
   }
 }

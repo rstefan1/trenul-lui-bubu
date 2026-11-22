@@ -21,6 +21,7 @@ import { createOffscreen } from '../core/canvas-cache.js';
 import { LANDMARKS, PICTURE_SIZE } from '../gfx/landmarks.js';
 import { el } from '../ui/dom.js';
 import { Mission } from './mission.js';
+import { showPanel } from '../ui/panel.js';
 
 /**
  * @typedef {import('./mission.js').MissionConfig & {
@@ -141,10 +142,7 @@ export class RotatePuzzleMission extends Mission {
    * @param {HTMLElement | null} node
    */
   setPanel(node) {
-    const root = this.ctx.panel;
-    root.replaceChildren();
-    root.hidden = !node;
-    if (node) root.append(node);
+    showPanel(this.ctx.panel, node);
   }
 
   dispose() {
