@@ -35,7 +35,7 @@ export const WINTER_MISSIONS = {
         houses: 6,
         empty: 2,
         spare: 2,
-        pace: { far: 520, brake: 310 },
+        pace: { far: 520, brake: 450 },
       },
     },
     {
@@ -74,7 +74,7 @@ export const WINTER_MISSIONS = {
         text: 'E noapte. În unele case, câte un copil stă la geam și așteaptă trenul lui Bubu. Atinge casele unde vezi un copil la fereastră, ca Bubu să-i aprindă o lumânare de Crăciun.',
         houses: 6,
         empty: 2,
-        pace: { far: 520, slow: 110, brake: 310, enter: 0.6 },
+        pace: { far: 520, slow: 110, brake: 450, near: { ahead: 60, behind: 420 } },
       },
     },
     {
@@ -182,7 +182,7 @@ export const WINTER_MISSIONS = {
         title: 'Fluierul trenului',
         text: 'În dimineața de Crăciun, copiii din Bucovina au ieșit lângă linie să vadă trenul. Când treci pe lângă ei, apasă „Fluieră!” și trenul le va fluiera de Crăciun!',
         groups: 3,
-        pace: { far: 540, slow: 150, brake: 310, enter: 0.6 },
+        pace: { far: 540, slow: 150, brake: 450, near: { ahead: 60, behind: 420 } },
       },
     },
 
