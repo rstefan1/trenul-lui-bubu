@@ -22,12 +22,13 @@ import { CLOPOTEI } from '../../shared/js/audio/songs.js';
 /**
  * Life around a monastery on Christmas morning: horse sleighs going by
  * almost all the time (each one crosses from one side to the other in
- * about 8 s, then a short pause), and people walking past in fresh snow.
+ * about 8 s, then a short pause), and people walking past in fresh snow
+ * every few seconds.
  * @type {import('../../shared/js/audio/ambience.js').AmbienceEvent[]}
  */
 const MONASTERY_LIFE = [
   { sound: 'sleigh', first: [0.5, 1.5], every: [9.5, 13], spread: 0 },
-  { sound: 'snowSteps', first: [3, 5], every: [7, 13], spread: 0.7 },
+  { sound: 'snowSteps', first: [2, 3], every: [3, 5], spread: 0.7 },
 ];
 /** @type {import('../../shared/js/audio/ambience.js').AmbienceEvent} the birds of the morning (Putna) */
 const BIRDS = { sound: 'birdsong', first: [1, 3], every: [1.5, 5], spread: 0.8 };
@@ -50,18 +51,13 @@ export const WINTER_PLACES = {
   yard: { layers: [{ sound: 'freight-train', level: 0.7 }] },
   /** the forest in the mountains */
   forest: { layers: [{ sound: 'winter-wind', level: 0.8 }] },
-  /** Voroneț before sunrise: a light wind, sleighs going by, people walking in the snow, a bell far away */
+  /** Voroneț before sunrise: a light wind, sleighs going by, people walking in the snow */
   monastery: {
     layers: [{ sound: 'winter-wind', level: 0.35 }],
-    events: [...MONASTERY_LIFE, { sound: 'distantBell', first: [6, 8], every: [22, 35] }],
+    events: MONASTERY_LIFE,
   },
-  /** Putna on Christmas morning: the birds wake up; sleighs, steps in the snow, a bell far away */
+  /** Putna on Christmas morning: the birds wake up; sleighs and steps in the snow */
   putna: {
-    layers: [{ sound: 'winter-wind', level: 0.15 }],
-    events: [...MONASTERY_LIFE, BIRDS, { sound: 'distantBell', first: [6, 8], every: [22, 35] }],
-  },
-  /** Putna while the child rings the big bell: no other bell far away, to not confuse it */
-  putnaBell: {
     layers: [{ sound: 'winter-wind', level: 0.15 }],
     events: [...MONASTERY_LIFE, BIRDS],
   },
