@@ -113,6 +113,7 @@ export class ConnectStarsMission extends Mission {
       if (this.joined === this.points.length) this.finishShape();
     } else if (best > this.joined) {
       this.mistakes += 1;
+      this.oops();
       this.wobble[best] = 0.4;
     }
   }

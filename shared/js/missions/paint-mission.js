@@ -143,6 +143,7 @@ export class PaintMission extends SceneMission {
         if (this.painted.size === PARTS.length) this.doneT = 0;
       } else {
         this.mistakes += 1;
+        this.oops();
         this.shake.set(part.id, 0.45);
       }
       return;

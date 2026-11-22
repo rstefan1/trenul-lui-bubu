@@ -128,6 +128,7 @@ export class ChangeTrainMission extends SceneMission {
         setTimeout(() => this.toPlatforms(), 1600);
       } else {
         this.mistakes += 1;
+        this.oops();
         this.shakeRow = i;
         this.shakeT = 0.45;
         this.say = { text: `Acest tren merge la ${d.to}. Bubu merge la ${this.config.destination}.`, t: 0 };
@@ -142,6 +143,7 @@ export class ChangeTrainMission extends SceneMission {
           this.ctx.hud.clearInstructions();
         } else {
           this.mistakes += 1;
+          this.oops();
           this.say = { text: `Aceasta e linia ${pl.number}. Pe tabelă scria linia ${this.target.platform}.`, t: 0 };
         }
         return;

@@ -97,6 +97,7 @@ export class SnowflakeMission extends Mission {
     } else {
       best.wobble = 0.5;
       this.mistakes += 1;
+      this.oops();
     }
   }
 

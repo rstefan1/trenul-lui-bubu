@@ -109,6 +109,7 @@ export class BirdsMission extends Mission {
         this.ctx.hud.setCounter('🐦', this.fed, this.hungryCount);
       } else if (f.full) {
         this.mistakes += 1;
+        this.oops();
       }
       return;
     }

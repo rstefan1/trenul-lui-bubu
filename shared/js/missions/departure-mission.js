@@ -180,6 +180,7 @@ export class DepartureMission extends Mission {
         }
       } else {
         this.mistakes += 1;
+        this.oops();
         node.classList.remove('is-wrong');
         void node.offsetWidth;   // restart the shake animation
         node.classList.add('is-wrong');
@@ -233,6 +234,7 @@ export class DepartureMission extends Mission {
       return;
     }
     this.mistakes += 1;
+    this.oops();
     const msg = car.number === undefined
       ? 'Aceasta e locomotiva – acolo stă mecanicul! Caută vagonul scris pe bilet.'
       : `Acesta e vagonul ${car.number}. Uită-te pe bilet: Bubu are loc în vagonul ${target}.`;

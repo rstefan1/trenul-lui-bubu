@@ -108,6 +108,7 @@ export class FairMission extends SceneMission {
     const dear = offer.price > this.coins;
     if (tall || dear) {
       this.mistakes += 1;
+      this.oops();
       this.say = {
         text: tall ? `E prea înalt: are ${fmt(offer.height)} m, iar pe vagon încape cel mult ${fmt(this.config.maxHeight)} m.`
           : `Costă ${offer.price} bănuți, dar Bubu are doar ${this.coins}.`,

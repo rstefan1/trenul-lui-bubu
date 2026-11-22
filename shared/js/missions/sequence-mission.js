@@ -123,8 +123,8 @@ export class SequenceMission extends Mission {
     if (this.step !== 'input') return;
     this.flash[i] = 0.3;
     if (this.sequence[this.index] !== i) {
-      playNote(this.ctx.audio, 'C4', { length: 0.3, level: 0.2 });   // a soft, low "oops"
       this.mistakes += 1;
+      this.oops();
       this.message = 'Hopa! Mai privește o dată…';
       this.step = 'pause';
       this.stepT = -0.6;

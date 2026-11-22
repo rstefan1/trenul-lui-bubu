@@ -298,6 +298,7 @@ export class SwitchesMission extends SceneMission {
       this.particles.burst(end.x, end.y, SPARKS, 30, 280);
     } else {
       this.mistakes += 1;
+      this.oops();
       this.message = `Vagonul a ajuns pe linia ${reached + 1}, dar trebuia pe linia ${this.target + 1}. Corectează programul!`;
     }
     this.refreshPanel();

@@ -19,6 +19,8 @@
  * never be lost: the worst result is one star.
  */
 
+import { oopsSound } from '../audio/effects.js';
+
 /**
  * Everything a mission may use.
  * @typedef {object} MissionContext
@@ -105,6 +107,14 @@ export class Mission {
     this.stars = Math.max(1, Math.min(3, Math.round(stars)));
     this.resultText = text;
     this.phase = 'finished';
+  }
+
+  /**
+   * A wrong choice: a gentle "oops" (never a punishing buzzer).
+   * @protected
+   */
+  oops() {
+    oopsSound(this.ctx.audio);
   }
 
   /** Called by the director after the mission has finished (remove panels, listeners). */
