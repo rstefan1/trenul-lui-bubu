@@ -19,12 +19,13 @@
 
 import { clamp } from '../core/math.js';
 import { Particles } from '../gfx/particles.js';
-import { fillCircle, fillRoundRect, glow, roundRectPath } from '../gfx/shapes.js';
+import { fillCircle, fillRoundRect, glow } from '../gfx/shapes.js';
 import { WIRE_Y } from '../world/track.js';
 import { MANUAL } from '../journey/journey.js';
 import { el } from '../ui/dom.js';
 import { ringBell } from '../audio/instruments.js';
 import { Mission } from './mission.js';
+import { drawGlassBox } from '../gfx/ui-style.js';
 
 /** Train speed (world units/s) → the km/h shown to the child. */
 const KMH = 0.2;
@@ -306,12 +307,7 @@ export class BellsMission extends Mission {
     const cy = stage.viewBottom - 70;
     const R = 105;
     // panel
-    fillRoundRect(c, cx - 135, cy - 125, 270, 150, 26, 'rgba(19,41,90,0.85)');
-    c.strokeStyle = 'rgba(255,255,255,0.85)';
-    c.lineWidth = 3;
-    c.beginPath();
-    roundRectPath(c, cx - 135, cy - 125, 270, 150, 26);
-    c.stroke();
+    drawGlassBox(c, cx - 135, cy - 125, 270, 150);
     // coloured bands on the dial
     const ang = (/** @type {number} */ v) => Math.PI + (clamp(v, 0, MANUAL.maxSpeed) / MANUAL.maxSpeed) * Math.PI;
     for (const band of Object.values(BANDS)) {
@@ -363,12 +359,7 @@ export class BellsMission extends Mission {
     // below the instructions card while it is shown, otherwise just above the bells' signs
     const y = Math.max(cardBottom ? stage.toStage(0, cardBottom + 12).y : 0, WIRE_Y - 110 - h - this.ctx.world.cameraY);
 
-    fillRoundRect(c, x, y, w, h, 24, 'rgba(19,41,90,0.88)');
-    c.strokeStyle = ok ? '#b9f6ca' : '#ffffff';
-    c.lineWidth = ok ? 5 : 3;
-    c.beginPath();
-    roundRectPath(c, x, y, w, h, 24);
-    c.stroke();
+    drawGlassBox(c, x, y, w, h, { active: ok });
     c.textAlign = 'center';
     c.textBaseline = 'alphabetic';
     c.fillStyle = 'rgba(255,255,255,0.9)';

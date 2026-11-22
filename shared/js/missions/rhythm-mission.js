@@ -23,6 +23,7 @@ import { drawFir, fillCircle, fillRoundRect, fillStar, glow } from '../gfx/shape
 import { drawBubu } from '../train/bubu.js';
 import { playNote } from '../audio/instruments.js';
 import { SceneMission } from './scene-mission.js';
+import { drawGlassBox } from '../gfx/ui-style.js';
 
 /** Seconds a note needs to glide from the right edge to the drum. */
 const TRAVEL = 2.6;
@@ -190,7 +191,7 @@ export class RhythmMission extends SceneMission {
     this.drawCarollers(c, L);
 
     // the lane, the drum and the notes
-    fillRoundRect(c, L.drumX - 70, L.laneY - 46, L.right - L.drumX + 70, 92, 46, 'rgba(19,41,90,0.85)');
+    drawGlassBox(c, L.drumX - 70, L.laneY - 46, L.right - L.drumX + 70, 92, { radius: 46 });
     const hitNow = this.notes.some(n => n.state === 'waiting' && Math.abs(n.time - this.songTime) < GOOD);
     glow(c, L.drumX, L.laneY, 80, `rgba(255,220,120,${hitNow ? 0.6 : 0.25})`, 'rgba(255,220,120,0)');
     c.fillStyle = '#c62828';

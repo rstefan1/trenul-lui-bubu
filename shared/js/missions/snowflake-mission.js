@@ -14,9 +14,10 @@
 
 import { TAU, clamp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
-import { fillRoundRect, glow } from '../gfx/shapes.js';
+import { glow } from '../gfx/shapes.js';
 import { TRACK_Y } from '../world/track.js';
 import { Mission } from './mission.js';
+import { drawGlassBox } from '../gfx/ui-style.js';
 
 /** How many kinds of snowflakes there are (see drawFlake). */
 const KINDS = 4;
@@ -167,12 +168,7 @@ export class SnowflakeMission extends Mission {
     // the model, in a frame
     const m = this.frame;
     glow(c, m.x, m.y, m.r * 1.6, 'rgba(180,220,255,0.35)', 'rgba(180,220,255,0)');
-    fillRoundRect(c, m.x - m.r, m.y - m.r, m.r * 2, m.r * 2, 18, 'rgba(19,41,90,0.88)');
-    c.strokeStyle = '#ffffff';
-    c.lineWidth = 4;
-    c.beginPath();
-    c.roundRect(m.x - m.r, m.y - m.r, m.r * 2, m.r * 2, 18);
-    c.stroke();
+    drawGlassBox(c, m.x - m.r, m.y - m.r, m.r * 2, m.r * 2, { radius: 18 });
     drawFlake(c, m.x, m.y + 4, m.r * 0.72, this.model, 0);
     c.fillStyle = '#ffe082';
     c.font = '800 18px "Baloo 2", system-ui, sans-serif';

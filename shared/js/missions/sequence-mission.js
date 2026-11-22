@@ -14,9 +14,10 @@
 
 import { playNote } from '../audio/instruments.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
-import { fillCircle, fillRoundRect, glow, roundRectPath } from '../gfx/shapes.js';
+import { fillCircle, glow } from '../gfx/shapes.js';
 import { WIRE_Y } from '../world/track.js';
 import { Mission, starsForMistakes } from './mission.js';
+import { drawGlassBox } from '../gfx/ui-style.js';
 
 const BULBS = [
   { color: '#e53935', dim: '#6b2a2a', name: 'roșu', note: 'C5' },
@@ -202,12 +203,7 @@ export class SequenceMission extends Mission {
   /** @param {CanvasRenderingContext2D} c */
   draw(c) {
     const p = this.panel;
-    fillRoundRect(c, p.x, p.y, p.w, p.h, 26, 'rgba(19,41,90,0.9)');
-    c.strokeStyle = this.step === 'input' ? '#b9f6ca' : '#ffffff';
-    c.lineWidth = this.step === 'input' ? 5 : 3;
-    c.beginPath();
-    roundRectPath(c, p.x, p.y, p.w, p.h, 26);
-    c.stroke();
+    drawGlassBox(c, p.x, p.y, p.w, p.h, { active: this.step === 'input' });
     c.fillStyle = '#ffffff';
     c.font = '700 20px "Baloo 2", system-ui, sans-serif';
     c.textAlign = 'center';
