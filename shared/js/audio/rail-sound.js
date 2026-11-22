@@ -13,10 +13,11 @@
  * and echoes off the walls; on a bridge or a viaduct the wheels ring hollow
  * and metallic.
  *
- * So that the loop never hitches, the recording is prepared once: the bits
- * of silence an MP3 has at both ends are cut off, and the end is blended
- * into the beginning for a few hundredths of a second.
+ * So that the loop never hitches, the recording is prepared once (see
+ * seamless.js).
  */
+
+import { makeSeamless } from './seamless.js';
 
 /** Below this speed the train is considered stopped. */
 const MIN_SPEED = 0.5;
@@ -197,40 +198,4 @@ export class RailSound {
       },
     };
   }
-}
-
-/** Seconds of the recording's end blended into its beginning (just enough to hide the joint). */
-const BLEND = 0.04;
-/** Samples quieter than this at both ends count as the MP3's padding. */
-const SILENCE = 0.003;
-
-/**
- * A copy of a recording that loops without a seam: the padding at both
- * ends is trimmed and the end is blended into the beginning (equal power).
- * @param {AudioContext} ctx
- * @param {AudioBuffer} src
- * @returns {AudioBuffer}
- */
-function makeSeamless(ctx, src) {
-  const channels = Array.from({ length: src.numberOfChannels }, (_, c) => src.getChannelData(c));
-  const loud = (/** @type {number} */ i) => channels.some(d => Math.abs(d[i]) > SILENCE);
-  let start = 0;
-  while (start < src.length - 1 && !loud(start)) start++;
-  let end = src.length - 1;
-  while (end > start && !loud(end)) end--;
-  const usable = end - start + 1;
-  const blend = Math.min(Math.round(BLEND * src.sampleRate), Math.floor(usable / 4));
-  const length = usable - blend;
-  if (blend < 2 || length < 2) return src;
-  const out = ctx.createBuffer(src.numberOfChannels, length, src.sampleRate);
-  channels.forEach((d, c) => {
-    const o = out.getChannelData(c);
-    for (let i = 0; i < length; i++) o[i] = d[start + i];
-    // the tail (just after the loop's end) fades out over the head, which fades in
-    for (let i = 0; i < blend; i++) {
-      const k = i / blend;
-      o[i] = d[start + i] * Math.sqrt(k) + d[start + length + i] * Math.sqrt(1 - k);
-    }
-  });
-  return out;
 }
