@@ -165,8 +165,10 @@ const overlays = [...document.querySelectorAll('.overlay')];
  */
 function placeNow() {
   if (overlays.some(o => !o.hidden) || journey.state === 'running') return null;
+  // a mission that moves between places (up a forest hill to a fair…) says where it is
+  const moving = director.active.find(m => m.place !== undefined);
   const station = route.stations[journey.stationIndex];
-  const key = station && WINTER_MISSIONS.stations[station.id]?.ambience;
+  const key = moving ? moving.place : station && WINTER_MISSIONS.stations[station.id]?.ambience;
   return key ? WINTER_PLACES[key] ?? null : null;
 }
 

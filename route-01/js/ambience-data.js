@@ -27,8 +27,8 @@ export const WINTER_PLACES = {
   town: { layers: [{ sound: 'town-square', level: 0.85 }], carol: true },
   /** a quiet small town (no market) */
   street: { layers: [{ sound: 'town-square', level: 0.6 }] },
-  /** the enchanted Christmas fair: a happy crowd and "Clopoței" from the stalls */
-  fair: { layers: [{ sound: 'station-crowd', level: 0.9 }], carol: true, song: CLOPOTEI },
+  /** the enchanted Christmas fair: people around the stalls and "Clopoței" from afar */
+  fair: { layers: [{ sound: 'town-square', level: 0.9 }], carol: true, song: CLOPOTEI },
   /** a fortress at night: the wind on the walls */
   fortress: { layers: [{ sound: 'winter-wind', level: 0.8 }] },
   /** a railway yard at night: a freight train shunting far away, the wind */
