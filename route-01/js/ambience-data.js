@@ -41,8 +41,9 @@ export const WINTER_PLACES = {
   monastery: {
     layers: [{ sound: 'winter-wind', level: 0.35 }],
     events: [
-      { sound: 'toaca', first: [2, 5], every: [45, 70] },
-      { sound: 'distantBell', first: [5, 8], every: [22, 35] },
+      // first the toaca (about 7 s), then the bell: never both at once at the start
+      { sound: 'toaca', first: [2, 3], every: [45, 70] },
+      { sound: 'distantBell', first: [11, 13], every: [22, 35] },
     ],
   },
   /** Putna on Christmas morning: the birds wake up; the toaca and a bell far away */
@@ -50,8 +51,9 @@ export const WINTER_PLACES = {
     layers: [{ sound: 'winter-wind', level: 0.15 }],
     events: [
       { sound: 'birdsong', first: [1, 3], every: [1.5, 5], spread: 0.8 },
-      { sound: 'toaca', first: [4, 8], every: [50, 80] },
-      { sound: 'distantBell', first: [2, 4], every: [22, 35] },
+      // first the bell (about 7 s), then the toaca
+      { sound: 'toaca', first: [11, 14], every: [50, 80] },
+      { sound: 'distantBell', first: [2, 3], every: [22, 35] },
     ],
   },
   /** Putna while the child rings the big bell: only the birds (no other bell to confuse it) */
