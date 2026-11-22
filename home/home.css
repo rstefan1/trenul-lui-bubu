@@ -1,0 +1,169 @@
+/* Trenul lui Bubu — the home page: the list of journeys.
+   It uses the shared design tokens (shared/css/tokens.css): the cards are
+   "paper" cards, like everything to read in the game. Nothing moves except
+   Bubu's hop and the cards when touched (transform only). */
+
+* { box-sizing: border-box; }
+
+html { min-height: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  font-family: var(--font);
+  color: var(--snow);
+  /* a night sky with a few fixed snowflakes (painted once) */
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, .7) 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 12%, rgba(255, 255, 255, .6) 0 2px, transparent 3px),
+    radial-gradient(circle at 64% 38%, rgba(255, 255, 255, .5) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 30% 60%, rgba(255, 255, 255, .5) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 90% 70%, rgba(255, 255, 255, .6) 0 2px, transparent 3px),
+    linear-gradient(var(--night), var(--night-2)) fixed;
+}
+
+/* ---------- Header ---------- */
+.home-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 3vw, 24px);
+  margin: clamp(8px, 3vh, 32px) auto clamp(16px, 4vh, 36px);
+}
+.home-bubu {
+  width: clamp(80px, 16vw, 120px);
+  height: auto;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .35));
+  animation: hop 2.4s ease-in-out infinite;
+}
+@keyframes hop {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-10px) rotate(3deg); }
+}
+.home-title {
+  margin: 0;
+  font-size: clamp(36px, 8vw, 64px);
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 4px 0 rgba(0, 0, 0, .3);
+}
+.home-subtitle { margin: 6px 0 0; font-size: clamp(18px, 3.4vw, 26px); font-weight: 700; color: var(--gold); }
+
+/* ---------- Season filter (only with journeys of several seasons) ---------- */
+.season-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto 20px;
+}
+.season-btn {
+  padding: 8px 18px;
+  border: var(--glass-line);
+  border-radius: 999px;
+  background: var(--glass);
+  color: #fff;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: var(--shadow-s);
+  cursor: pointer;
+}
+.season-btn[aria-pressed="true"] { background: var(--gold); color: var(--ink); }
+
+/* ---------- Journeys ---------- */
+.home-main { max-width: 1100px; margin: 0 auto; }
+.route-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: clamp(16px, 3vw, 28px);
+}
+.route-item[hidden] { display: none; }
+
+.route-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--paper-card);
+  color: var(--ink);
+  border: var(--paper-line);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-l);
+  text-decoration: none;
+  transition: transform .2s var(--spring);
+  animation: card-in .5s var(--spring) backwards;
+}
+.route-card:hover, .route-card:focus-visible { transform: translateY(-4px); }
+.route-card:active { transform: translateY(2px) scale(.99); }
+.route-card:focus-visible { outline: 5px solid var(--gold); outline-offset: 3px; }
+.route-card--plain { padding: 20px; font-size: 20px; font-weight: 700; }
+@keyframes card-in {
+  from { transform: translateY(24px); opacity: 0; }
+}
+
+.route-pic { aspect-ratio: 20 / 9; background: var(--night-2); }
+.route-pic svg { display: block; width: 100%; height: 100%; }
+
+.route-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 20px 20px;
+}
+.route-kicker {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--season, var(--green));
+}
+.route-title { margin: 0; font-size: clamp(26px, 4vw, 32px); font-weight: 800; line-height: 1.05; color: var(--red); }
+.route-way { margin: 0; font-size: 20px; font-weight: 700; }
+.route-blurb { margin: 0; font-size: 17px; line-height: 1.35; }
+.route-facts {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.route-status { padding: 0 10px; border-radius: 999px; background: #e9e2d2; }
+.route-status--started { background: #fff1b8; }
+.route-status--finished { background: #c8efd5; color: var(--green-dark); }
+.route-stars { color: #c79400; }
+.route-go {
+  align-self: center;
+  margin-top: auto;
+  padding: 8px 30px 10px;
+  border: 4px solid #fff;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #5fd68a, var(--green) 60%, var(--green-dark));
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+  box-shadow: 0 6px 0 #155a30;
+}
+
+/* each season colours its card's kicker */
+.season--winter { --season: #1f4f9c; }
+.season--spring { --season: #c2477a; }
+.season--summer { --season: #c27a00; }
+.season--autumn { --season: #b5451b; }
+
+/* ---------- Footer ---------- */
+.home-foot { margin: 28px 0 8px; text-align: center; font-size: 15px; opacity: .75; }
+
+@media (prefers-reduced-motion: reduce) {
+  .home-bubu, .route-card { animation: none; }
+  .route-card { transition: none; }
+}

@@ -2,14 +2,39 @@
 <html lang="ro">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Trenul lui Bubu</title>
-  <!-- For now there is only the winter journey; later this page will let the
-       player choose between the winter and the summer journey. -->
-  <meta http-equiv="refresh" content="0; url=winter/">
-  <link rel="canonical" href="winter/">
+  <meta name="description" content="Trenul lui Bubu: călătorii cu trenul prin România, cu misiuni în gări și pe drum. Un joc pentru copii, pe calculator, tabletă și telefon.">
+  <meta name="theme-color" content="#13295a">
+  <link rel="icon" href="shared/assets/favicon.ico" sizes="48x48">
+  <link rel="icon" href="shared/assets/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared/css/tokens.css">
+  <link rel="stylesheet" href="home/home.css">
 </head>
 <body>
-  <p><a href="winter/">Trenul lui Bubu – Drumul de Crăciun</a></p>
+  <header class="home-head">
+    <img class="home-bubu" src="shared/assets/bubu.webp" alt="" width="120" height="120">
+    <div>
+      <h1 class="home-title">Trenul lui Bubu</h1>
+      <p class="home-subtitle">Alege o călătorie!</p>
+    </div>
+  </header>
+
+  <main class="home-main">
+    <!-- the journeys are listed by home/home.js (from home/routes.js) -->
+    <ol class="route-list" id="routes" aria-label="Călătoriile">
+      <li><a class="route-card route-card--plain" href="route-01/">Ruta 1 · Drumul de Crăciun (Timișoara → Putna)</a></li>
+    </ol>
+  </main>
+
+  <footer class="home-foot">
+    <p>Progresul se salvează doar în acest browser.</p>
+  </footer>
+
+  <noscript><p class="home-foot">Pentru joc trebuie activat JavaScript în browser.</p></noscript>
+  <script type="module" src="home/home.js"></script>
 </body>
 </html>
