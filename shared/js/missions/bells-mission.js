@@ -292,14 +292,17 @@ export class BellsMission extends Mission {
   }
 
   /**
-   * Speedometer and "next bell" indicator, bottom left.
+   * Speedometer, bottom left, just to the right of the gearbox (measured,
+   * so the two never overlap whatever the screen size).
    * @private
    * @param {CanvasRenderingContext2D} c
    */
   drawDashboard(c) {
     const stage = this.ctx.stage;
     const j = this.ctx.journey;
-    const cx = stage.viewLeft + 150;
+    const box = this.gearbox?.getBoundingClientRect();
+    const left = box ? stage.toStage(box.right, box.bottom).x + 16 : stage.viewLeft + 15;
+    const cx = left + 135;
     const cy = stage.viewBottom - 70;
     const R = 105;
     // panel
