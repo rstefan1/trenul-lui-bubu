@@ -5,6 +5,11 @@
  * once into an offscreen canvas and then only copied each frame. The cache
  * keeps the most recently used canvases and drops the oldest ones, so memory
  * stays bounded on phones.
+ *
+ * The bound is in bytes, not in a number of canvases: a canvas painted for a
+ * very sharp screen takes many times the memory of one for an ordinary
+ * screen. A canvas that is dropped is emptied at once (see releaseCanvas):
+ * left to the browser, its memory would only come back much later.
  */
 
 /**
@@ -32,14 +37,42 @@ export function createOffscreen(req) {
 }
 
 /**
+ * Memory taken by a canvas (4 bytes a pixel).
+ * @param {HTMLCanvasElement | null | undefined} canvas
+ */
+export const canvasBytes = canvas => (canvas ? canvas.width * canvas.height * 4 : 0);
+
+/**
+ * Gives a canvas's memory back right away (instead of whenever the browser
+ * collects it): a canvas of size 0 holds no pixels.
+ * @param {HTMLCanvasElement | null | undefined} canvas
+ */
+export function releaseCanvas(canvas) {
+  if (!canvas) return;
+  canvas.width = 0;
+  canvas.height = 0;
+}
+
+/**
+ * @template T
+ * @typedef {object} LruOptions
+ * @property {number} maxBytes                the memory the cache may hold
+ * @property {number} minEntries              never fewer entries than this (those on screen)
+ * @property {(value: T) => number} sizeOf    memory of one value, in bytes
+ * @property {(value: T) => void} release     frees a value that is dropped
+ */
+
+/**
  * @template T
  */
 export class LruCache {
-  /** @param {number} capacity  maximum number of entries */
-  constructor(capacity) {
-    this.capacity = capacity;
+  /** @param {LruOptions<T>} options */
+  constructor(options) {
+    this.options = options;
     /** @type {Map<string, T>} */
     this.map = new Map();
+    /** Memory held now, in bytes. */
+    this.bytes = 0;
   }
 
   /**
@@ -56,12 +89,27 @@ export class LruCache {
       this.map.set(key, hit);
       return hit;
     }
-    while (this.map.size >= this.capacity) {
-      this.map.delete(this.map.keys().next().value);
-    }
     const value = build();
     this.map.set(key, value);
+    this.bytes += this.options.sizeOf(value);
+    // drop the least recently used until the memory fits (the newest ones stay)
+    const { maxBytes, minEntries } = this.options;
+    while (this.bytes > maxBytes && this.map.size > minEntries) {
+      const [oldKey, old] = /** @type {[string, T]} */ (this.map.entries().next().value);
+      this.drop(oldKey, old);
+    }
     return value;
+  }
+
+  /**
+   * @private
+   * @param {string} key
+   * @param {T} value
+   */
+  drop(key, value) {
+    this.map.delete(key);
+    this.bytes -= this.options.sizeOf(value);
+    this.options.release(value);
   }
 
   /**
@@ -72,7 +120,9 @@ export class LruCache {
     return this.map.has(key);
   }
 
+  /** Drops (and frees) everything. */
   clear() {
-    this.map.clear();
+    for (const [key, value] of [...this.map]) this.drop(key, value);
+    this.bytes = 0;
   }
 }
