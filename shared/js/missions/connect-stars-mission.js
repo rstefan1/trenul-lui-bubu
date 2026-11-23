@@ -13,7 +13,21 @@
 import { clamp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillStar, glow } from '../gfx/shapes.js';
+import { TRACK_Y } from '../world/track.js';
 import { Mission } from './mission.js';
+
+/**
+ * Stretches a drawing so it fills the whole square, edge to edge (the
+ * stars as far apart as the box allows).
+ * @param {Array<[number, number]>} points
+ * @returns {ReadonlyArray<[number, number]>}
+ */
+function fill(points) {
+  const xs = points.map(p => p[0]);
+  const ys = points.map(p => p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  return points.map(([x, y]) => /** @type {[number, number]} */ ([(x - x0) / (x1 - x0), (y - y0) / (y1 - y0)]));
+}
 
 /**
  * Drawings as points in a unit square (x right, y down), in the order the
@@ -21,20 +35,25 @@ import { Mission } from './mission.js';
  * @type {Readonly<Record<string, ReadonlyArray<[number, number]>>>}
  */
 const SHAPES = Object.freeze({
-  star: Array.from({ length: 10 }, (_, i) => {
+  // a plump star: its inner points are far from the outer ones, so no two stars are close
+  star: fill(Array.from({ length: 10 }, (_, i) => {
     const a = -Math.PI / 2 + (i * Math.PI) / 5;
-    const r = i % 2 ? 0.2 : 0.5;
-    return /** @type {[number, number]} */ ([0.5 + Math.cos(a) * r, 0.52 + Math.sin(a) * r]);
-  }),
-  tree: [[0.5, 0], [0.7, 0.3], [0.6, 0.3], [0.8, 0.62], [0.68, 0.62], [0.9, 0.95], [0.1, 0.95], [0.32, 0.62], [0.2, 0.62], [0.4, 0.3], [0.3, 0.3]],
+    const r = i % 2 ? 0.3 : 0.5;
+    return /** @type {[number, number]} */ ([0.5 + Math.cos(a) * r, 0.5 + Math.sin(a) * r]);
+  })),
+  tree: fill([[0.5, 0], [0.7, 0.3], [0.6, 0.3], [0.8, 0.62], [0.68, 0.62], [0.9, 0.95], [0.1, 0.95], [0.32, 0.62], [0.2, 0.62], [0.4, 0.3], [0.3, 0.3]]),
 });
 
 /**
  * @typedef {import('./mission.js').MissionConfig & {shapes: string[]}} ConnectStarsConfig
  */
 
-/** How much wider than tall the drawing may be (the stars stay easy to recognise, and farther apart). */
-const WIDEN = 1.3;
+/**
+ * How much wider than tall each drawing may be: wider spreads the stars
+ * apart; the tree takes it well (a broad fir), the star a little less.
+ * @type {Record<string, number>}
+ */
+const WIDEN = { star: 1.6, tree: 2.1 };
 
 export class ConnectStarsMission extends Mission {
   /**
@@ -71,19 +90,20 @@ export class ConnectStarsMission extends Mission {
   /**
    * Where the drawing is: as big as the screen allows, so the stars are easy
    * to touch — from just below the heads-up display (with room for the
-   * numbers above the top stars) down over the landscape and the train, to
-   * near the bottom of the screen; a little wider than tall, on wide screens.
+   * numbers above the top stars) down to the train, its lowest stars over
+   * the train's windows; wider than tall, on wide screens.
    */
   get box() {
     const stage = this.ctx.stage;
     const hud = this.ctx.hud;
     const below = Math.max(hud.hudBottom, hud.cardBottom);
-    const top = Math.max(stage.viewTop + 50, stage.toStage(0, below).y + 50);
-    const bottom = stage.viewBottom - 30;
-    const size = clamp(Math.min(bottom - top, stage.width * 0.8), 240, 900);
-    const width = Math.min(size * WIDEN, (stage.viewRight - stage.viewLeft) * 0.85);
-    const y = size <= bottom - top ? top + (bottom - top - size) / 2 : top;
-    return { x: stage.width / 2 - width / 2, y, size, width };
+    const top = Math.max(stage.viewTop + 40, stage.toStage(0, below).y + 40);
+    const bottom = Math.min(stage.viewBottom - 30, TRACK_Y - 90 - this.ctx.world.cameraY);
+    const size = Math.max(240, Math.min(bottom - top, stage.width * 0.8));
+    const widen = WIDEN[this.config.shapes[this.shape]] ?? 1.5;
+    const width = Math.min(size * widen, (stage.viewRight - stage.viewLeft) * 0.88);
+    // anchored at the bottom: the drawing always comes down to the train
+    return { x: stage.width / 2 - width / 2, y: bottom - size, size, width };
   }
 
   /**
