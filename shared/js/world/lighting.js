@@ -80,7 +80,7 @@ export function lightAt(minutes) {
     top: mixRgb(a.topRgb, b.topRgb, t),
     mid: mixRgb(a.midRgb, b.midRgb, t),
     bottom: mixRgb(a.bottomRgb, b.bottomRgb, t),
-    wash: { color: css(washRgb), alpha: lerp(a.washAlpha, b.washAlpha, t) },
+    wash: { color: css(washRgb), alpha: lerp(a.washAlpha, b.washAlpha, t), rgb: washRgb },
     washRgb,
     night,
     sun: sunAt(minutes),

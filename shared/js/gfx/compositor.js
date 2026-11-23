@@ -9,14 +9,40 @@
  * that are already painted) and copies the band back.
  *
  * When there is nothing to tint (daytime), the band is drawn directly, so
- * the common case costs nothing extra.
+ * the common case costs nothing extra. Several washes (e.g. a layer's haze
+ * and the time of day) are first merged into one, so a band is washed with a
+ * single fill: laying colour A at alpha a, then colour B at alpha b, is the
+ * same as laying one colour C at alpha c, with
+ *   c = 1 − (1 − a)(1 − b)   and   C = (A·a·(1 − b) + B·b) / c.
  */
 
 /**
  * @typedef {object} Wash
  * @property {string} color  CSS colour
  * @property {number} alpha  0..1; washes under 0.003 are skipped
+ * @property {import('./color.js').Rgb} [rgb]  the same colour as numbers (lets washes be merged)
  */
+
+/**
+ * Merges washes into one with the same effect (see the file comment).
+ * Washes without numbers are kept as they are.
+ * @param {ReadonlyArray<Wash>} washes  the active ones, in order
+ * @returns {ReadonlyArray<Wash>}
+ */
+export function mergeWashes(washes) {
+  if (washes.length < 2 || washes.some(w => !w.rgb)) return washes;
+  let alpha = 0;
+  let rgb = [0, 0, 0];
+  for (const w of washes) {
+    const a = Math.min(1, w.alpha);
+    const next = 1 - (1 - alpha) * (1 - a);
+    const src = /** @type {import('./color.js').Rgb} */ (w.rgb);
+    rgb = rgb.map((v, i) => (v * alpha * (1 - a) + src[i] * a) / next);
+    alpha = next;
+  }
+  const color = `rgb(${Math.round(rgb[0])},${Math.round(rgb[1])},${Math.round(rgb[2])})`;
+  return [{ color, alpha, rgb: /** @type {import('./color.js').Rgb} */ (rgb) }];
+}
 
 export class BandCompositor {
   constructor() {
@@ -48,7 +74,7 @@ export class BandCompositor {
    * @param {ReadonlyArray<Wash>} washes
    */
   draw(ctx, top, bottom, paint, washes) {
-    const active = washes.filter(w => w.alpha > 0.003);
+    const active = mergeWashes(washes.filter(w => w.alpha > 0.003));
     if (active.length === 0) {
       paint(ctx);
       return;
