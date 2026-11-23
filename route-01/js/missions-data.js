@@ -18,7 +18,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'baubles-timisoara-arad',
         title: 'Globurile fugite',
-        text: 'Vântul a luat globurile din târgul de Crăciun din Timișoara! Atinge-le, ca Bubu să le prindă cu plasa ei fermecată și să împodobească tot trenul.',
+        text: 'Vântul a luat globurile de la târgul din Timișoara! Atinge globurile, ca Bubu să le prindă.',
         count: 'fill',
         goal: 0.8,
       },
@@ -31,7 +31,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'gifts-mures-valley',
         title: 'Daruri pe Valea Mureșului',
-        text: 'În satele de pe Valea Mureșului, copiii așteaptă în curte. Trenul oprește lângă fiecare copil care așteaptă: atunci atinge ecranul, ca Bubu să-i arunce un dar în cercul auriu.',
+        text: 'Copiii din sate așteaptă daruri. Când trenul se oprește lângă un copil, atinge ecranul ca Bubu să-i arunce darul.',
         houses: 6,
         empty: 2,
         spare: 2,
@@ -46,7 +46,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'bells-deva-alba',
         title: 'Clopoțeii de pe linie',
-        text: 'Acum conduci tu trenul! Pe firul electric atârnă clopoței, iar fiecare sună doar dacă treci pe sub el cu viteza scrisă pe tăbliță. Alege viteza cu butoanele din stânga: ÎNCET (70 km/h) sau REPEDE (110 km/h). Deasupra trenului vezi ce viteză vrea următorul clopoțel.',
+        text: 'Acum conduci tu trenul! Un clopoțel sună doar dacă treci pe sub el cu viteza cerută. Alege ÎNCET sau REPEDE din butoanele din stânga.',
         bells: 9,
       },
     },
@@ -58,7 +58,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'lights-alba-cluj',
         title: 'Beculețele în ordine',
-        text: 'Bubu vrea o ghirlandă de beculețe pentru tren! Uită-te în ce ordine se aprind beculețele, apoi atinge-le în aceeași ordine. La fiecare rundă reușită, pe tren se mai aprinde o bucată de ghirlandă.',
+        text: 'Uită-te în ce ordine se aprind beculețele. Apoi atinge-le și tu în aceeași ordine.',
         rounds: 3,
         start: 2,
       },
@@ -71,7 +71,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'candles-cluj-dej',
         title: 'Lumânări la ferestre',
-        text: 'E noapte. În unele case, câte un copil stă la geam și așteaptă trenul lui Bubu. Atinge casele unde vezi un copil la fereastră, ca Bubu să-i aprindă o lumânare de Crăciun.',
+        text: 'E noapte. Atinge casele unde un copil stă la fereastră, ca Bubu să-i aprindă o lumânare.',
         houses: 6,
         empty: 2,
         pace: { far: 520, slow: 110, brake: 450, near: { ahead: 60, behind: 420 } },
@@ -85,7 +85,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'stars-dej-ilva',
         title: 'Steaua colindătorilor',
-        text: 'Se apropie miezul nopții. Pe cer apar stele cu numere: atinge-le în ordine, 1, 2, 3…, și vezi ce desen apare!',
+        text: 'Pe cer apar stele cu numere. Atinge-le în ordine: 1, 2, 3… Ce desen apare?',
         shapes: ['star', 'tree'],
       },
     },
@@ -97,7 +97,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'photos-viaducts',
         title: 'Fotografii de pe viaducte',
-        text: 'Urmează viaductele cele mai frumoase! Când trenul trece pe un viaduct, uită-te în vale: acolo e un animal. Atinge-l ca să-l fotografiezi.',
+        text: 'Când trenul trece pe un viaduct, caută un animal în vale. Atinge-l ca să-i faci o fotografie.',
         animals: ['🦌', '🦊', '🦉', '🐇'],
         pace: { far: 480, slow: 120 },
       },
@@ -110,10 +110,10 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'snowbound',
         title: 'Trenul s-a înzăpezit!',
-        text: 'Ninge atât de tare încât un nămete uriaș a acoperit linia. Trenul trebuie să oprească!',
-        digText: 'Ajut-o pe Bubu să curețe zăpada: freacă nămetele cu degetul sau cu mouse-ul (ține apăsat și mișcă), sau atinge-l de multe ori.',
-        signalText: 'Restul zăpezii e prea mult pentru Bubu. Atinge lanterna de 3 ori, ca să facă semn plugului de zăpadă!',
-        ploughText: 'Vine plugul de zăpadă! El curăță linia până la capăt.',
+        text: 'Ninge foarte tare! Un nămete mare a acoperit linia și trenul trebuie să se oprească.',
+        digText: 'Ajut-o pe Bubu să dea zăpada la o parte: atinge nămetele de multe ori sau mișcă degetul peste el.',
+        signalText: 'E prea multă zăpadă pentru Bubu. Atinge lanterna de 3 ori, ca să cheme plugul de zăpadă!',
+        ploughText: 'Vine plugul de zăpadă! El curăță toată linia.',
       },
     },
     {
@@ -124,7 +124,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'forest-friends',
         title: 'Prietenii pădurii',
-        text: 'Animalele pădurii vor să meargă cu trenul la Câmpulung! Când apare sus, în dreapta, animalul care te așteaptă, apasă „Oprește trenul”: trenul oprește singur la stația lui. După ce animalul a urcat, apasă „Pornește trenul”.',
+        text: 'Animalele pădurii vor să meargă cu trenul! Când vezi un animal care așteaptă, apasă „Oprește trenul”. După ce urcă, apasă „Pornește trenul”.',
         animals: [
           { emoji: '🦊', stop: 'Stația Vulpiței' },
           { emoji: '🐇', stop: 'Stația Iepurașului' },
@@ -141,7 +141,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'snowflakes-campulung-gura',
         title: 'Fulgii gemeni',
-        text: 'Pe Valea Moldovei ninge cu fulgi mari. Uită-te la fulgul din chenarul din stânga sus, apoi atinge fulgii care arată exact la fel!',
+        text: 'Uită-te la fulgul din căsuța de sus, din stânga. Atinge fulgii care arată exact la fel!',
         goal: 6,
         models: 2,
       },
@@ -154,7 +154,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'frost-gura-suceava',
         title: 'Flori de gheață',
-        text: 'E atât de frig încât pe geam au crescut flori de gheață! Freacă geamul (ține apăsat și mișcă degetul sau mouse-ul) ca să vezi ce se ascunde dedesubt.',
+        text: 'Pe geam au apărut flori de gheață! Mișcă degetul pe geam ca să vezi ce se ascunde dedesubt.',
         pictures: ['fortress', 'star', 'sleigh'],
       },
     },
@@ -166,7 +166,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'birds-suceava-radauti',
         title: 'Păsărelele de iarnă',
-        text: 'Iarna, păsărelele găsesc greu mâncare. Atinge căsuțele goale lângă care așteaptă păsări flămânde, ca Bubu să le umple cu semințe.',
+        text: 'Iarna, păsările găsesc greu mâncare. Atinge căsuțele goale lângă care așteaptă păsări, ca Bubu să le pună semințe.',
         feeders: 6,
         full: 2,
         pace: { far: 520, slow: 110, brake: 450, near: { ahead: 60, behind: 420 } },
@@ -180,7 +180,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'whistle-bucovina',
         title: 'Fluierul trenului',
-        text: 'În dimineața de Crăciun, copiii din Bucovina au ieșit lângă linie să vadă trenul. Când treci pe lângă ei, apasă „Fluieră!” și trenul le va fluiera de Crăciun!',
+        text: 'Copiii au ieșit lângă linie să vadă trenul. Când treci pe lângă ei, apasă „Fluieră!”.',
         groups: 3,
         pace: { far: 540, slow: 150, brake: 450, near: { ahead: 60, behind: 420 } },
       },
@@ -194,28 +194,28 @@ export const WINTER_MISSIONS = {
       at: 0.47,
       kicker: 'Surpriză',
       title: 'Ninge! ❄️',
-      text: 'Primii fulgi de zăpadă din călătoria lui Bubu! Uită-te cum se albește totul în jur.',
+      text: 'Primii fulgi de zăpadă! Uită-te cum se face totul alb.',
     },
     {
       segment: 5,
       at: 0.667,
       kicker: 'Ora 00:00',
       title: 'E Crăciun! 🎄',
-      text: 'Clopotele din sate bat de miezul nopții. Crăciun fericit, Bubu! Crăciun fericit tuturor celor din tren!',
+      text: 'Clopotele bat la miezul nopții. Crăciun fericit!',
     },
     {
       segment: 11,
       at: 0.02,
       kicker: 'Suceava – Rădăuți',
       title: 'Cu trenul cel mic',
-      text: 'Bubu merge mai departe cu un tren regional mic și verde. Se luminează de ziuă!',
+      text: 'Bubu merge mai departe cu un tren mic și verde. Se face ziuă!',
     },
     {
       segment: 12,
       at: 0.04,
       kicker: 'Bună dimineața!',
       title: 'Răsare soarele',
-      text: 'Soarele răsare peste dealurile Bucovinei. Mai e puțin până la Putna!',
+      text: 'Soarele răsare peste dealuri. Mai e puțin până la Putna!',
     },
   ],
 
@@ -226,7 +226,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'departure-timisoara',
         title: 'Plecarea din Timișoara',
-        text: 'Înainte de drum, completează biletul de tren al lui Bubu.',
+        text: 'Înainte de drum, completează biletul lui Bubu.',
         ticket: {
           train: 'IR 1765',
           from: 'Timișoara Nord',
@@ -260,8 +260,8 @@ export const WINTER_MISSIONS = {
           { id: 'flipflops', icon: '🩴', label: 'Șlapii', reply: 'Cu șlapii prin zăpadă? Nici vorbă!' },
           { id: 'watermelon', icon: '🍉', label: 'Pepenele', reply: 'Pepene în decembrie? Mai bine luăm cozonac!' },
         ],
-        boardingText: 'Uită-te pe bilet: în ce vagon are loc Bubu? Atinge vagonul potrivit, ca Bubu să urce în tren.',
-        tip: 'Sfatul călătorului: numărul vagonului e scris pe tren, pe o tăbliță albă.',
+        boardingText: 'În ce vagon are loc Bubu? Uită-te pe bilet, apoi atinge vagonul.',
+        tip: 'Numărul vagonului e scris pe tren, pe o tăbliță albă.',
       },
     },
 
@@ -271,11 +271,11 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'puzzle-arad',
         title: 'Ceasul din Arad',
-        text: 'Vântul a răsucit piesele imaginii cu Palatul Administrativ din Arad. Întoarce-le la loc, ca Bubu să vadă cât e ceasul din turn!',
+        text: 'Vântul a răsucit piesele imaginii. Atinge piesele ca să le întorci la loc!',
         picture: 'arad-city-hall',
         grid: 4,
-        solvedText: 'Ceasul din turn arată ora 16:00. Trenul nostru pleacă din Arad la 16:03 – repede înapoi în vagon!',
-        fact: 'Primăria din Arad se numește Palatul Administrativ și are în mijloc un turn înalt, cu ceas, care se vede de departe.',
+        solvedText: 'Ceasul din turn arată ora 16:00. Trenul pleacă la 16:03, deci repede înapoi în tren!',
+        fact: 'Primăria din Arad se numește Palatul Administrativ. Are un turn înalt, cu ceas.',
       },
     },
 
@@ -285,11 +285,11 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'lanterns-deva',
         title: 'Felinarele Cetății Deva',
-        text: 'Deasupra orașului, pe un deal, stă Cetatea Devei. Bubu urcă până acolo cu liftul înclinat…',
-        lightText: 'Pe ziduri s-au stins felinarele! Plimbă lanterna lui Bubu (cu mouse-ul sau cu degetul) și ține-o pe fiecare felinar până se aprinde.',
-        windText: 'Uf! O pală de vânt a stins un felinar. Mai aprinde-l o dată!',
-        doneText: 'Toate felinarele ard! Cetatea se vede acum din tren, de departe.',
-        fact: 'Cetatea Deva a fost ridicată pe un deal care, cu milioane de ani în urmă, a fost un vulcan. Este pomenită în documente încă din anul 1269.',
+        text: 'Cetatea Deva este sus, pe un deal. Bubu urcă până acolo cu un lift care merge pe deal.',
+        lightText: 'S-au stins felinarele de pe ziduri! Mută lanterna lui Bubu peste un felinar și ține-o acolo până se aprinde.',
+        windText: 'Vântul a stins un felinar. Aprinde-l din nou!',
+        doneText: 'Toate felinarele ard! Cetatea se vede din tren.',
+        fact: 'Dealul pe care stă Cetatea Deva a fost, demult, un vulcan.',
         flag: 'deva-fortress-lit',
       },
     },
@@ -300,10 +300,10 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'maze-alba-iulia',
         title: 'Labirintul cetății',
-        text: 'Văzute de sus, aleile Cetății Alba Carolina sunt un labirint! Du-o pe Bubu la bradul de Crăciun și adună pe drum stelele ascunse. Atinge o căsuță în linie dreaptă cu Bubu sau trage cu degetul pe alei.',
+        text: 'Aleile din cetate sunt un labirint! Du-o pe Bubu la brad și adună stelele de pe drum.',
         hidden: 3,
-        doneText: 'Bubu a ajuns la bradul cel mare din mijlocul cetății!',
-        fact: 'Cetatea Alba Carolina are forma unei stele cu șapte colțuri. Aici, la 1 Decembrie 1918, s-a hotărât Marea Unire – de aceea 1 Decembrie este Ziua Națională a României.',
+        doneText: 'Bubu a ajuns la bradul din mijlocul cetății!',
+        fact: 'Cetatea Alba Carolina are forma unei stele. Aici s-a hotărât Marea Unire, la 1 Decembrie 1918.',
       },
     },
 
@@ -313,9 +313,9 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'circuit-cluj',
         title: 'Bradul din Piața Unirii',
-        text: 'Bradul cel mare din Piața Unirii nu se aprinde: bucățile de cablu s-au răsucit! Atinge-le ca să le rotești, după linia punctată, ca să ducă curentul de la generator ⚡ până la priza bradului.',
+        text: 'Bradul din piață nu se aprinde. Atinge bucățile de cablu ca să le rotești, până când curentul ajunge la brad.',
         doneText: 'Bradul s-a aprins și toată piața strălucește!',
-        fact: 'În Piața Unirii din Cluj-Napoca se află Biserica Sfântul Mihail, una dintre cele mai mari biserici gotice din România. De Crăciun, aici se ține un târg mare, cu un brad uriaș.',
+        fact: 'În Piața Unirii din Cluj-Napoca este Biserica Sfântul Mihail, una dintre cele mai mari biserici din țară.',
       },
     },
 
@@ -325,10 +325,10 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'switches-dej',
         title: 'Macazurile din Dej',
-        text: 'Dej este un nod de cale ferată, cu multe linii. O locomotivă mică trebuie să ducă vagonul cu daruri pe linia cerută. Atinge macazurile (cercurile albastre) ca să le muți SUS sau JOS, apoi pornește trenul.',
+        text: 'Vagonul cu daruri trebuie să ajungă pe linia cerută. Atinge cercurile albastre ca să muți macazurile, apoi pornește trenul.',
         levels: [2, 3, 3],
         doneText: 'Toate vagoanele cu daruri au ajuns pe liniile bune!',
-        fact: 'La Dej se întâlnesc linii de cale ferată care vin din mai multe direcții. Macazul este o bucată de șină care se mută și alege pe unde merge trenul – exact ca o instrucțiune „dacă… atunci…” dintr-un program.',
+        fact: 'Macazul este o bucată de șină care se mută și alege drumul trenului. Funcționează ca „dacă… atunci…” dintr-un program.',
       },
     },
 
@@ -337,13 +337,13 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'carollers-ilva',
         title: 'Colindătorii din gară',
-        text: 'E noaptea de Crăciun, iar în gara Ilva Mică au venit colindătorii! Ține ritmul colindului: atinge ecranul (sau apasă Space) când nota ajunge în cercul tobei.',
+        text: 'Au venit colindătorii! Atinge ecranul când nota ajunge în cercul tobei.',
         // the notes caught play "Clopoței, clopoței" (the tune of "Jingle Bells")
         tempo: 80,
         beats: [0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 30],
         melody: ['E5', 'E5', 'E5', 'E5', 'E5', 'E5', 'E5', 'G5', 'C5', 'D5', 'E5', 'F5', 'F5', 'F5', 'F5', 'F5', 'E5', 'E5', 'E5', 'D5', 'D5', 'E5', 'D5', 'G5'],
-        doneText: 'Colindătorii i-au dăruit lui Bubu un colac cald!',
-        fact: 'În noaptea de Ajun, copiii merg cu colindul din casă în casă, iar gazdele le dau colaci, mere și nuci. Steaua purtată de colindători amintește de steaua care i-a călăuzit pe magi.',
+        doneText: 'Colindătorii i-au dat lui Bubu un colac cald!',
+        fact: 'În noaptea de Ajun, copiii merg cu colindul din casă în casă. Primesc colaci, mere și nuci.',
       },
     },
     'vatra-dornei': {
@@ -352,14 +352,14 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'fair-vatra-dornei',
         title: 'Târgul fermecat',
-        text: 'Trenul stă mai mult la Vatra Dornei. Acum, în miezul nopții, oamenii dorm, dar pe deal s-a deschis târgul fermecat de Crăciun, unde vând și cumpără doar animalele pădurii! Bubu urcă până acolo cu sania cu reni.',
-        climbText: 'Mișcă sania în sus și în jos (cu mouse-ul sau cu degetul) și prinde bănuții 🪙 de pe drum. Cu bănuții vei cumpăra bradul!',
-        fairText: 'Ai ajuns la târgul fermecat al animalelor! Alege un brad pentru bunici. Atenție: pe vagonul trenului încape un brad de cel mult 1,80 m, iar Bubu trebuie să aibă destui bănuți!',
+        text: 'Pe deal s-a deschis un târg fermecat, unde vând doar animalele pădurii! Bubu urcă până acolo cu sania.',
+        climbText: 'Mișcă sania în sus și în jos și prinde bănuții 🪙. Cu ei vei cumpăra un brad!',
+        fairText: 'Alege un brad pentru bunici. Pe vagon încape un brad de cel mult 1,80 m. Ai grijă să ai destui bănuți!',
         trees: [{ height: 1.2, price: 5 }, { height: 1.6, price: 8 }, { height: 2.1, price: 6 }, { height: 2.6, price: 9 }],
         maxHeight: 1.8,
         flag: 'tree-bought',
         doneText: 'Bradul e pe vagon și merge cu noi până la Putna!',
-        fact: 'Vatra Dornei este o stațiune de munte cunoscută pentru izvoarele ei de apă minerală.',
+        fact: 'Vatra Dornei este un oraș de munte, cunoscut pentru apa minerală.',
       },
     },
     mestecanis: {
@@ -368,10 +368,10 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'eyes-mestecanis',
         title: 'Ochii din pădure',
-        text: 'Pe pasul Mestecăniș, în pădurea întunecată, clipesc perechi de ochi. Atinge-i ca să vezi ce animale stau ascunse!',
+        text: 'În pădurea întunecată clipesc perechi de ochi. Atinge-i ca să vezi ce animale sunt!',
         animals: ['🦉', '🦊', '🦌', '🐿️', '🐻'],
         doneText: 'Toate animalele pădurii au ieșit să vadă trenul lui Bubu!',
-        fact: 'Mestecăniș este un pas de munte: locul cel mai jos prin care drumurile și căile ferate pot trece dintr-o parte în alta a munților.',
+        fact: 'Mestecăniș este un pas de munte, adică un loc pe unde drumul trece peste munți.',
       },
     },
     campulung: {
@@ -379,10 +379,10 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'spoons-campulung',
         title: 'Muzeul lingurilor de lemn',
-        text: 'La Câmpulung Moldovenesc, Bubu vizitează un muzeu plin de linguri de lemn sculptate. Uită-te bine la linguri cât stau întoarse cu fața în sus, apoi găsește perechile la fel!',
+        text: 'Bubu vizitează un muzeu cu linguri de lemn. Uită-te bine la linguri, apoi găsește perechile!',
         motifs: ['star', 'heart', 'sun', 'fir'],
-        doneText: 'Ai găsit toate perechile de linguri sculptate!',
-        fact: 'La Câmpulung Moldovenesc se află un muzeu cu mii de linguri de lemn sculptate, adunate de un singur om de-a lungul vieții.',
+        doneText: 'Ai găsit toate perechile de linguri!',
+        fact: 'La Câmpulung Moldovenesc este un muzeu cu mii de linguri de lemn, adunate de un singur om.',
       },
     },
     'gura-humorului': {
@@ -391,9 +391,9 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'paint-voronet',
         title: 'Pictează Voronețul',
-        text: 'Lângă Gura Humorului este Mănăstirea Voroneț, pictată și pe dinafară. Ajut-o pe Bubu să picteze biserica: alege o culoare de jos, apoi atinge părțile care au același număr.',
-        doneText: 'Biserica e pictată, iar pe pereții albaștri au apărut sfinții!',
-        fact: 'Mănăstirea Voroneț are pereții pictați și pe dinafară. Albastrul ei este atât de frumos și de rar, încât i se spune „albastru de Voroneț”.',
+        text: 'Ajut-o pe Bubu să picteze biserica! Alege o culoare de jos, apoi atinge părțile cu același număr.',
+        doneText: 'Biserica e gata pictată!',
+        fact: 'Mănăstirea Voroneț este pictată și pe dinafară. Albastrul ei se numește „albastru de Voroneț”.',
       },
     },
     suceava: {
@@ -402,8 +402,8 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'change-suceava',
         title: 'Schimbăm trenul',
-        text: 'Trenul de noapte se oprește aici, la Suceava. Bubu merge mai departe cu alt tren. Uită-te pe biletul lui Bubu (jos), apoi atinge pe tabelă trenul care merge acolo.',
-        platformText: 'Acum găsește trenul! Atinge trenul de la linia scrisă pe tabelă.',
+        text: 'Aici Bubu schimbă trenul. Uită-te pe bilet unde merge Bubu, apoi atinge pe tabelă trenul potrivit.',
+        platformText: 'Acum atinge trenul de la linia scrisă pe tabelă.',
         destination: 'Putna',
         train: 'regional',
         departures: [
@@ -412,8 +412,8 @@ export const WINTER_MISSIONS = {
           { time: '07:05', to: 'Iași', platform: 3 },
           { time: '07:20', to: 'Vatra Dornei', platform: 1 },
         ],
-        doneText: 'Bubu și bradul ei au urcat în trenul regional spre Putna!',
-        fact: 'Suceava a fost capitala Moldovei pe vremea lui Ștefan cel Mare. Cetatea de Scaun a Sucevei se vede și azi, pe un deal din oraș.',
+        doneText: 'Bubu și bradul ei au urcat în trenul spre Putna!',
+        fact: 'Suceava a fost capitala Moldovei pe vremea lui Ștefan cel Mare.',
       },
     },
     radauti: {
@@ -422,9 +422,9 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'costume-radauti',
         title: 'O pălărie pentru Bubu',
-        text: 'La târgul de Crăciun din Rădăuți, Bubu probează pălăriile de sărbătoare din Bucovina! Alege-i una (o poți schimba oricând), apoi apasă „Gata!”.',
-        doneText: 'Bubu e gata de sărbătoare, ca o adevărată bucovineancă!',
-        fact: 'De sărbători, în Bucovina, bărbații poartă clopuri negre împodobite cu mărgele, flori sau pene, iar femeile își pun basmale colorate.',
+        text: 'La târgul din Rădăuți, Bubu probează pălării de sărbătoare. Alege una, apoi apasă „Gata!”.',
+        doneText: 'Bubu e gata de sărbătoare!',
+        fact: 'De sărbători, bărbații din Bucovina poartă pălării negre cu mărgele, flori sau pene.',
       },
     },
     putna: {
@@ -433,11 +433,11 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'christmas-putna',
         title: 'Crăciun la Putna',
-        text: 'Am ajuns la Mănăstirea Putna, în dimineața de Crăciun! Atinge clopotul din turn de 3 ori, ca să vestească slujba.',
-        treeText: 'Bradul lui Bubu a ajuns cu bine! Atinge bradul ca să agăți globurile pe care le-ai prins în călătorie.',
+        text: 'Am ajuns la Mănăstirea Putna! Atinge clopotul de 3 ori.',
+        treeText: 'Bradul lui Bubu a ajuns! Atinge bradul ca să agăți globurile prinse pe drum.',
         rings: 3,
-        doneText: 'Clopotul a vestit Crăciunul, iar bradul lui Bubu strălucește lângă biserică!',
-        fact: 'Mănăstirea Putna a fost ridicată de Ștefan cel Mare în anul 1466. Tot aici este și mormântul lui.',
+        doneText: 'Clopotul a sunat, iar bradul lui Bubu strălucește!',
+        fact: 'Mănăstirea Putna a fost construită de Ștefan cel Mare. Tot aici este și mormântul lui.',
       },
     },
 
