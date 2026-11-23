@@ -4,9 +4,11 @@
  * Ornaments drift across the sky towards the back of the train, bobbing in
  * the wind. When the child touches one, Bubu throws her magic net from the
  * window: a golden line reaches the ornament, which then flies in an arc to
- * the train and hangs on its garland. Ornaments that are not caught simply
- * fly away. Later ornaments are a little faster and smaller, so the mission
- * stays interesting until the end.
+ * the train and hangs on its garland. The free places on the garland are
+ * shared out among the ornaments, so catching them all decorates the whole
+ * train, however few they are (each one may hang several baubles).
+ * Ornaments that are not caught simply fly away. Later ornaments are a
+ * little faster and smaller, so the mission stays interesting until the end.
  *
  * Configuration (besides id/title/text):
  *   count   how many ornaments appear, or "fill" for exactly as many as there
@@ -51,7 +53,8 @@ const SKY_BOTTOM = 520;
  * @property {number} t          seconds since caught
  * @property {number} cx         where it was caught
  * @property {number} cy
- * @property {number} slot       index of its slot on the train
+ * @property {number} slot       index of its (first) slot on the train
+ * @property {number} share      baubles it hangs on the train
  */
 
 /**
@@ -71,6 +74,8 @@ export class CatchMission extends Mission {
     this.spawned = 0;
     this.caught = 0;
     this.count = 0;
+    this.free = 0;
+    this.before = 0;
     this.goal = 0;
     this.spawnEvery = 3;
     this.spawnTimer = 0.8;
@@ -87,6 +92,10 @@ export class CatchMission extends Mission {
     // leave the last seconds free, so the last ornament can still be caught
     const { count, goal } = this.config;
     const free = this.ctx.world.train.baubleSlots.length - this.ctx.state.baubles.length;
+    /** Free places on the garland, shared out among the ornaments. */
+    this.free = Math.max(0, free);
+    /** Baubles already on the train when the mission began. */
+    this.before = this.ctx.state.baubles.length;
     /** Number of ornaments that will appear. */
     this.count = count === 'fill' ? Math.max(1, free) : count;
     /** Ornaments needed for three stars. */
@@ -119,7 +128,7 @@ export class CatchMission extends Mission {
       } else {
         o.t += dt;
         if (o.t >= NET_TIME + FLY_TIME) {
-          this.ctx.state.addBauble(o.color);
+          for (let k = 0; k < o.share; k++) this.ctx.state.addBauble(o.color);
           const p = this.slotStage(o.slot);
           this.particles.burst(p.x, p.y, SPARKS, 14, 220);
           this.ornaments.splice(i, 1);
@@ -157,6 +166,7 @@ export class CatchMission extends Mission {
       cx: 0,
       cy: 0,
       slot: 0,
+      share: 0,
     });
     this.spawned += 1;
   }
@@ -177,12 +187,16 @@ export class CatchMission extends Mission {
       this.misses.push({ x: p.x, y: p.y, t: 0 });
       return;
     }
-    const inFlight = this.ornaments.filter(o => o.state === 'caught').length;
     best.state = 'caught';
     best.t = 0;
     best.cx = best.x;
     best.cy = best.y;
-    best.slot = this.ctx.state.baubles.length + inFlight;
+    // its part of the garland: the k-th ornament caught takes the k-th
+    // share of the free places, so all of them fill the whole train
+    const from = Math.round((this.free * this.caught) / this.count);
+    const to = Math.round((this.free * (this.caught + 1)) / this.count);
+    best.slot = this.before + from;
+    best.share = to - from;
     this.caught += 1;
     this.ctx.hud.setCounter('🎄', this.caught, this.goal);
     this.particles.burst(best.x, best.y, [best.color, '#ffffff', '#ffd54f'], 10, 180);
