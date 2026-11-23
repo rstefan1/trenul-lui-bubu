@@ -27,6 +27,12 @@
  * landscape — behind the train and the text, which stay sharp — looks the
  * same a little softer. The memory of a tile grows with the square of its
  * resolution, so the cap saves most where it is invisible.
+ *
+ * Painting a tile (a forest with hundreds of firs) can take longer than a
+ * frame. So that no frame is ever late because of it, the tiles that are
+ * about to come into view are painted ahead, one at a time, when the
+ * browser has a moment to spare (requestIdleCallback), well before they are
+ * needed.
  */
 
 import { LruCache, createOffscreen } from '../core/canvas-cache.js';
@@ -66,6 +72,12 @@ const SEAM = 1;
 
 /** Number of variants per biome and layer (avoids visible repetition). */
 const VARIANTS = 4;
+/** How many tiles beyond the right edge of the screen are painted ahead, per layer. */
+const AHEAD = 1;
+/** Paint ahead only while at least this much of the browser's spare moment is left (ms). */
+const IDLE_MARGIN = 4;
+/** At the latest after this long (ms), a tile is painted ahead even if the browser is never idle. */
+const IDLE_TIMEOUT = 600;
 
 const GROUND_DEEP_BARE = hexToRgb(paletteFor(false).groundDeep);
 const GROUND_DEEP_SNOWY = hexToRgb(paletteFor(true).groundDeep);
@@ -106,9 +118,15 @@ export class Landscape {
     this.biomeAt = biomeAt;
     /** @type {LruCache<Tile>} */
     this.cache = new LruCache(30);
-    stage.on('resize', () => this.cache.clear());
+    stage.on('resize', () => {
+      this.cache.clear();
+      this.ahead.clear();
+    });
     /** Paint the tiles at the screen's full density, without the caps (for comparing, in ?debug). */
     this.fullResolution = false;
+    /** @type {Map<string, {layer: LayerSpec, biome: string, variant: number, snowy: boolean, soon: number}>} tiles to paint ahead */
+    this.ahead = new Map();
+    this.idleQueued = false;
   }
 
   /**
@@ -119,6 +137,7 @@ export class Landscape {
     if (full === this.fullResolution) return;
     this.fullResolution = full;
     this.cache.clear();
+    this.ahead.clear();
   }
 
   /**
@@ -178,6 +197,83 @@ export class Landscape {
     }
     if (extraLights) extraLights(c);
     c.restore();
+    this.planAhead(layer, view);
+  }
+
+  /**
+   * Notes the tiles of a layer that come into view next, to paint them ahead.
+   * @private
+   * @param {LayerSpec} layer
+   * @param {LandscapeView} view
+   */
+  planAhead(layer, view) {
+    const offset = view.distance * layer.speed;
+    const last = Math.floor((offset + this.stage.width) / TILE_WIDTH);
+    // the ground can be bare, snowy, or both while it turns white
+    const covers = view.cover <= 0.001 ? [false] : view.cover >= 0.999 ? [true] : [false, true];
+    for (let i = last + 1; i <= last + AHEAD; i++) {
+      const t = this.tileAt(layer, i);
+      // how soon it comes into view (in stage units of the near layer: the far ones come later)
+      const soon = (i * TILE_WIDTH - offset - this.stage.width) / layer.speed;
+      for (const snowy of covers) {
+        const key = this.keyOf(layer, t.biome, t.variant, snowy);
+        if (!this.cache.has(key) && !this.ahead.has(key)) this.ahead.set(key, { layer, ...t, snowy, soon });
+      }
+    }
+    if (this.ahead.size && !this.idleQueued) this.whenIdle();
+  }
+
+  /**
+   * Asks the browser for a spare moment to paint ahead.
+   * @private
+   */
+  whenIdle() {
+    this.idleQueued = true;
+    const run = (/** @type {IdleDeadline | null} */ deadline) => {
+      this.idleQueued = false;
+      this.paintAhead(deadline);
+      if (this.ahead.size) this.whenIdle();
+    };
+    if (window.requestIdleCallback) window.requestIdleCallback(run, { timeout: IDLE_TIMEOUT });
+    else setTimeout(() => run(null), 50);   // Safari: no idle callbacks, a short pause instead
+  }
+
+  /**
+   * Paints the tiles noted ahead, the soonest first, while the spare moment lasts
+   * (always at least one, so they are ready in time).
+   * @private
+   * @param {IdleDeadline | null} deadline
+   */
+  paintAhead(deadline) {
+    const jobs = [...this.ahead.entries()].sort((a, b) => a[1].soon - b[1].soon);
+    for (const [key, job] of jobs) {
+      this.ahead.delete(key);
+      if (this.cache.has(key)) continue;
+      this.tile(job.layer, job.biome, job.variant, job.snowy);
+      if (!deadline || deadline.timeRemaining() < IDLE_MARGIN) return;
+    }
+  }
+
+  /**
+   * Which biome and variant tile number `i` of a layer shows.
+   * @private
+   * @param {LayerSpec} layer
+   * @param {number} i
+   */
+  tileAt(layer, i) {
+    const centreDistance = (i * TILE_WIDTH + TILE_WIDTH / 2 - REFERENCE_X) / layer.speed;
+    return { biome: this.biomeAt(centreDistance), variant: ((i % VARIANTS) + VARIANTS) % VARIANTS };
+  }
+
+  /**
+   * @private
+   * @param {LayerSpec} layer
+   * @param {string} biomeId
+   * @param {number} variant
+   * @param {boolean} snowy
+   */
+  keyOf(layer, biomeId, variant, snowy) {
+    return `${layer.id}|${biomeId}|${variant}|${snowy ? 's' : 'b'}`;
   }
 
   /**
@@ -191,14 +287,7 @@ export class Landscape {
     const first = Math.floor(offset / TILE_WIDTH);
     const last = Math.floor((offset + this.stage.width) / TILE_WIDTH);
     const out = [];
-    for (let i = first; i <= last; i++) {
-      const centreDistance = (i * TILE_WIDTH + TILE_WIDTH / 2 - REFERENCE_X) / layer.speed;
-      out.push({
-        x: i * TILE_WIDTH - offset,
-        biome: this.biomeAt(centreDistance),
-        variant: ((i % VARIANTS) + VARIANTS) % VARIANTS,
-      });
-    }
+    for (let i = first; i <= last; i++) out.push({ x: i * TILE_WIDTH - offset, ...this.tileAt(layer, i) });
     return out;
   }
 
@@ -231,8 +320,7 @@ export class Landscape {
    * @returns {Tile}
    */
   tile(layer, biomeId, variant, snowy) {
-    const key = `${layer.id}|${biomeId}|${variant}|${snowy ? 's' : 'b'}`;
-    return this.cache.get(key, () => {
+    return this.cache.get(this.keyOf(layer, biomeId, variant, snowy), () => {
       const ratio = this.ratioOf(layer);
       const req = { x: 0, y: layer.top, width: TILE_WIDTH, height: layer.bottom - layer.top, ratio };
       const body = createOffscreen(req);
