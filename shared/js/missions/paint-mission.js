@@ -132,23 +132,36 @@ export class PaintMission extends SceneMission {
     const u = (p.x - b.x) / b.scale;
     const v = (p.y - b.y) / b.scale;
     // topmost part first; small parts get a little extra room
-    for (let i = PARTS.length - 1; i >= 0; i--) {
+    let target = null;
+    for (let i = PARTS.length - 1; i >= 0 && !target; i--) {
       const part = PARTS[i];
-      if (!this.inside(part.id, u, v)) continue;
-      if (this.painted.has(part.id)) continue;
-      if (COLORS[this.brush].n === part.n) {
-        this.painted.add(part.id);
-        this.since.set(part.id, 0);
-        this.particles.burst(p.x, p.y, [COLORS[this.brush].color, '#ffffff'], 14, 180);
-        this.sound('brush', p.x);
-        this.ctx.hud.setCounter('🎨', this.painted.size, PARTS.length);
-        if (this.painted.size === PARTS.length) this.doneT = 0;
-      } else {
-        this.mistakes += 1;
-        this.oops();
-        this.shake.set(part.id, 0.45);
+      if (this.inside(part.id, u, v) && !this.painted.has(part.id)) target = part;
+    }
+    // on a small screen a finger easily misses a small part: the nearest
+    // number still to paint counts too
+    if (!target) {
+      let best = 22 / this.ctx.stage.scale / b.scale;
+      for (const part of PARTS) {
+        if (this.painted.has(part.id)) continue;
+        const d = Math.hypot(part.label[0] - u, part.label[1] - v);
+        if (d < best) {
+          best = d;
+          target = part;
+        }
       }
-      return;
+    }
+    if (!target) return;
+    if (COLORS[this.brush].n === target.n) {
+      this.painted.add(target.id);
+      this.since.set(target.id, 0);
+      this.particles.burst(p.x, p.y, [COLORS[this.brush].color, '#ffffff'], 14, 180);
+      this.sound('brush', p.x);
+      this.ctx.hud.setCounter('🎨', this.painted.size, PARTS.length);
+      if (this.painted.size === PARTS.length) this.doneT = 0;
+    } else {
+      this.mistakes += 1;
+      this.oops();
+      this.shake.set(target.id, 0.45);
     }
   }
 
@@ -246,7 +259,9 @@ export class PaintMission extends SceneMission {
     }
     if (done) this.drawSaints(c, clamp(this.doneT / 0.8, 0, 1));
     // the numbers of the parts still to paint
-    c.font = '800 6px "Baloo 2", system-ui, sans-serif';
+    // (a little bigger on phones, as far as they stay apart)
+    const lk = 1 + (this.ctx.stage.ui - 1) * 0.5;
+    c.font = `800 ${(6 * lk).toFixed(1)}px "Baloo 2", system-ui, sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     for (const part of PARTS) {
@@ -254,14 +269,14 @@ export class PaintMission extends SceneMission {
       const [x, y] = part.label;
       const picked = COLORS[this.brush].n === part.n;
       c.fillStyle = picked ? '#ffd23f' : '#ffffff';
-      fillCircle(c, x, y, 4.2);
+      fillCircle(c, x, y, 4.2 * lk);
       c.strokeStyle = '#3a2d26';
       c.lineWidth = 0.5;
       c.beginPath();
-      c.arc(x, y, 4.2, 0, Math.PI * 2);
+      c.arc(x, y, 4.2 * lk, 0, Math.PI * 2);
       c.stroke();
       c.fillStyle = '#1b2440';
-      c.fillText(String(part.n), x, y + 0.3);
+      c.fillText(String(part.n), x, y + 0.3 * lk);
     }
     c.restore();
     this.particles.draw(c);

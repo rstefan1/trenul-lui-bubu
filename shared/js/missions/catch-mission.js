@@ -139,12 +139,15 @@ export class CatchMission extends Mission {
   spawn() {
     const k = this.spawned / Math.max(1, this.count - 1);   // 0 → 1 along the mission
     const stage = this.ctx.stage;
+    // bigger on phones, and never behind the heads-up display
+    const r = lerp(36, 31, k) * stage.ui;
+    const top = Math.max(SKY_TOP, stage.toStage(0, this.ctx.hud.controlsBottom).y + r + 24);
     this.ornaments.push({
       x: stage.viewRight + 60,
       y: 0,
-      baseY: lerp(SKY_TOP, SKY_BOTTOM, Math.random()),
+      baseY: lerp(top, Math.max(top, SKY_BOTTOM), Math.random()),
       vx: -lerp(MIN_SPEED, MAX_SPEED, k) * (0.9 + Math.random() * 0.2),
-      r: lerp(36, 31, k),
+      r,
       phase: Math.random() * 6.28,
       color: BAUBLE_COLORS[this.spawned % BAUBLE_COLORS.length],
       state: 'free',

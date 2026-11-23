@@ -88,7 +88,7 @@ export class PhotoMission extends Mission {
 
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerDown(p) {
-    const reach = Math.max(70, 40 / this.ctx.stage.scale);
+    const reach = Math.max(70 * this.ctx.stage.ui, 40 / this.ctx.stage.scale);
     for (const s of this.sightings) {
       if (s.state !== 'waiting') continue;
       const q = this.at(s);
@@ -126,14 +126,15 @@ export class PhotoMission extends Mission {
   /** @param {CanvasRenderingContext2D} c */
   draw(c) {
     const lifted = this.ctx.world.cameraY > 60;
+    const ui = this.ctx.stage.ui;   // bigger animals on phones
     for (const s of this.sightings) {
       if (s.state === 'missed') continue;
       const q = this.at(s);
       if (q.x < this.ctx.stage.viewLeft - 80 || q.x > this.ctx.stage.viewRight + 80) continue;
       if (s.state === 'waiting' && lifted) {
-        glow(c, q.x, q.y, 70, `rgba(255,240,170,${0.25 + 0.15 * Math.sin(this.time * 4)})`, 'rgba(255,240,170,0)');
+        glow(c, q.x, q.y, 70 * ui, `rgba(255,240,170,${0.25 + 0.15 * Math.sin(this.time * 4)})`, 'rgba(255,240,170,0)');
       }
-      c.font = '64px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+      c.font = `${Math.round(64 * ui)}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
       c.textAlign = 'center';
       c.textBaseline = 'middle';
       c.fillText(s.animal, q.x, q.y);
@@ -179,8 +180,9 @@ export class PhotoMission extends Mission {
    */
   drawAlbum(c) {
     const stage = this.ctx.stage;
-    const w = 100;
-    const h = 70;
+    const ui = stage.ui;   // bigger photos on phones
+    const w = 100 * ui;
+    const h = 70 * ui;
     this.album.forEach((thumb, i) => {
       const x = stage.viewLeft + 24 + i * (w + 16);
       const y = stage.viewBottom - h - 40;

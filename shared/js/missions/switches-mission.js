@@ -19,10 +19,11 @@
  *   doneText, fact
  */
 
-import { approach, lerp } from '../core/math.js';
+import { approach, clamp, lerp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillCircle, fillRoundRect, fillStar, glow } from '../gfx/shapes.js';
 import { el } from '../ui/dom.js';
+import { zoomed } from '../gfx/ui-style.js';
 import { starsForMistakes } from './mission.js';
 import { SceneMission } from './scene-mission.js';
 
@@ -174,8 +175,10 @@ export class SwitchesMission extends SceneMission {
   /** @private The free rectangle between the card (or the HUD) and the program panel. */
   freeBox() {
     const stage = this.ctx.stage;
-    const cardBottom = this.ctx.hud.cardBottom;
-    const top = Math.max(stage.viewTop + 200, cardBottom ? stage.toStage(0, cardBottom + 24).y : 0);
+    const hud = this.ctx.hud;
+    const cardBottom = hud.cardBottom;
+    const top = Math.max(stage.viewTop + 200, stage.toStage(0, hud.controlsBottom + 16).y,
+      cardBottom ? stage.toStage(0, cardBottom + 24).y : -Infinity);
     const panel = this.ctx.panel.firstElementChild;
     const panelTop = panel ? panel.getBoundingClientRect().top : window.innerHeight;
     const bottom = Math.min(stage.viewBottom - 20, stage.toStage(0, panelTop - 12).y);
@@ -345,10 +348,11 @@ export class SwitchesMission extends SceneMission {
     fillRoundRect(c, b.left, b.top, b.right - b.left, b.bottom - b.top, 24, '#dfe6f1');
     // the task, in big letters
     c.fillStyle = '#1b2440';
-    c.font = '800 26px "Baloo 2", system-ui, sans-serif';
+    const ui = this.ctx.stage.ui;   // bigger letters on phones
+    c.font = `800 ${Math.round(26 * ui)}px "Baloo 2", system-ui, sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText(this.message, (b.left + b.right) / 2, b.top + 22);
+    c.fillText(this.message, (b.left + b.right) / 2, b.top + 22 * ui);
 
     this.drawTracks(c);
     this.drawTrain(c);
@@ -403,21 +407,12 @@ export class SwitchesMission extends SceneMission {
     }
     c.globalAlpha = 1;
 
-    // platforms with their numbers; the target shines
+    // platforms with their numbers; the target shines (bigger on phones, as
+    // far as they stay apart)
+    const lk = clamp((n > 1 ? Math.abs(this.trackY(1) - this.trackY(0)) : 60) / 42, 1, this.ctx.stage.ui);
     for (let k = 0; k < n; k++) {
       const y = this.trackY(k);
-      const target = k === this.target;
-      if (target) glow(c, b.right - 40, y, 50, 'rgba(255,215,90,0.6)', 'rgba(255,215,90,0)');
-      fillRoundRect(c, b.right - 64, y - 18, 48, 36, 9, target ? '#ffd23f' : '#ffffff');
-      c.fillStyle = '#1f4f9c';
-      c.font = '800 22px "Baloo 2", system-ui, sans-serif';
-      c.textAlign = 'center';
-      c.textBaseline = 'middle';
-      c.fillText(String(k + 1), b.right - 40, y + 1);
-      if (target) {
-        c.fillStyle = '#e53935';
-        fillStar(c, b.right - 6, y, 10, 4);
-      }
+      zoomed(c, lk, b.right - 40, y, () => this.drawPlatform(c, k, y));
     }
 
     // the switches: big round buttons with an arrow showing where they lead
@@ -437,6 +432,29 @@ export class SwitchesMission extends SceneMission {
         c.font = `800 ${Math.round(r * 1.1)}px "Baloo 2", system-ui, sans-serif`;
         c.fillText(this.switches.get(key) ? '⬇' : '⬆', p.x, p.y + 2);
       }
+    }
+  }
+
+  /**
+   * A numbered platform; the target shines.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {number} k
+   * @param {number} y
+   */
+  drawPlatform(c, k, y) {
+    const b = this.box;
+    const target = k === this.target;
+    if (target) glow(c, b.right - 40, y, 50, 'rgba(255,215,90,0.6)', 'rgba(255,215,90,0)');
+    fillRoundRect(c, b.right - 64, y - 18, 48, 36, 9, target ? '#ffd23f' : '#ffffff');
+    c.fillStyle = '#1f4f9c';
+    c.font = '800 22px "Baloo 2", system-ui, sans-serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(String(k + 1), b.right - 40, y + 1);
+    if (target) {
+      c.fillStyle = '#e53935';
+      fillStar(c, b.right - 6, y, 10, 4);
     }
   }
 

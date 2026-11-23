@@ -123,7 +123,7 @@ export class DepartureMission extends Mission {
       this.showLuggage();
     });
 
-    this.setPanel(el('div', { class: 'panel' }, [
+    this.setPanel(el('div', { class: 'panel ticket-panel' }, [
       el('p', { class: 'panel-kicker' }, ['Misiune']),
       el('h2', { class: 'panel-title' }, [this.config.title]),
       el('p', { class: 'panel-text' }, [this.config.text]),

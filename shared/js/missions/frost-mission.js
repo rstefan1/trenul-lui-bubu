@@ -17,6 +17,7 @@ import { Particles, SPARKS } from '../gfx/particles.js';
 import { drawFir, fillCircle, glow } from '../gfx/shapes.js';
 import { drawSleighTeam } from '../gfx/sleigh.js';
 import { TRACK_Y } from '../world/track.js';
+import { unzoom, zoomed } from '../gfx/ui-style.js';
 import { Mission } from './mission.js';
 
 /** Radius of a frost flower (stage units). */
@@ -143,7 +144,7 @@ export class FrostMission extends Mission {
    * @returns {Bloom}
    */
   makeBloom(picture) {
-    const ratio = Math.min(2, this.ctx.stage.scale * this.ctx.stage.dpr);
+    const ratio = Math.min(2, this.ctx.stage.scale * this.ctx.stage.dpr * this.ctx.stage.ui);
     const { canvas: frost, ctx: fc } = createOffscreen({ x: 0, y: 0, width: R * 2, height: R * 2, ratio });
     const g = fc.createRadialGradient(R, R, R * 0.1, R, R, R);
     g.addColorStop(0, 'rgba(236,244,255,0.97)');
@@ -177,26 +178,43 @@ export class FrostMission extends Mission {
     return { picture, frost, fc, cells: new Array(GRID * GRID).fill(false), grow: 0, melt: -1 };
   }
 
-  /** Where the frost flower is: in the sky above the train, in the middle. */
+  /**
+   * Where the frost flower is: in the sky above the train, in the middle.
+   * `k`: how much bigger it is drawn (on phones, as far as the sky allows).
+   */
   get centre() {
     const stage = this.ctx.stage;
     const hud = this.ctx.hud;
     const top = stage.toStage(0, Math.max(hud.hudBottom, hud.cardBottom)).y;
     const bottom = TRACK_Y - 290 - this.ctx.world.cameraY;
-    return { x: stage.width / 2, y: clamp((top + bottom) / 2, top + R + 10, Math.max(top + R + 10, bottom - R)) };
+    const k = clamp((bottom - top - 20) / (2 * R + 22), 1, stage.ui);
+    const r = R * k;
+    return { x: stage.width / 2, y: clamp((top + bottom) / 2, top + r + 10, Math.max(top + r + 10, bottom - r)), k };
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerDown(p) {
-    this.rubbing = { x: p.x, y: p.y };
-    this.wipe(p.x, p.y, p.x, p.y);
+    const q = this.toFlower(p);
+    this.rubbing = q;
+    this.wipe(q.x, q.y, q.x, q.y);
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerMove(p) {
     if (!this.rubbing) return;
-    this.wipe(this.rubbing.x, this.rubbing.y, p.x, p.y);
-    this.rubbing = { x: p.x, y: p.y };
+    const q = this.toFlower(p);
+    this.wipe(this.rubbing.x, this.rubbing.y, q.x, q.y);
+    this.rubbing = q;
+  }
+
+  /**
+   * A touch in the units of the flower (which may be drawn bigger).
+   * @private
+   * @param {{x: number, y: number}} p
+   */
+  toFlower(p) {
+    const c0 = this.centre;
+    return unzoom(p, c0.k, c0.x, c0.y);
   }
 
   pointerUp() {
@@ -236,7 +254,10 @@ export class FrostMission extends Mission {
       }
     }
     b.fc.restore();
-    if (Math.random() < 0.3) this.particles.burst(x1, y1, ['#ffffff', '#dbe9ff'], 3, 120);
+    if (Math.random() < 0.3) {
+      const k = c0.k;
+      this.particles.burst(c0.x + (x1 - c0.x) * k, c0.y + (y1 - c0.y) * k, ['#ffffff', '#dbe9ff'], 3, 120);
+    }
     if (this.share(b) >= CLEAR) {
       b.melt = 0;
       this.cleared += 1;
@@ -300,7 +321,19 @@ export class FrostMission extends Mission {
       this.particles.draw(c);
       return;
     }
-    const { x, y } = this.centre;
+    const { x, y, k } = this.centre;
+    zoomed(c, k, x, y, () => this.drawFlower(c, b, x, y));
+    this.particles.draw(c);
+  }
+
+  /**
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {Bloom} b
+   * @param {number} x
+   * @param {number} y
+   */
+  drawFlower(c, b, x, y) {
     const r = R * (0.3 + 0.7 * b.grow);
     // the picture, in a round window
     c.save();
@@ -327,6 +360,5 @@ export class FrostMission extends Mission {
     c.beginPath();
     c.arc(x, y, r + 11, 0, TAU);
     c.stroke();
-    this.particles.draw(c);
   }
 }

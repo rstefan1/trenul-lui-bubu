@@ -23,6 +23,7 @@ import { fillCircle, fillRoundRect, glow } from '../gfx/shapes.js';
 import { MANUAL } from '../journey/journey.js';
 import { drawBubu } from '../train/bubu.js';
 import { TRACK_Y } from '../world/track.js';
+import { zoomed } from '../gfx/ui-style.js';
 import { Mission } from './mission.js';
 
 /** How much snow one stage unit of rubbing clears (the drift starts at 1). */
@@ -111,7 +112,8 @@ export class SnowboundMission extends Mission {
       this.clear(TAP, p);
     } else if (this.step === 'signal') {
       const l = this.lantern;
-      if (Math.hypot(p.x - l.x, p.y - (l.y - 40)) < Math.max(80, 50 / this.ctx.stage.scale)) {
+      const ui = this.ctx.stage.ui;
+      if (Math.hypot(p.x - l.x, p.y - (l.y - 14 - 26 * ui)) < Math.max(80 * ui, 50 / this.ctx.stage.scale)) {
         this.signals += 1;
         this.flash = 1;
         this.sound('ding', l.x);
@@ -329,24 +331,30 @@ export class SnowboundMission extends Mission {
         c.fill();
       }
     }
-    fillRoundRect(c, l.x - 18, l.y - 70, 36, 56, 10, '#37474f');
-    fillRoundRect(c, l.x - 12, l.y - 62, 24, 36, 6, this.step === 'signal' || this.flash ? '#ffe082' : '#90a4ae');
-    c.strokeStyle = '#37474f';
-    c.lineWidth = 4;
-    c.beginPath();
-    c.arc(l.x, l.y - 74, 12, Math.PI, 0);
-    c.stroke();
-    if (this.step === 'signal') {
-      c.fillStyle = '#ffffff';
-      c.font = '800 22px "Baloo 2", system-ui, sans-serif';
-      c.textAlign = 'center';
-      c.fillText(`${this.signals} / 3`, l.x, l.y - 100);
-    }
+    // the lantern and the snow left: bigger on phones
+    const ui = this.ctx.stage.ui;
+    zoomed(c, ui, l.x, l.y - 14, () => {
+      fillRoundRect(c, l.x - 18, l.y - 70, 36, 56, 10, '#37474f');
+      fillRoundRect(c, l.x - 12, l.y - 62, 24, 36, 6, this.step === 'signal' || this.flash ? '#ffe082' : '#90a4ae');
+      c.strokeStyle = '#37474f';
+      c.lineWidth = 4;
+      c.beginPath();
+      c.arc(l.x, l.y - 74, 12, Math.PI, 0);
+      c.stroke();
+      if (this.step === 'signal') {
+        c.fillStyle = '#ffffff';
+        c.font = '800 22px "Baloo 2", system-ui, sans-serif';
+        c.textAlign = 'center';
+        c.fillText(`${this.signals} / 3`, l.x, l.y - 100);
+      }
+    });
     // a hint of how much snow is left while digging
     if (this.step === 'dig') {
       const k = (this.snow - PLOUGH_AT) / (1 - PLOUGH_AT);
-      fillRoundRect(c, x0 + DRIFT_W / 2 - 100, TRACK_Y - 330, 200, 16, 8, 'rgba(19,41,90,0.7)');
-      fillRoundRect(c, x0 + DRIFT_W / 2 - 100, TRACK_Y - 330, Math.max(16, 200 * k), 16, 8, '#e3ecf8');
+      zoomed(c, ui, x0 + DRIFT_W / 2, TRACK_Y - 314, () => {
+        fillRoundRect(c, x0 + DRIFT_W / 2 - 100, TRACK_Y - 330, 200, 16, 8, 'rgba(19,41,90,0.7)');
+        fillRoundRect(c, x0 + DRIFT_W / 2 - 100, TRACK_Y - 330, Math.max(16, 200 * k), 16, 8, '#e3ecf8');
+      });
     }
     c.restore();
     if (this.step === 'out' || this.step === 'back') this.drawHop(c, x0 - 95);

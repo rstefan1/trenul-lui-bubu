@@ -525,6 +525,10 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .panel .big-btn { margin-top: 6px; animation: none; }
 .panel .big-btn:disabled { filter: grayscale(.8); opacity: .55; cursor: not-allowed; box-shadow: 0 4px 0 #155a30; }
 
+@media (max-height: 520px) and (orientation: landscape) {
+  .panel .panel-kicker { display: none; }
+}
+
 /* ---------- Ticket ---------- */
 .ticket {
   width: min(500px, 100%);
@@ -680,6 +684,34 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   .luggage-items { grid-template-columns: repeat(3, 1fr); width: 100%; }
   .luggage-icon { font-size: 32px; }
   .luggage-item { font-size: 13px; }
+  .suitcase { width: 120px; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  .luggage { gap: 10px; margin: 0; }
+  .luggage-items { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+  .luggage-item { padding: 2px 4px; font-size: 12px; border-radius: 12px; }
+  .luggage-icon { font-size: 26px; }
+  .suitcase { width: 120px; }
+  .suitcase-count { font-size: 16px; }
+  .bubu-says { font-size: 14px; padding: 2px 12px 2px 4px; }
+  .bubu-says img { width: 34px; height: 34px; }
+  .ticket { margin: 2px 0; padding: 6px 14px 8px; }
+  .ticket-route { margin: 2px 0; font-size: 17px; }
+  .ticket-grid { margin-bottom: 4px; }
+  .ticket-grid dd { font-size: 17px; }
+  .swatch { width: 40px; height: 40px; }
+  /* the ticket on the left, the name hint, the colours and the button on the right */
+  .ticket-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    column-gap: 16px;
+    align-items: center;
+    width: min(860px, 100%);
+  }
+  .ticket-panel > * { grid-column: 2; }
+  .ticket-panel > .panel-title, .ticket-panel > .panel-title + .panel-text { grid-column: 1 / -1; }
+  .ticket-panel > .ticket { grid-column: 1; grid-row: 3 / span 4; width: 100%; }
+  .ticket-panel .big-btn { justify-self: center; }
 }
 
 /* ---------- Ticket reminder while boarding ---------- */
@@ -785,6 +817,12 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .fact b { color: var(--station-blue); }
 @media (max-width: 640px) {
   .puzzle { flex-direction: column-reverse; align-items: center; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  /* the picture as big as the height under the HUD allows */
+  .puzzle { margin: 0; }
+  .puzzle-grid { width: min(440px, calc(100dvh - var(--hud-bottom, 70px) - 110px)); }
+  .puzzle.is-solved .puzzle-grid { width: min(320px, calc(100dvh - var(--hud-bottom, 70px) - 190px)); }
 }
 
 /* ---------- Panel at the bottom (the scene above stays visible) ---------- */
@@ -907,6 +945,12 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .program-title { margin: 0; font-size: clamp(15px, 2.3vmin, 19px); font-weight: 700; }
 .program-run { padding: 8px 26px 10px; font-size: clamp(20px, 3vmin, 28px); }
 .program-run:disabled { filter: grayscale(.8); opacity: .5; cursor: not-allowed; }
+@media (max-height: 520px) and (orientation: landscape) {
+  /* sideways phones: the sentence beside the button, so the tracks get the height */
+  .program-panel { flex-direction: row; justify-content: center; gap: 16px; padding: 8px 16px; }
+  .program-panel .program-title { text-align: left; max-width: 26em; }
+  .program-panel .big-btn { margin-top: 0; flex: none; }
+}
 
 /* ---------- Brake button (animals crossing) ---------- */
 .brake-btn {
@@ -972,6 +1016,11 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 @media (max-height: 560px) {
   .memory-card { aspect-ratio: 1; }
 }
+/* sideways phones: all the cards in one row, so they fit under the HUD */
+@media (max-height: 520px) and (orientation: landscape) {
+  .memory-panel { width: min(860px, 100%); }
+  .memory-grid { grid-template-columns: repeat(calc(var(--cols, 4) * 2), 1fr); gap: 8px; }
+}
 .memory-card.is-matched { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold); }
 
 /* ---------- Mission briefing (pauses the game until it is closed) ---------- */
@@ -1017,6 +1066,24 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   line-height: 1.45;
 }
 .briefing__note { margin: 10px 0 0; font-size: 14px; color: #7a6a55; }
+/* sideways phones: Bubu beside the title, so the whole card fits without scrolling */
+@media (max-height: 520px) and (orientation: landscape) {
+  .briefing { padding: 8px; }
+  .briefing__card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 14px;
+    align-items: center;
+    width: min(720px, 100%);
+    padding: 10px 20px 12px;
+  }
+  .briefing__bubu { grid-row: 1 / 3; width: 64px; height: 64px; margin: 0; }
+  .briefing__card .mission-kicker { text-align: left; }
+  .briefing__card .mission-title { text-align: left; font-size: 24px; }
+  .briefing__text { grid-column: 1 / -1; margin: 6px 0 10px; font-size: 17px; line-height: 1.35; }
+  .briefing__card .big-btn { grid-column: 1 / -1; justify-self: center; padding: 6px 30px 8px; font-size: 24px; }
+  .briefing__note { grid-column: 1 / -1; margin-top: 6px; font-size: 12px; }
+}
 .help-btn {
   position: fixed;
   left: max(var(--gap), env(safe-area-inset-left));

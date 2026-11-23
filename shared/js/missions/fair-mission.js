@@ -27,6 +27,7 @@ import { drawFir, fillCircle, fillRoundRect, fillStar, glow } from '../gfx/shape
 import { drawFairStalls } from '../gfx/scenes/fair-stalls.js';
 import { drawWinterValley } from '../gfx/scenes/winter-valley.js';
 import { drawSleighTeam } from '../gfx/sleigh.js';
+import { zoomed } from '../gfx/ui-style.js';
 import { SceneMission } from './scene-mission.js';
 
 /** Seconds of the ride up the hill and down again. */
@@ -85,8 +86,10 @@ export class FairMission extends SceneMission {
   /** The free part of the screen (it grows when the instructions card goes away). */
   get layout() {
     const stage = this.ctx.stage;
-    const cardBottom = this.ctx.hud.cardBottom;
-    const top = Math.max(stage.viewTop + 140, cardBottom ? stage.toStage(0, cardBottom + 20).y : 0);
+    const hud = this.ctx.hud;
+    const cardBottom = hud.cardBottom;
+    const top = Math.max(stage.viewTop + 140, stage.toStage(0, hud.controlsBottom + 20).y,
+      cardBottom ? stage.toStage(0, cardBottom + 20).y : -Infinity);
     return { top, bottom: stage.viewBottom - 60, left: stage.viewLeft, right: stage.viewRight, w: stage.viewRight - stage.viewLeft };
   }
 
@@ -178,7 +181,8 @@ export class FairMission extends SceneMission {
       const sx = L.left + L.w * 0.22;
       for (const it of this.items) {
         it.x -= ITEM_SPEED * dt;
-        if (!it.taken && Math.abs(it.x - (sx + 40)) < 70 && Math.abs(it.y - (this.sleighY - 30)) < 70) {
+        const reach = 70 * this.ctx.stage.ui;
+        if (!it.taken && Math.abs(it.x - (sx + 40)) < reach && Math.abs(it.y - (this.sleighY - 30)) < reach) {
           it.taken = true;
           this.coins += 1;
           this.ctx.hud.setCounter('🪙', this.coins, 0);
@@ -219,6 +223,12 @@ export class FairMission extends SceneMission {
     return { x, y: ground, h: this.config.trees[i].height * unit, unit };
   }
 
+  /** How much bigger the trees' labels are drawn (on phones, as far as they stay apart). */
+  get labelZoom() {
+    const L = this.layout;
+    return clamp((L.w * 0.84) / this.config.trees.length / 140, 1, this.ctx.stage.ui);
+  }
+
   /**
    * The tree under a point, or -1.
    * @param {{x: number, y: number}} p
@@ -226,7 +236,7 @@ export class FairMission extends SceneMission {
   treeAt(p) {
     for (let i = 0; i < this.config.trees.length; i++) {
       const t = this.treeSpot(i);
-      if (Math.abs(p.x - t.x) < Math.max(70, t.h * 0.3) && p.y > t.y - t.h - 60 && p.y < t.y + 50) return i;
+      if (Math.abs(p.x - t.x) < Math.max(70, t.h * 0.3) && p.y > t.y - t.h - 60 && p.y < t.y + 10 + 54 * this.labelZoom) return i;
     }
     return -1;
   }
@@ -260,12 +270,16 @@ export class FairMission extends SceneMission {
 
     if (this.say.t < 3.5) {
       c.globalAlpha = this.fade * clamp(3.5 - this.say.t, 0, 1);
-      fillRoundRect(c, stage.width / 2 - 360, L.top - 10, 720, 50, 16, this.say.good ? 'rgba(46,157,87,0.95)' : 'rgba(198,40,40,0.95)');
-      c.fillStyle = '#ffffff';
-      c.font = '700 22px "Baloo 2", system-ui, sans-serif';
-      c.textAlign = 'center';
-      c.textBaseline = 'middle';
-      c.fillText(this.say.text, stage.width / 2, L.top + 15);
+      // as big as the width allows on phones (the sentence is long)
+      const k = clamp((stage.viewRight - stage.viewLeft - 20) / 720, 0.5, stage.ui);
+      zoomed(c, k, stage.width / 2, L.top - 10, () => {
+        fillRoundRect(c, stage.width / 2 - 360, L.top - 10, 720, 50, 16, this.say.good ? 'rgba(46,157,87,0.95)' : 'rgba(198,40,40,0.95)');
+        c.fillStyle = '#ffffff';
+        c.font = '700 22px "Baloo 2", system-ui, sans-serif';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText(this.say.text, stage.width / 2, L.top + 15);
+      });
     }
     c.restore();
   }
@@ -280,25 +294,28 @@ export class FairMission extends SceneMission {
     // mountains, a valley with a village and many firs, scrolling by
     const stage = this.ctx.stage;
     drawWinterValley(c, { left: L.left, right: L.right, top: stage.viewTop, bottom: L.bottom + 60 }, this.scroll);
+    const ui = stage.ui;   // bigger coins and sleigh on phones
     for (const it of this.items) {
       const bob = Math.sin(this.time * 3 + it.phase) * 8;
-      glow(c, it.x, it.y + bob, 34, 'rgba(255,215,90,0.45)', 'rgba(255,215,90,0)');
-      c.fillStyle = '#f2b632';
-      fillCircle(c, it.x, it.y + bob, 18);
-      c.fillStyle = '#ffd54f';
-      fillCircle(c, it.x, it.y + bob, 13);
-      c.fillStyle = '#c79400';
-      c.font = '800 16px "Baloo 2", system-ui, sans-serif';
-      c.textAlign = 'center';
-      c.textBaseline = 'middle';
-      c.fillText('B', it.x, it.y + bob + 1);
+      zoomed(c, ui, it.x, it.y + bob, () => {
+        glow(c, it.x, it.y + bob, 34, 'rgba(255,215,90,0.45)', 'rgba(255,215,90,0)');
+        c.fillStyle = '#f2b632';
+        fillCircle(c, it.x, it.y + bob, 18);
+        c.fillStyle = '#ffd54f';
+        fillCircle(c, it.x, it.y + bob, 13);
+        c.fillStyle = '#c79400';
+        c.font = '800 16px "Baloo 2", system-ui, sans-serif';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText('B', it.x, it.y + bob + 1);
+      });
     }
     const sx = L.left + L.w * 0.22;
     const y = this.act === 'down' ? (L.top + L.bottom) / 2 + Math.sin(this.time * 2) * 20 : this.sleighY;
     const cargo = this.act === 'down'
       ? (/** @type {CanvasRenderingContext2D} */ cc, /** @type {number} */ x, /** @type {number} */ yy) => drawFir(cc, x, yy + 10, 110, { snowy: true })
       : undefined;
-    drawSleighTeam(c, sx, y, 1.15, this.time, cargo);
+    drawSleighTeam(c, sx, y, 1.15 * ui, this.time, cargo);
   }
 
   /**
@@ -322,16 +339,18 @@ export class FairMission extends SceneMission {
       const t = this.treeSpot(i);
       if (i === this.chosen) glow(c, t.x, t.y - t.h / 2, t.h, 'rgba(255,230,140,0.55)', 'rgba(255,230,140,0)');
       drawFir(c, t.x, t.y, t.h, { snowy: true });
-      // the label: height and price
+      // the label: height and price (bigger on phones)
       const ly = t.y + 8;
-      fillRoundRect(c, t.x - 66, ly, 132, 54, 10, '#fffaf0');
-      c.fillStyle = '#1b2440';
-      c.font = '800 20px "Baloo 2", system-ui, sans-serif';
-      c.textAlign = 'center';
-      c.textBaseline = 'middle';
-      c.fillText(`📏 ${fmt(offer.height)} m`, t.x, ly + 16);
-      c.fillStyle = '#b8860b';
-      c.fillText(`🪙 ${offer.price}`, t.x, ly + 39);
+      zoomed(c, this.labelZoom, t.x, ly, () => {
+        fillRoundRect(c, t.x - 66, ly, 132, 54, 10, '#fffaf0');
+        c.fillStyle = '#1b2440';
+        c.font = '800 20px "Baloo 2", system-ui, sans-serif';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText(`📏 ${fmt(offer.height)} m`, t.x, ly + 16);
+        c.fillStyle = '#b8860b';
+        c.fillText(`🪙 ${offer.price}`, t.x, ly + 39);
+      });
     });
     // the measuring stick: the largest tree that fits on the wagon
     const unit = this.treeSpot(0).unit;
@@ -350,7 +369,7 @@ export class FairMission extends SceneMission {
     c.stroke();
     c.setLineDash([]);
     c.fillStyle = '#ffd23f';
-    c.font = '800 18px "Baloo 2", system-ui, sans-serif';
+    c.font = `800 ${Math.round(18 * stage.ui)}px "Baloo 2", system-ui, sans-serif`;
     c.textAlign = 'left';
     c.fillText(`încape pe vagon: cel mult ${fmt(max)} m`, sx + 14, top - 14);
     if (this.chosen >= 0) {
