@@ -18,7 +18,7 @@
  * and twinkles, brightest at night.
  */
 
-import { createOffscreen } from '../core/canvas-cache.js';
+import { createOffscreen, releaseCanvas } from '../core/canvas-cache.js';
 import { TAU, approach, clamp } from '../core/math.js';
 import { drawBauble, drawGarland } from '../gfx/ornaments.js';
 import { fillCircle, glow } from '../gfx/shapes.js';
@@ -122,7 +122,7 @@ export class TrainRenderer {
     /** Where Bubu looks (screen x) and for how long already. */
     this.look = { x: 0, t: Infinity };
     this.setSpec(spec);
-    stage.on('resize', () => { this.body = null; });
+    stage.on('resize', () => this.dropBody());
   }
 
   /**
@@ -145,6 +145,16 @@ export class TrainRenderer {
     });
     /** Train x of the rear end. */
     this.rearX = cursor + spec.gap;
+    this.dropBody();
+  }
+
+  /**
+   * Forgets the painted body (it is painted again when next drawn), giving
+   * its memory back at once.
+   * @private
+   */
+  dropBody() {
+    releaseCanvas(this.body);
     this.body = null;
   }
 
@@ -165,7 +175,7 @@ export class TrainRenderer {
    */
   setLocoColor(color) {
     this.locoColor = color;
-    this.body = null;
+    this.dropBody();
   }
 
   /**

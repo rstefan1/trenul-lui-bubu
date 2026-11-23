@@ -9,7 +9,7 @@
 
 import { TAU } from '../core/math.js';
 import { rngFor } from '../core/random.js';
-import { createOffscreen } from '../core/canvas-cache.js';
+import { createOffscreen, releaseCanvas } from '../core/canvas-cache.js';
 import { css } from '../gfx/color.js';
 import { fillCircle, fillStar, glow } from '../gfx/shapes.js';
 
@@ -75,6 +75,7 @@ export class Sky {
         ctx.arc(x, y, r, 0, TAU);
       }
       ctx.fill();
+      releaseCanvas(this.starCanvas);
       this.starCanvas = canvas;
       this.starTop = top;
       this.starHeight = h;
