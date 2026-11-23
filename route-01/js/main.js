@@ -134,7 +134,7 @@ audio.register('brakes', '../shared/assets/sounds/brakes.mp3', { normalize: true
 for (const [name, file] of [
   ['station-platform', 'railway-station-platform'], ['station-crowd', 'station-crowd'], ['town-square', 'town-square'],
   ['winter-wind', 'winter-wind'], ['freight-train', 'freight-train-passing'],
-]) audio.register(name, `../shared/assets/sounds/${file}.mp3`, { normalize: true });
+]) audio.register(name, `../shared/assets/sounds/${file}.mp3`, { normalize: true, lazy: true });
 setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
 // every effect is measured once, so they can all be heard equally well
 audio.on('unlock', () => setTimeout(() => balanceSounds(audio), 1500));
