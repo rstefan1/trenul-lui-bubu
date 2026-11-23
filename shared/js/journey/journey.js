@@ -109,7 +109,8 @@ export class Journey extends Emitter {
   /**
    * The missions of this trip are done: the train hurries to the next
    * station (faster, and without the slow stretches kept for the missions —
-   * it still slows down on the viaducts), so the child does not wait.
+   * it still slows down on the viaducts, only a little less), so the child
+   * does not wait.
    */
   hurry() {
     if (this.state !== 'running' || this.controls) return;
@@ -128,7 +129,12 @@ export class Journey extends Emitter {
     const remaining = seg.length - offset;
     const limits = seg.limits
       .filter(l => !(skipMissionStretches && l.kind === 'mission'))
-      .map(l => ({ from: l.from - offset, to: l.to - offset, speed: l.speed, kind: l.kind }));
+      .map(l => ({
+        from: l.from - offset,
+        to: l.to - offset,
+        speed: skipMissionStretches && l.kind === 'viaduct' ? l.speed * HURRY : l.speed,
+        kind: l.kind,
+      }));
     this.leg = { plan: new MotionPlan(remaining, cruise, ACCELERATION * (cruise / CRUISE_SPEED), limits, this.speed), start: this.distance, elapsed: 0 };
   }
 
