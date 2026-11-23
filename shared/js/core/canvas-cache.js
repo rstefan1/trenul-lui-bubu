@@ -64,6 +64,14 @@ export class LruCache {
     return value;
   }
 
+  /**
+   * Is a value cached (without marking it as used)?
+   * @param {string} key
+   */
+  has(key) {
+    return this.map.has(key);
+  }
+
   clear() {
     this.map.clear();
   }
