@@ -100,15 +100,15 @@ export const WINTER_ROUTE = {
     // Ilva Mică → Vatra Dornei: deep forests and spectacular viaducts, under the full moon
     // (the train slows down on every viaduct, so the play time is longer than `duration`)
     {
-      duration: 70,
+      duration: 48,
       biomes: [[0, 'forest']],
       features: [
-        { type: 'viaduct', at: 0.12, length: 900, depth: 400 },
-        { type: 'tunnel', at: 0.27, length: 700 },
-        { type: 'viaduct', at: 0.38, length: 1300, depth: 480 },
-        { type: 'viaduct', at: 0.55, length: 800, depth: 340 },
-        { type: 'tunnel', at: 0.68, length: 520 },
-        { type: 'viaduct', at: 0.78, length: 1100, depth: 440 },
+        { type: 'viaduct', at: 0.1, length: 900, depth: 400 },
+        { type: 'tunnel', at: 0.26, length: 700 },
+        { type: 'viaduct', at: 0.37, length: 1300, depth: 480 },
+        { type: 'viaduct', at: 0.56, length: 800, depth: 340 },
+        { type: 'tunnel', at: 0.69, length: 520 },
+        { type: 'viaduct', at: 0.8, length: 1100, depth: 440 },
       ],
       snowfall: [[0, 0.15], [0.3, 0.04], [0.9, 0.04], [1, 0.12]],
       cover: [[0, 1]],
