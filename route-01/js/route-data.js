@@ -51,7 +51,7 @@ export const WINTER_ROUTE = {
   segments: [
     // Timișoara → Arad: the western plain on a sunny winter afternoon, no snow
     {
-      duration: 50,
+      duration: 34,
       biomes: [[0, 'city'], [0.2, 'plain'], [0.85, 'city']],
       features: [{ type: 'bridge', at: 0.45, length: 340, depth: 110 }],
       snowfall: [[0, 0]],
@@ -60,7 +60,7 @@ export const WINTER_ROUTE = {
     // Arad → Deva: along the Mureș valley (past Săvârșin); sunset, and the first snowflakes.
     // (the gifts mission stops the train by every waiting child)
     {
-      duration: 50,
+      duration: 33,
       biomes: [[0, 'city'], [0.14, 'plain'], [0.38, 'hills'], [0.9, 'city']],
       features: [{ type: 'bridge', at: 0.28, length: 420, depth: 120 }],
       snowfall: [[0, 0], [0.42, 0], [0.5, 0.25], [0.75, 0.6], [1, 0.55]],
@@ -68,14 +68,14 @@ export const WINTER_ROUTE = {
     },
     // Deva → Alba Iulia: hills and villages in the evening (past Simeria)
     {
-      duration: 50,
+      duration: 42,
       biomes: [[0, 'city'], [0.12, 'hills'], [0.88, 'city']],
       snowfall: [[0, 0.5], [1, 0.35]],
       cover: [[0, 1]],
     },
     // Alba Iulia → Cluj-Napoca (past Câmpia Turzii); slower while the lights game is played
     {
-      duration: 55,
+      duration: 32,
       slow: [[0.08, 0.9, 330]],
       biomes: [[0, 'city'], [0.1, 'hills'], [0.45, 'plain'], [0.6, 'hills'], [0.86, 'city']],
       features: [{ type: 'bridge', at: 0.4, length: 300, depth: 100 }],
@@ -84,7 +84,7 @@ export const WINTER_ROUTE = {
     },
     // Cluj-Napoca → Dej: along the Someș (the candles mission sets the pace near the houses)
     {
-      duration: 45,
+      duration: 36,
       biomes: [[0, 'city'], [0.14, 'hills'], [0.86, 'city']],
       features: [{ type: 'bridge', at: 0.45, length: 360, depth: 120 }],
       snowfall: [[0, 0.45], [1, 0.35]],
@@ -92,7 +92,7 @@ export const WINTER_ROUTE = {
     },
     // Dej → Ilva Mică: towards the mountains; midnight, Christmas begins
     {
-      duration: 55,
+      duration: 44,
       biomes: [[0, 'city'], [0.12, 'hills'], [0.5, 'forest'], [0.68, 'hills']],
       snowfall: [[0, 0.35], [0.6, 0.2], [1, 0.15]],
       cover: [[0, 1]],
@@ -100,22 +100,23 @@ export const WINTER_ROUTE = {
     // Ilva Mică → Vatra Dornei: deep forests and spectacular viaducts, under the full moon
     // (the train slows down on every viaduct, so the play time is longer than `duration`)
     {
-      duration: 48,
+      duration: 34,
       biomes: [[0, 'forest']],
       features: [
         { type: 'viaduct', at: 0.1, length: 900, depth: 400 },
-        { type: 'tunnel', at: 0.26, length: 700 },
-        { type: 'viaduct', at: 0.37, length: 1300, depth: 480 },
-        { type: 'viaduct', at: 0.56, length: 800, depth: 340 },
-        { type: 'tunnel', at: 0.69, length: 520 },
-        { type: 'viaduct', at: 0.8, length: 1100, depth: 440 },
+        { type: 'tunnel', at: 0.27, length: 700 },
+        { type: 'viaduct', at: 0.36, length: 1300, depth: 480 },
+        { type: 'viaduct', at: 0.57, length: 800, depth: 340 },
+        { type: 'tunnel', at: 0.75, length: 520 },
+        // the last one just before the station: no long run after the last photo
+        { type: 'viaduct', at: 0.86, length: 900, depth: 440 },
       ],
       snowfall: [[0, 0.15], [0.3, 0.04], [0.9, 0.04], [1, 0.12]],
       cover: [[0, 1]],
     },
     // Vatra Dornei → Mestecăniș: climbing towards the pass, in a blizzard (the train gets snowed in)
     {
-      duration: 40,
+      duration: 20,
       biomes: [[0, 'city'], [0.15, 'forest']],
       snowfall: [[0, 0.8], [0.25, 2], [1, 1.8]],
       cover: [[0, 1]],
@@ -123,22 +124,22 @@ export const WINTER_ROUTE = {
     // Mestecăniș → Câmpulung Moldovenesc: through the long tunnel under the pass
     // (the longest tunnel of the journey: for a while, only darkness)
     {
-      duration: 45,
+      duration: 38,
       biomes: [[0, 'forest'], [0.62, 'hills'], [0.9, 'city']],
-      features: [{ type: 'tunnel', at: 0.14, length: 3600 }],
+      features: [{ type: 'tunnel', at: 0.1, length: 3600 }],
       snowfall: [[0, 1.4], [0.5, 0.6], [1, 0.3]],
       cover: [[0, 1]],
     },
     // Câmpulung Moldovenesc → Gura Humorului: down the Moldova valley
     {
-      duration: 45,
+      duration: 36,
       biomes: [[0, 'city'], [0.12, 'hills'], [0.4, 'forest'], [0.7, 'hills'], [0.9, 'city']],
       snowfall: [[0, 0.3], [1, 0.2]],
       cover: [[0, 1]],
     },
     // Gura Humorului → Suceava
     {
-      duration: 45,
+      duration: 32,
       biomes: [[0, 'city'], [0.12, 'hills'], [0.88, 'city']],
       features: [{ type: 'bridge', at: 0.5, length: 380, depth: 120 }],
       snowfall: [[0, 0.2], [1, 0.1]],
@@ -147,7 +148,7 @@ export const WINTER_ROUTE = {
     // Suceava → Rădăuți: the small regional train, first light of the morning
     // (the birds mission sets the pace near the feeders)
     {
-      duration: 50,
+      duration: 32,
       train: 'regional',
       biomes: [[0, 'city'], [0.12, 'plain'], [0.6, 'hills'], [0.9, 'city']],
       snowfall: [[0, 0.1], [0.5, 0]],
@@ -156,7 +157,7 @@ export const WINTER_ROUTE = {
     // Rădăuți → Putna (past Marginea): sunrise over the hills of Bucovina
     // (the gifts mission slows the train down itself near each village)
     {
-      duration: 55,
+      duration: 27,
       train: 'regional',
       biomes: [[0, 'city'], [0.1, 'hills'], [0.55, 'forest'], [0.85, 'hills']],
       features: [{ type: 'bridge', at: 0.4, length: 300, depth: 100 }],

@@ -80,7 +80,7 @@ export const WINTER_MISSIONS = {
     {
       segment: 5,
       from: 0.06,
-      to: 0.62,
+      to: 0.85,
       type: 'connect-stars',
       config: {
         id: 'stars-dej-ilva',
@@ -104,7 +104,7 @@ export const WINTER_MISSIONS = {
     },
     {
       segment: 7,
-      from: 0.4,
+      from: 0.42,
       to: 0.98,
       type: 'snowbound',
       config: {
@@ -118,7 +118,7 @@ export const WINTER_MISSIONS = {
     },
     {
       segment: 8,
-      from: 0.33,
+      from: 0.31,
       to: 0.92,
       type: 'forest-stops',
       config: {
@@ -174,7 +174,7 @@ export const WINTER_MISSIONS = {
     {
       segment: 12,
       from: 0.12,
-      to: 0.8,
+      to: 0.88,
       type: 'whistle',
       config: {
         id: 'whistle-bucovina',
