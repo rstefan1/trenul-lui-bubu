@@ -64,3 +64,60 @@ export const WINTER_PLACES = {
     song: O_BRAD_FRUMOS,
   },
 };
+
+/**
+ * The landscape heard on the way, softly under the train: what it passes by
+ * now and then (a village church's bell, crows over the fields, an owl in
+ * the night forest, a twig snapping) and, along a river, its water.
+ *
+ * Segments along a river (by index in the route): Arad → Deva (the Mureș),
+ * Cluj-Napoca → Dej (the Someș), Câmpulung → Gura Humorului (the Moldova).
+ */
+const RIVER_SEGMENTS = new Set([1, 4, 9]);
+/** @type {import('../../shared/js/audio/ambience.js').AmbienceLayer} */
+const RIVER = { sound: 'river', level: 0.45 };
+/** @type {import('../../shared/js/audio/ambience.js').AmbienceEvent} */
+const BELL = { sound: 'passingBell', first: [6, 14], every: [30, 50], spread: 0 };
+
+/**
+ * What can be heard in each kind of landscape, by day and by night.
+ * @type {Record<string, {day: import('../../shared/js/audio/ambience.js').AmbienceEvent[], night: import('../../shared/js/audio/ambience.js').AmbienceEvent[]}>}
+ */
+const TRAVEL_EVENTS = {
+  city: { day: [BELL], night: [BELL] },
+  plain: {
+    day: [{ sound: 'crow', first: [4, 9], every: [14, 28], spread: 0.8 }, { ...BELL, first: [15, 25], every: [45, 70] }],
+    night: [{ ...BELL, first: [15, 25], every: [45, 70] }],
+  },
+  hills: {
+    day: [{ sound: 'crow', first: [6, 12], every: [18, 32], spread: 0.8 }, { ...BELL, first: [18, 30], every: [50, 80] }],
+    night: [{ sound: 'owl', first: [8, 16], every: [25, 45], spread: 0.8 }, { ...BELL, first: [20, 30], every: [50, 80] }],
+  },
+  forest: {
+    day: [{ sound: 'twig', first: [5, 10], every: [9, 18], spread: 0.8 }, { sound: 'crow', first: [10, 18], every: [25, 40], spread: 0.8 }],
+    night: [{ sound: 'owl', first: [4, 9], every: [14, 26], spread: 0.8 }, { sound: 'twig', first: [6, 12], every: [10, 20], spread: 0.8 }],
+  },
+};
+
+/** @type {Map<string, import('../../shared/js/audio/ambience.js').Place>} the same place object for the same key */
+const travelCache = new Map();
+
+/**
+ * The sound of the landscape the train is going through.
+ * @param {number} segment  index of the segment of the route
+ * @param {string} biome
+ * @param {boolean} night
+ * @returns {import('../../shared/js/audio/ambience.js').Place | null}
+ */
+export function travelPlace(segment, biome, night) {
+  const events = TRAVEL_EVENTS[biome];
+  if (!events) return null;
+  const river = RIVER_SEGMENTS.has(segment);
+  const key = `${biome}|${night ? 'n' : 'd'}|${river ? 'r' : ''}`;
+  let place = travelCache.get(key);
+  if (!place) {
+    place = { layers: river ? [RIVER] : [], events: night ? events.night : events.day };
+    travelCache.set(key, place);
+  }
+  return place;
+}

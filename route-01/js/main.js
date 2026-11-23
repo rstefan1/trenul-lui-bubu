@@ -60,7 +60,7 @@ import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
 import { Hud } from '../../shared/js/ui/hud.js';
 import { MissionHud } from '../../shared/js/ui/mission-hud.js';
 import { AudioEngine, setupSoundButton } from '../../shared/js/audio/audio.js';
-import { balanceSounds, chimeSound, clickSound, finaleSound, playSound } from '../../shared/js/audio/effects.js';
+import { balanceSounds, chimeSound, clickSound, finaleSound, makeRiver, playSound } from '../../shared/js/audio/effects.js';
 import { Ambience } from '../../shared/js/audio/ambience.js';
 import { Music } from '../../shared/js/audio/music.js';
 import { RAIL_VOLUME, RailSound } from '../../shared/js/audio/rail-sound.js';
@@ -71,7 +71,7 @@ import { keepScreenAwake } from '../../shared/js/ui/wake-lock.js';
 import { WorldView } from '../../shared/js/world/world-view.js';
 import { WINTER_CHAPTERS } from './chapters-data.js';
 import { WINTER_MISSIONS } from './missions-data.js';
-import { WINTER_PLACES } from './ambience-data.js';
+import { WINTER_PLACES, travelPlace } from './ambience-data.js';
 import { WINTER_ROUTE } from './route-data.js';
 
 /** Mission types used by the winter journey. */
@@ -135,6 +135,8 @@ for (const [name, file] of [
   ['station-platform', 'railway-station-platform'], ['station-crowd', 'station-crowd'], ['town-square', 'town-square'],
   ['winter-wind', 'winter-wind'], ['freight-train', 'freight-train-passing'],
 ]) audio.register(name, `../shared/assets/sounds/${file}.mp3`, { normalize: true, lazy: true });
+// the water of the rivers along the way, made in code
+audio.registerGenerated('river', makeRiver);
 setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
 // every effect is measured once, so they can all be heard equally well
 audio.on('unlock', () => setTimeout(() => balanceSounds(audio), 1500));
@@ -164,7 +166,12 @@ const overlays = [...document.querySelectorAll('.overlay')];
  * @returns {import('./ambience-data.js').WinterPlace | null}
  */
 function placeNow() {
-  if (overlays.some(o => !o.hidden) || journey.state === 'running') return null;
+  if (overlays.some(o => !o.hidden)) return null;
+  if (journey.state === 'running') {
+    // on the way: the landscape (nothing inside a tunnel)
+    if (world.features.placeAt(journey.distance) === 'tunnel') return null;
+    return travelPlace(journey.stationIndex, route.biomeAt(journey.distance), world.light.night > 0.5);
+  }
   // a mission that moves between places (up a forest hill to a fair…) says where it is
   const moving = director.active.find(m => m.soundOfPlace !== undefined);
   const station = route.stations[journey.stationIndex];
