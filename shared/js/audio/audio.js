@@ -51,7 +51,11 @@ export class AudioEngine {
     this.muted = readFlag(MUTE_KEY);
     /** The music is off (the other sounds can still be on). */
     this.musicOff = readFlag(MUSIC_KEY);
-    /** @type {Map<string, {url: string, normalize: boolean, lazy: boolean}>} name → file of every sound */
+    /**
+     * Name → file of every sound (or the function that makes it, for a sound
+     * generated in code).
+     * @type {Map<string, {url: string, normalize: boolean, lazy: boolean, generate?: (ctx: AudioContext) => Promise<AudioBuffer>}>}
+     */
     this.files = new Map();
     /** @type {Map<string, AudioBuffer>} sounds ready to play */
     this.buffers = new Map();
@@ -133,6 +137,16 @@ export class AudioEngine {
   }
 
   /**
+   * Declares a sound made in code instead of a recording (e.g. a stream of
+   * water); it is made, like a lazy recording, only when needed.
+   * @param {string} name
+   * @param {(ctx: AudioContext) => Promise<AudioBuffer>} generate
+   */
+  registerGenerated(name, generate) {
+    this.files.set(name, { url: '', normalize: false, lazy: true, generate });
+  }
+
+  /**
    * Starts loading a sound, if it is not loaded or loading already (and sound
    * has been allowed). It is in `buffers` once ready.
    * @param {string} name
@@ -141,7 +155,11 @@ export class AudioEngine {
     const file = this.files.get(name);
     if (!file || !this.ctx || this.buffers.has(name) || this.loading.has(name)) return;
     this.loading.add(name);
-    this.fetch(name, file.url, file.normalize).finally(() => this.loading.delete(name));
+    const ctx = this.ctx;
+    const ready = file.generate
+      ? file.generate(ctx).then(b => { this.buffers.set(name, b); }, () => {})
+      : this.fetch(name, file.url, file.normalize);
+    ready.finally(() => this.loading.delete(name));
   }
 
   /**
