@@ -25,6 +25,10 @@
       <span class="clock-time" id="hudTime">15:00</span>
       <span class="clock-date" id="hudDate">24 decembrie</span>
     </div>
+    <!-- the mission's help and progress: below the HUD on large screens,
+         inside it on phones (shared/css/game.css) -->
+    <button class="hud-btn help-btn" id="btnHelp" type="button" title="Ce am de făcut?" aria-label="Ce am de făcut?" hidden>?</button>
+    <div class="mission-counter" id="missionCounter" aria-live="polite" hidden></div>
     <div class="hud-card route-card">
       <div class="route-line">
         <ol class="route-track" id="hudTrack" aria-hidden="true">
@@ -60,8 +64,6 @@
       <p class="briefing__note">Jocul așteaptă până apeși butonul.</p>
     </div>
   </div>
-  <button class="hud-btn help-btn" id="btnHelp" type="button" title="Ce am de făcut?" aria-label="Ce am de făcut?" hidden>?</button>
-  <div class="mission-counter" id="missionCounter" aria-live="polite" hidden></div>
   <div class="mission-result" id="missionResult" role="status" hidden>
     <div class="mission-result__stars" id="missionResultStars" aria-hidden="true"></div>
     <p class="mission-result__text" id="missionResultText"></p>

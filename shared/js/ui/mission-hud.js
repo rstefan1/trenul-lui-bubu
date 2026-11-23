@@ -64,6 +64,22 @@ export class MissionHud {
     state.on('change', (/** @type {string} */ what) => {
       if (what === 'stars') this.el.stars.textContent = String(state.totalStars);
     });
+    this.watchHud();
+  }
+
+  /**
+   * Keeps the CSS variable --hud-bottom equal to the bottom edge of the
+   * heads-up display, so that on phones (where its height changes with the
+   * help button and the counter inside it) the boxes below it never cover it.
+   * @private
+   */
+  watchHud() {
+    const hud = document.querySelector('.hud');
+    if (!hud) return;
+    const update = () => document.documentElement.style.setProperty('--hud-bottom', `${Math.round(this.hudBottom)}px`);
+    if (typeof ResizeObserver === 'function') new ResizeObserver(update).observe(hud);
+    window.addEventListener('resize', update);
+    update();
   }
 
   /**
@@ -134,6 +150,9 @@ export class MissionHud {
   get hudBottom() {
     let bottom = 0;
     for (const node of document.querySelectorAll('.hud > *')) {
+      // the help button and the counter float below the HUD on large screens
+      // (and are not part of it there); on phones they are inside it
+      if (getComputedStyle(node).position === 'fixed') continue;
       const r = node.getBoundingClientRect();
       if (r.width && r.top < window.innerHeight / 2) bottom = Math.max(bottom, r.bottom);
     }

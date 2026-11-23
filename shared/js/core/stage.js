@@ -24,6 +24,15 @@ export const MAX_WIDTH = 2400;
 /** Device pixel ratio cap: sharper than this is invisible but costs a lot. */
 const MAX_DPR = 2;
 
+/**
+ * Screen pixels per stage unit below which what the child must see or touch
+ * on the canvas is drawn bigger (see {@link Stage#ui}): laptops and tablets
+ * stay above it, phones (about 0.43) fall below it.
+ */
+const UI_SCALE = 0.72;
+/** The most that {@link Stage#ui} enlarges. */
+const MAX_UI = 1.8;
+
 export class Stage extends Emitter {
   /** @param {HTMLCanvasElement} canvas */
   constructor(canvas) {
@@ -72,6 +81,16 @@ export class Stage extends Emitter {
   /** Device pixels per stage unit (what offscreen canvases should use). */
   get pixelRatio() {
     return this.scale * this.dpr;
+  }
+
+  /**
+   * How much bigger the missions draw the things the child must see or
+   * touch (buttons, signs, targets, their texts): 1 on laptops and tablets,
+   * up to {@link MAX_UI} on phones, where the whole stage is shrunk to fit
+   * a small screen and they would otherwise be too small for a finger.
+   */
+  get ui() {
+    return clamp(UI_SCALE / this.scale, 1, MAX_UI);
   }
 
   /** Width of the visible area in stage units (may exceed `width`). */
