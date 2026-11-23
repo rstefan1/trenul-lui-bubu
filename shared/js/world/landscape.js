@@ -72,13 +72,28 @@ const SEAM = 1;
 
 /** Number of variants per biome and layer (avoids visible repetition). */
 const VARIANTS = 4;
+const MB = 1024 * 1024;
+
 /**
- * Memory the tiles may take. Enough for every tile on screen and the ones
- * painted ahead, on all three layers, even while the ground turns white
- * (bare and snowy tiles at once), on a sharp screen; on ordinary screens it
- * holds many more.
+ * Memory the tiles may take, by device. The tiles on screen and the ones
+ * painted ahead are kept whatever the limit (see the cache below); the
+ * limit only decides how many old tiles are kept to be used again.
+ *
+ *   phones and tablets, and devices with little memory: 128 MB — Safari on
+ *   iPhone and iPad has a hard limit for all the canvases of a page (past
+ *   it, drawings stay blank), and small Android phones close a tab that
+ *   takes too much;
+ *   computers with plenty of memory (8 GB or more, as the browser reports):
+ *   256 MB, so tiles are painted again less often;
+ *   other computers (the browser does not tell its memory): 192 MB.
  */
-const TILES_MAX_BYTES = 128 * 1024 * 1024;
+function tilesMaxBytes() {
+  const nav = /** @type {Navigator & {deviceMemory?: number}} */ (navigator);
+  // a touch screen as the main pointer (also an iPad, which says it is a Mac)
+  const touch = window.matchMedia?.('(pointer: coarse)').matches || nav.maxTouchPoints > 1;
+  if (touch || (nav.deviceMemory !== undefined && nav.deviceMemory < 8)) return 128 * MB;
+  return nav.deviceMemory !== undefined ? 256 * MB : 192 * MB;
+}
 /**
  * A tile painted ahead is kept for at least this many frames, waiting to come
  * into view (the far mountains move slowly: theirs can wait half a minute).
@@ -136,7 +151,7 @@ export class Landscape {
     // the tiles on screen now and the ones painted ahead are never dropped, so
     // none has to be painted again while it is needed
     this.cache = new LruCache({
-      maxBytes: TILES_MAX_BYTES,
+      maxBytes: tilesMaxBytes(),
       isProtected: tile => tile.usedIn === this.frame || tile.keepUntil > this.frame,
       sizeOf: tile => canvasBytes(tile.body) + canvasBytes(tile.lights),
       release: tile => {
