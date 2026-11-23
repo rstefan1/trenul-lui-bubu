@@ -15,7 +15,7 @@
  *            screen and goes fast between the houses (see TrainPace)
  */
 
-import { TAU } from '../core/math.js';
+import { TAU, clamp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { drawHouse, fillCircle, glow, lightWindows } from '../gfx/shapes.js';
 import { ROOFS, WALLS } from '../world/biomes/terrain.js';
@@ -84,7 +84,8 @@ export class CandlesMission extends Mission {
     this.children = plan.filter(Boolean).length;
     const j = this.ctx.journey;
     const length = hints.window ? (hints.window.to - hints.window.from) * j.segment.length : 15000;
-    this.spacing = Math.max(800, (length - this.ctx.stage.width) / houses);
+    // never long empty stretches: with few houses the mission ends sooner
+    this.spacing = clamp((length - this.ctx.stage.width) / houses, 800, 2600);
     this.nextWorldX = j.distance - this.ctx.world.anchorX + this.ctx.stage.viewRight + 150;
     /** @type {TrainPace | null} */
     this.pace = this.config.pace ? new TrainPace(j, this.config.pace) : null;
