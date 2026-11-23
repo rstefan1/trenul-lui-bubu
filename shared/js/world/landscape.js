@@ -188,7 +188,7 @@ export class Landscape {
     const { light } = view;
     const dy = -view.cameraY * layer.parallaxY;
     const washes = [
-      { color: css(light.bottom), alpha: layer.haze },
+      { color: css(light.bottom), alpha: layer.haze, rgb: light.bottom },
       light.wash,
     ];
     const bottom = layer.id === 'near' ? view.viewBottom + view.cameraY + 4 : layer.bottom;
