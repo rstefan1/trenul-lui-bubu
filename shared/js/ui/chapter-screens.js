@@ -75,7 +75,7 @@ export class ChapterScreens {
       byId('btnWhoIsBubu').onclick = () => choose({ kind: 'intro' });
       reset.onclick = () => {
         // the browser's own confirmation dialog: simple, and understood by every child
-        if (window.confirm('Sigur vrei să o iei de la capăt? Stelele și drumul făcut până acum se vor șterge.')) {
+        if (window.confirm('Sigur vrei să începi de la capăt? Se vor șterge stelele și tot drumul făcut.')) {
           choose({ kind: 'reset' });
         }
       };
@@ -137,7 +137,7 @@ export class ChapterScreens {
     const go = byId('btnNextChapter');
     const pause = byId('btnPause');
     go.hidden = !canContinue || !next;
-    pause.textContent = canContinue ? 'Fac o pauză (meniu)' : 'Înapoi la meniu';
+    pause.textContent = canContinue ? 'Fac o pauză' : 'Înapoi la meniu';
     return new Promise(resolve => {
       const done = (/** @type {'next' | 'menu'} */ choice) => {
         go.onclick = null;

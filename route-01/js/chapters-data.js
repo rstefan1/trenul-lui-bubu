@@ -12,7 +12,7 @@ export const WINTER_CHAPTERS = [
     title: 'Câmpia și Mureșul',
     from: 'timisoara',
     to: 'deva',
-    teaser: 'O după-amiază de Ajun, apusul pe Valea Mureșului și prima ninsoare.',
+    teaser: 'După-amiaza de Ajun, apusul pe Valea Mureșului și prima ninsoare.',
   },
   {
     id: 'transilvania',
@@ -26,13 +26,13 @@ export const WINTER_CHAPTERS = [
     title: 'Noaptea de Crăciun în munți',
     from: 'dej',
     to: 'campulung',
-    teaser: 'Miezul nopții, viaductele sub lună și târgul fermecat din Vatra Dornei.',
+    teaser: 'Miezul nopții, viaductele sub lună și târgul fermecat.',
   },
   {
     id: 'bucovina',
     title: 'Bucovina în zori',
     from: 'campulung',
     to: 'putna',
-    teaser: 'Răsăritul peste dealurile Bucovinei și slujba de Crăciun de la Putna.',
+    teaser: 'Răsăritul în Bucovina și Crăciunul la Putna.',
   },
 ];
