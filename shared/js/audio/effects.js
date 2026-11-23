@@ -69,6 +69,8 @@ const MIX = {
   success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 10,
   // the sounds of places (heard now and then, far away, under everything)
   birdsong: -16, sleigh: -11,
+  // the sounds of the landscape on the way (far away, under the train)
+  passingBell: -12, owl: -13, crow: -16, twig: -17,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
 const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, star: 0.5 };
@@ -345,6 +347,84 @@ const SOUNDS = {
       }
     }
   },
+  /**
+   * The bell of a village church the train goes past: it rings three times,
+   * coming from the right (ahead), passing, and going away to the left.
+   */
+  passingBell(ctx, out, t) {
+    const length = 7;
+    const far = ctx.createBiquadFilter();
+    far.type = 'lowpass';
+    far.frequency.value = 1800;
+    const pass = ctx.createGain();
+    pass.gain.setValueAtTime(0.5, t);
+    pass.gain.linearRampToValueAtTime(1, t + 2.5);
+    pass.gain.linearRampToValueAtTime(0.35, t + length);
+    far.connect(pass);
+    let last = pass;
+    if (ctx.createStereoPanner) {
+      const pan = ctx.createStereoPanner();
+      pan.pan.setValueAtTime(0.75, t);
+      pan.pan.linearRampToValueAtTime(-0.75, t + length);
+      pass.connect(pan);
+      last = pan;
+    }
+    last.connect(out);
+    for (let i = 0; i < 3; i++) churchBell(ctx, far, fq('B3'), t + i * 2.2, 0.25);
+  },
+  /** A tawny owl in the night forest: "hoo… hoo-hoo-hoooo", soft and round. */
+  owl(ctx, out, t) {
+    const hoot = (/** @type {number} */ at, /** @type {number} */ length, /** @type {number} */ level) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(hz(410), at);
+      osc.frequency.linearRampToValueAtTime(hz(385), at + length);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(level, at + Math.min(0.12, length * 0.3));
+      g.gain.setValueAtTime(level, at + length * 0.6);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + length);
+      osc.connect(g).connect(out);
+      osc.start(at);
+      osc.stop(at + length + 0.02);
+      // the breath in the hoot
+      noisePuff(ctx, out, { t: at, length, level: level * 0.12, type: 'bandpass', from: 420, q: 4, attack: 0.08 });
+    };
+    hoot(t, 0.5, 0.08);
+    hoot(t + 1.4, 0.18, 0.06);
+    hoot(t + 1.7, 0.18, 0.06);
+    hoot(t + 2.0, 0.9, 0.08);
+  },
+  /** Crows over the fields: two or three hoarse "kraa". */
+  crow(ctx, out, t) {
+    const n = 2 + Math.floor(Math.random() * 2);
+    for (let k = 0; k < n; k++) {
+      const at = t + k * (0.38 + Math.random() * 0.12);
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(hz(720), at);
+      osc.frequency.exponentialRampToValueAtTime(hz(560), at + 0.24);
+      const voice = ctx.createBiquadFilter();
+      voice.type = 'bandpass';
+      voice.frequency.value = hz(1300);
+      voice.Q.value = 3;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(0.06, at + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 0.26);
+      osc.connect(voice).connect(g).connect(out);
+      osc.start(at);
+      osc.stop(at + 0.28);
+      // the hoarseness
+      noisePuff(ctx, out, { t: at, length: 0.24, level: 0.03, type: 'bandpass', from: 1400, to: 1100, q: 2, attack: 0.02 });
+    }
+  },
+  /** A twig snapping under the snow somewhere in the forest. */
+  twig(ctx, out, t) {
+    noisePuff(ctx, out, { t, length: 0.04, level: 0.12, type: 'highpass', from: 1800, attack: 0.001 });
+    noisePuff(ctx, out, { t: t + 0.05, length: 0.03, level: 0.06, type: 'highpass', from: 2400, attack: 0.001 });
+    sweep(ctx, out, { t, from: 160, to: 80, slide: 0.06, level: 0.05, length: 0.08, attack: 0.002 });
+  },
   /** A bird of the winter morning: a great tit ("ti-tu ti-tu"), a sparrow, or a robin's little trill. */
   birdsong(ctx, out, t) {
     const kind = Math.floor(Math.random() * 3);
@@ -515,4 +595,41 @@ export const chimeSound = engine => playSound(engine, 'chime');
 export function starSound(engine, index) {
   starIndex = index;
   playSound(engine, 'star');
+}
+
+/**
+ * A few seconds of a river heard from the train: rushing water (noise in two
+ * bands that swells and settles) and the bubbling of small waves (short
+ * notes that rise quickly), rendered once into a sound to loop.
+ * @param {AudioContext} ctx
+ * @returns {Promise<AudioBuffer>}
+ */
+export async function makeRiver(ctx) {
+  const Offline = window.OfflineAudioContext || /** @type {any} */ (window).webkitOfflineAudioContext;
+  const seconds = 8;
+  const off = new Offline(1, Math.round(ctx.sampleRate * seconds), ctx.sampleRate);
+  const t0 = 0;
+  // noise as long as the whole sound, so no pattern repeats inside it
+  const noise = off.createBuffer(1, off.length, off.sampleRate);
+  const nd = noise.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  for (const [freq, q, level] of [[500, 0.8, 0.5], [1700, 1.2, 0.25]]) {
+    const src = off.createBufferSource();
+    src.buffer = noise;
+    const band = off.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.value = freq;
+    band.Q.value = q;
+    const g = off.createGain();
+    // the water swells and settles, slowly and unevenly
+    for (let at = 0; at <= seconds; at += 0.5) g.gain.linearRampToValueAtTime(level * (0.7 + Math.random() * 0.5), t0 + at);
+    src.connect(band).connect(g).connect(off.destination);
+    src.start(t0);
+  }
+  for (let i = 0; i < 90; i++) {
+    const at = t0 + Math.random() * (seconds - 0.1);
+    const f = 350 + Math.random() * 700;
+    sweep(off, off.destination, { t: at, from: f, to: f * 1.6, slide: 0.03, level: 0.05 + Math.random() * 0.05, length: 0.05, attack: 0.004 });
+  }
+  return off.startRendering();
 }
