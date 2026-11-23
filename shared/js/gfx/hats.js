@@ -13,12 +13,12 @@ import { fillCircle } from './shapes.js';
  * @type {ReadonlyArray<{name: string, draw: (c: CanvasRenderingContext2D) => void}>}
  */
 export const HATS = [
-  { name: 'Clop cu pană', draw: c => blackHat(c, 'feather') },
+  { name: 'Pălărie cu pană', draw: c => blackHat(c, 'feather') },
   { name: 'Căciulă de miel', draw: lambCap },
-  { name: 'Clop cu flori', draw: c => blackHat(c, 'flowers') },
+  { name: 'Pălărie cu flori', draw: c => blackHat(c, 'flowers') },
   { name: 'Basma cu flori', draw: headscarf },
   { name: 'Cunună de flori', draw: flowerCrown },
-  { name: 'Clop cu mărgele', draw: c => blackHat(c, 'beads') },
+  { name: 'Pălărie cu mărgele', draw: c => blackHat(c, 'beads') },
 ];
 
 /**

@@ -126,7 +126,7 @@ export class RotatePuzzleMission extends Mission {
       for (const t of this.tiles) t.disabled = true;
       const next = el('button', { class: 'big-btn', type: 'button' }, ['Mai departe! 🚂']);
       next.addEventListener('click', () => this.complete(stars, stars === 3
-        ? 'Excelent! Ai refăcut imaginea din câteva mișcări!'
+        ? 'Excelent! Ai refăcut imaginea din doar câteva mutări!'
         : 'Bravo! Imaginea e din nou întreagă.'));
       this.footer?.replaceChildren(
         el('p', { class: 'puzzle-solved' }, [this.config.solvedText]),

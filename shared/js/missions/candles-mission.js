@@ -140,7 +140,7 @@ export class CandlesMission extends Mission {
       const k = n / Math.max(1, this.children);
       this.complete(k >= 0.9 ? 3 : k >= 0.6 ? 2 : 1,
         n === this.children ? `Ai aprins lumânări la toți cei ${n} copii!`
-          : `Ai aprins ${n} lumânări din ${this.children}. Satele strălucesc în noaptea de Ajun!`);
+          : `Ai aprins ${n} lumânări din ${this.children}. Bravo!`);
     }
   }
 

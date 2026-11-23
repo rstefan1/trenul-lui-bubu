@@ -156,7 +156,7 @@ export class ConnectStarsMission extends Mission {
     const done = this.shape + (this.step === 'shine' || this.step === 'done' ? 1 : 0);
     const all = done >= this.config.shapes.length;
     this.complete(all ? (this.mistakes <= 2 ? 3 : 2) : 1,
-      all ? 'Stelele de pe cer au desenat steaua colindătorilor și bradul!' : 'Câteva stele au rămas neunite… dar cerul e tot frumos!');
+      all ? 'Stelele de pe cer au desenat steaua colindătorilor și bradul!' : 'Câteva stele n-au fost unite, dar cerul e tot frumos!');
   }
 
   /** @param {CanvasRenderingContext2D} c */

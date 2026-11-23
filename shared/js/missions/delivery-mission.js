@@ -251,7 +251,7 @@ export class DeliveryMission extends Mission {
       this.complete(k >= 0.9 ? 3 : k >= 0.6 ? 2 : 1,
         n === this.children ? `Minunat! Toți cei ${n} copii au primit câte un dar!`
           : n > 0 ? `Ai dus daruri la ${n} copii din ${this.children}. Ce bucurie ${this.config.where ?? 'pe Valea Mureșului'}!`
-            : 'De data asta darurile au căzut în zăpadă… dar copiii au văzut trenul lui Bubu!');
+            : 'De data asta darurile au căzut în zăpadă, dar copiii au văzut trenul lui Bubu!');
     }
   }
 

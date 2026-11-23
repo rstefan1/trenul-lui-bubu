@@ -200,7 +200,7 @@ export class DepartureMission extends Mission {
     this.setPanel(el('div', { class: 'panel panel--wide' }, [
       el('p', { class: 'panel-kicker' }, ['Misiune']),
       el('h2', { class: 'panel-title' }, ['Bagajul lui Bubu']),
-      el('p', { class: 'panel-text' }, ['Trage în valiză (sau atinge) doar lucrurile de care Bubu are nevoie într-o călătorie de iarnă.']),
+      el('p', { class: 'panel-text' }, ['Pune în valiză doar ce îi trebuie lui Bubu iarna. Trage lucrurile sau atinge-le.']),
       el('div', { class: 'luggage' }, [el('div', { class: 'luggage-items' }, buttons), suitcase]),
       el('p', { class: 'bubu-says' }, [el('img', { src: '../shared/assets/bubu.webp', alt: '', width: '56', height: '56' }), says]),
     ]));
@@ -237,7 +237,7 @@ export class DepartureMission extends Mission {
     this.mistakes += 1;
     this.oops();
     const msg = car.number === undefined
-      ? 'Aceasta e locomotiva – acolo stă mecanicul! Caută vagonul scris pe bilet.'
+      ? 'Aceasta e locomotiva, acolo stă mecanicul! Caută vagonul scris pe bilet.'
       : `Acesta e vagonul ${car.number}. Uită-te pe bilet: Bubu are loc în vagonul ${target}.`;
     this.ctx.hud.announce('Urcarea în tren', msg, 'Misiune', 0);
   }

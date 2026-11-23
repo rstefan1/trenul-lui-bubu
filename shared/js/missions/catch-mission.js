@@ -251,6 +251,6 @@ export class CatchMission extends Mission {
   textFor(n) {
     if (n >= this.goal) return `Super! Ai prins ${n} globuri și trenul s-a împodobit!`;
     if (n > 0) return `Ai prins ${n} ${n === 1 ? 'glob' : 'globuri'}. Trenul arată deja mai vesel!`;
-    return 'Globurile au zburat… dar mai sunt multe de prins pe drum!';
+    return 'Globurile au zburat, dar mai sunt multe de prins pe drum!';
   }
 }

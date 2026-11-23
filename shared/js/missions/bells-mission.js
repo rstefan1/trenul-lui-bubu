@@ -206,7 +206,7 @@ export class BellsMission extends Mission {
     const k = n / Math.max(1, total);
     this.complete(k >= 0.9 ? 3 : k >= 0.6 ? 2 : 1,
       n === total ? `Toți cei ${n} clopoței au sunat! Ce mecanic priceput!`
-        : `Au sunat ${n} clopoței din ${total}. Frumos colind pe linia ferată!`);
+        : `Au sunat ${n} clopoței din ${total}. Bravo!`);
   }
 
   /** @private */
@@ -369,7 +369,7 @@ export class BellsMission extends Mission {
     c.textBaseline = 'alphabetic';
     c.fillStyle = 'rgba(255,255,255,0.9)';
     c.font = '700 20px "Baloo 2", system-ui, sans-serif';
-    c.fillText('Următorul clopoțel vrea viteza:', x + w / 2, y + 30);
+    c.fillText('Următorul clopoțel cere:', x + w / 2, y + 30);
     // the big label
     const pulse = ok ? 1 : 1 + 0.04 * Math.sin(this.time * 8);
     c.save();
@@ -392,7 +392,7 @@ export class BellsMission extends Mission {
     fillRoundRect(c, x + 24, y + 104, Math.max(10, (w - 48) * k), 10, 5, '#ffd23f');
     c.font = '700 18px "Baloo 2", system-ui, sans-serif';
     c.fillStyle = ok ? '#b9f6ca' : '#ffe082';
-    c.fillText(ok ? '✔ viteza aleasă e bună' : `Apasă pe ${band.label}!`, x + w / 2, y + 138);
+    c.fillText(ok ? '✔ Viteza e bună' : `Apasă pe ${band.label}!`, x + w / 2, y + 138);
   }
 
   dispose() {

@@ -143,7 +143,7 @@ export class BirdsMission extends Mission {
     const total = this.hungryCount;
     const k = this.fed / total;
     this.complete(k >= 1 ? (this.mistakes <= 1 ? 3 : 2) : k >= 0.5 ? 2 : 1,
-      k >= 1 ? 'Toate păsărelele au primit semințe!' : `Ai hrănit păsările de la ${this.fed} căsuțe din ${total}.`);
+      k >= 1 ? 'Toate păsărelele au primit semințe!' : `Ai pus semințe în ${this.fed} căsuțe din ${total}.`);
   }
 
   /**

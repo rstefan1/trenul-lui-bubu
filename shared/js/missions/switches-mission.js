@@ -127,7 +127,7 @@ export class SwitchesMission extends SceneMission {
     run.addEventListener('click', () => this.run());
     this.runButton = run;
     this.setPanel(el('div', { class: 'panel panel--bottom program-panel' }, [
-      el('p', { class: 'program-title' }, ['Atinge macazurile ca să le muți SUS sau JOS, apoi pornește trenul.']),
+      el('p', { class: 'program-title' }, ['Atinge cercurile albastre ca să muți macazurile, apoi pornește trenul.']),
       run,
     ]));
     this.refreshPanel();
@@ -301,7 +301,7 @@ export class SwitchesMission extends SceneMission {
     } else {
       this.mistakes += 1;
       this.oops();
-      this.message = `Vagonul a ajuns pe linia ${reached + 1}, dar trebuia pe linia ${this.target + 1}. Corectează programul!`;
+      this.message = `Vagonul a ajuns pe linia ${reached + 1}, dar trebuia să ajungă pe linia ${this.target + 1}. Mută macazurile și încearcă din nou!`;
     }
     this.refreshPanel();
   }
@@ -325,7 +325,7 @@ export class SwitchesMission extends SceneMission {
       doneText: this.config.doneText,
       fact: this.config.fact,
       stars: starsForMistakes(this.mistakes, 2, 0),
-      result: this.mistakes === 0 ? 'Programe fără nicio greșeală – ca un informatician adevărat!' : 'Bravo! Ai programat toate macazurile.',
+      result: this.mistakes === 0 ? 'Fără nicio greșeală, ca un adevărat programator!' : 'Bravo! Ai potrivit toate macazurile.',
       delay: 0.6,
     });
   }
