@@ -67,16 +67,17 @@ export class ConnectStarsMission extends Mission {
   }
 
   /**
-   * Where the drawing is: in the sky, below the heads-up display (with room
-   * for the numbers above the top stars) and above the train's roof.
+   * Where the drawing is: big, so the stars are easy to touch — from below
+   * the heads-up display (with room for the numbers above the top stars)
+   * down over the mountains, to just above the train.
    */
   get box() {
     const stage = this.ctx.stage;
     const hud = this.ctx.hud;
     const below = Math.max(hud.hudBottom, hud.cardBottom);
     const top = Math.max(stage.viewTop + 60, stage.toStage(0, below).y + 60);
-    const bottom = TRACK_Y - 300 - this.ctx.world.cameraY;
-    const size = clamp(bottom - top, 180, 420);
+    const bottom = TRACK_Y - 150 - this.ctx.world.cameraY;
+    const size = clamp(Math.min(bottom - top, stage.width * 0.8), 220, 640);
     const y = size <= bottom - top ? top + (bottom - top - size) / 2 : top;
     return { x: stage.width / 2 - size / 2, y, size };
   }
@@ -94,7 +95,7 @@ export class ConnectStarsMission extends Mission {
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerDown(p) {
     if (this.step !== 'draw') return;
-    const reach = Math.max(42, 30 / this.ctx.stage.scale);
+    const reach = Math.max(60, 40 / this.ctx.stage.scale);   // generous for fingers
     let best = -1;
     let bestDist = reach;
     this.points.forEach((_, i) => {
@@ -163,6 +164,9 @@ export class ConnectStarsMission extends Mission {
   draw(c) {
     const n = this.points.length;
     const shine = this.step === 'shine' ? clamp(this.stepT / 0.6, 0, 1) : 0;
+    // a soft patch of night sky behind the drawing, so the stars stand out over the mountains
+    const b0 = this.box;
+    glow(c, b0.x + b0.size / 2, b0.y + b0.size / 2, b0.size * 0.75, 'rgba(5,11,44,0.55)', 'rgba(5,11,44,0)');
     // the lines joined so far (closed when the drawing is complete)
     if (this.joined > 1 || shine) {
       c.strokeStyle = `rgba(255,214,90,${0.8 + 0.2 * shine})`;
@@ -189,15 +193,15 @@ export class ConnectStarsMission extends Mission {
       const next = i === this.joined && this.step === 'draw';
       const wob = Math.sin(this.wobble[i] * 40) * this.wobble[i] * 14;
       const pulse = next ? 1 + 0.18 * Math.sin(this.time * 6) : 1;
-      if (next) glow(c, q.x, q.y, 36, 'rgba(255,240,170,0.6)', 'rgba(255,240,170,0)');
+      if (next) glow(c, q.x, q.y, 44, 'rgba(255,240,170,0.6)', 'rgba(255,240,170,0)');
       c.fillStyle = done ? '#ffd23f' : '#ffffff';
-      fillStar(c, q.x + wob, q.y, 14 * pulse, 6 * pulse);
+      fillStar(c, q.x + wob, q.y, 18 * pulse, 8 * pulse);
       if (!done) {
         c.fillStyle = next ? '#ffe082' : 'rgba(255,255,255,0.85)';
-        c.font = `800 ${next ? 22 : 18}px "Baloo 2", system-ui, sans-serif`;
+        c.font = `800 ${next ? 26 : 22}px "Baloo 2", system-ui, sans-serif`;
         c.textAlign = 'center';
         c.textBaseline = 'middle';
-        c.fillText(String(i + 1), q.x + wob, q.y - 26);
+        c.fillText(String(i + 1), q.x + wob, q.y - 32);
       }
     }
     this.particles.draw(c);
