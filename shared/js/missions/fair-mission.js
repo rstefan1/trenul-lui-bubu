@@ -67,7 +67,8 @@ export class FairMission extends SceneMission {
     this.targetY = 0;
     this.scroll = 0;
     /** @type {number} index of the tree bought (-1 = none yet) */
-    this.chosen = -1;
+    /** @type {TreeOffer | null} the tree bought */
+    this.chosen = null;
     /** @type {{text: string, t: number, good: boolean}} */
     this.say = { text: '', t: 9, good: false };
     this.endingShown = false;
@@ -104,10 +105,10 @@ export class FairMission extends SceneMission {
       this.pointerMove(p);
       return;
     }
-    if (this.act !== 'fair' || this.chosen >= 0) return;
+    if (this.act !== 'fair' || this.chosen) return;
     const i = this.treeAt(p);
     if (i < 0) return;
-    const offer = this.config.trees[i];
+    const offer = this.trees[i];
     const tall = offer.height > this.config.maxHeight;
     const dear = offer.price > this.coins;
     if (tall || dear) {
@@ -121,7 +122,7 @@ export class FairMission extends SceneMission {
       };
       return;
     }
-    this.chosen = i;
+    this.chosen = offer;
     this.coins -= offer.price;
     this.ctx.hud.setCounter('🪙', this.coins, 0);
     this.say = { text: 'Ce brad frumos! Îl ducem la tren.', t: 0, good: true };
@@ -144,7 +145,7 @@ export class FairMission extends SceneMission {
     this.items = [];
     if (act === 'fair') {
       // never leave Bubu without enough coins for a tree that fits
-      const cheapest = Math.min(...this.config.trees.filter(t => t.height <= this.config.maxHeight).map(t => t.price));
+      const cheapest = Math.min(...this.trees.filter(t => t.height <= this.config.maxHeight).map(t => t.price));
       if (this.coins < cheapest) this.coins = cheapest;
       this.ctx.hud.setCounter('🪙', this.coins, 0);
       this.ctx.hud.instruct('Târgul fermecat', this.config.fairText);
@@ -211,22 +212,49 @@ export class FairMission extends SceneMission {
   // ------------------------------------------------------------ the fair
 
   /**
+   * The trees for sale on screen: all of them, unless they would stand on
+   * top of each other (a phone held upright); then the tallest stays out.
+   * @returns {TreeOffer[]}
+   */
+  get trees() {
+    const all = this.config.trees;
+    const L = this.layout;
+    const unit = this.unitFor(L);
+    // a fir is about 0.91 times as wide as it is tall
+    const fits = (/** @type {TreeOffer[]} */ list) =>
+      (L.w * 0.84) / list.length >= 0.91 * unit * Math.max(...list.map(t => t.height));
+    if (all.length <= 3 || fits(all)) return all;
+    const tallest = all.reduce((a, b) => (b.height > a.height ? b : a));
+    return all.filter(t => t !== tallest);
+  }
+
+  /**
+   * Stage units per metre of a tree.
+   * @private
+   * @param {{top: number, bottom: number}} L
+   */
+  unitFor(L) {
+    return Math.min(130, (L.bottom - 70 - L.top - 70) / 2.8);
+  }
+
+  /**
    * Where a tree for sale stands.
-   * @param {number} i
+   * @param {number} i  index in {@link FairMission#trees}
    */
   treeSpot(i) {
     const L = this.layout;
-    const n = this.config.trees.length;
+    const trees = this.trees;
+    const n = trees.length;
     const ground = L.bottom - 70;
-    const unit = Math.min(130, (ground - L.top - 70) / 2.8);   // stage units per metre
+    const unit = this.unitFor(L);
     const x = L.left + L.w * ((i + 0.5) / n) * 0.84 + L.w * 0.08;
-    return { x, y: ground, h: this.config.trees[i].height * unit, unit };
+    return { x, y: ground, h: (trees[i] ?? trees[0]).height * unit, unit };
   }
 
   /** How much bigger the trees' labels are drawn (on phones, as far as they stay apart). */
   get labelZoom() {
     const L = this.layout;
-    return clamp((L.w * 0.84) / this.config.trees.length / 140, 1, this.ctx.stage.ui);
+    return clamp((L.w * 0.84) / this.trees.length / 140, 1, this.ctx.stage.ui);
   }
 
   /**
@@ -234,7 +262,7 @@ export class FairMission extends SceneMission {
    * @param {{x: number, y: number}} p
    */
   treeAt(p) {
-    for (let i = 0; i < this.config.trees.length; i++) {
+    for (let i = 0; i < this.trees.length; i++) {
       const t = this.treeSpot(i);
       if (Math.abs(p.x - t.x) < Math.max(70, t.h * 0.3) && p.y > t.y - t.h - 60 && p.y < t.y + 10 + 54 * this.labelZoom) return i;
     }
@@ -319,7 +347,7 @@ export class FairMission extends SceneMission {
   }
 
   /**
-   * The fair: stalls with lights, and the four trees for sale with their
+   * The fair: stalls with lights, and the trees for sale with their
    * height and price, and a measuring stick showing what fits on the wagon.
    * @private
    * @param {CanvasRenderingContext2D} c
@@ -335,9 +363,9 @@ export class FairMission extends SceneMission {
     drawFairStalls(c, { left: L.left, right: L.right, ground, height: (ground - L.top) * 0.5 }, this.time);
     // the trees for sale
     const max = this.config.maxHeight;
-    this.config.trees.forEach((offer, i) => {
+    this.trees.forEach((offer, i) => {
       const t = this.treeSpot(i);
-      if (i === this.chosen) glow(c, t.x, t.y - t.h / 2, t.h, 'rgba(255,230,140,0.55)', 'rgba(255,230,140,0)');
+      if (offer === this.chosen) glow(c, t.x, t.y - t.h / 2, t.h, 'rgba(255,230,140,0.55)', 'rgba(255,230,140,0)');
       drawFir(c, t.x, t.y, t.h, { snowy: true });
       // the label: height and price (bigger on phones)
       const ly = t.y + 8;
@@ -372,9 +400,10 @@ export class FairMission extends SceneMission {
     c.font = `800 ${Math.round(18 * stage.ui)}px "Baloo 2", system-ui, sans-serif`;
     c.textAlign = 'left';
     c.fillText(`încape pe vagon: cel mult ${fmt(max)} m`, sx + 14, top - 14);
-    if (this.chosen >= 0) {
+    const chosen = this.chosen ? this.trees.indexOf(this.chosen) : -1;
+    if (chosen >= 0) {
       c.fillStyle = '#ffd23f';
-      const t = this.treeSpot(this.chosen);
+      const t = this.treeSpot(chosen);
       fillStar(c, t.x, t.y - t.h - 18, 18, 8);
     }
   }
