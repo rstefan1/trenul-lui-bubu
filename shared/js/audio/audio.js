@@ -51,10 +51,12 @@ export class AudioEngine {
     this.muted = readFlag(MUTE_KEY);
     /** The music is off (the other sounds can still be on). */
     this.musicOff = readFlag(MUSIC_KEY);
-    /** @type {Map<string, {url: string, normalize: boolean}>} name → file of every sound */
+    /** @type {Map<string, {url: string, normalize: boolean, lazy: boolean}>} name → file of every sound */
     this.files = new Map();
     /** @type {Map<string, AudioBuffer>} sounds ready to play */
     this.buffers = new Map();
+    /** @type {Set<string>} sounds being loaded now */
+    this.loading = new Set();
     /** @type {Record<string, Array<() => void>>} */
     this.listeners = {};
     const unlock = () => this.unlock();
@@ -106,7 +108,7 @@ export class AudioEngine {
       const musicRoom = ctx.createGain();
       musicRoom.gain.value = MUSIC_IN_ROOM;
       this.ducker.connect(musicRoom).connect(room);
-      for (const [name, file] of this.files) this.fetch(name, file.url, file.normalize);
+      for (const [name, file] of this.files) if (!file.lazy) this.load(name);
       this.emit('unlock');
       // the sound was left off last time: the engine waits, paused, until it is turned on
       if (this.muted) ctx.suspend();
@@ -116,15 +118,38 @@ export class AudioEngine {
   }
 
   /**
-   * Declares a recorded sound; it is loaded as soon as sound is allowed.
+   * Declares a recorded sound; it is loaded as soon as sound is allowed
+   * (or, if lazy, only when asked for with load).
    * @param {string} name
    * @param {string} url
-   * @param {{normalize?: boolean}} [options]  normalize: make it as loud as it can be without distortion
+   * @param {{normalize?: boolean, lazy?: boolean}} [options]
+   *        normalize: make it as loud as it can be without distortion;
+   *        lazy: load it only when needed (a long recording used in one place)
    */
   register(name, url, options = {}) {
-    const file = { url, normalize: !!options.normalize };
+    const file = { url, normalize: !!options.normalize, lazy: !!options.lazy };
     this.files.set(name, file);
-    if (this.ctx) this.fetch(name, file.url, file.normalize);
+    if (this.ctx && !file.lazy) this.load(name);
+  }
+
+  /**
+   * Starts loading a sound, if it is not loaded or loading already (and sound
+   * has been allowed). It is in `buffers` once ready.
+   * @param {string} name
+   */
+  load(name) {
+    const file = this.files.get(name);
+    if (!file || !this.ctx || this.buffers.has(name) || this.loading.has(name)) return;
+    this.loading.add(name);
+    this.fetch(name, file.url, file.normalize).finally(() => this.loading.delete(name));
+  }
+
+  /**
+   * Forgets a loaded sound (its memory is given back); it can be loaded again.
+   * @param {string} name
+   */
+  forget(name) {
+    this.buffers.delete(name);
   }
 
   /**
