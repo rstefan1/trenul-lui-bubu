@@ -29,6 +29,9 @@ import { Mission } from './mission.js';
 const RUB = 1 / 2400;
 /** How much one tap clears. */
 const TAP = 0.035;
+/** The plough: how fast it comes and goes (units/s), and how long it takes to push through the drift (s). */
+const PLOUGH_SPEED = 320;
+const PLOUGH_PUSH = 2.2;
 /** The plough takes over when this much snow is left. */
 const PLOUGH_AT = 0.38;
 /** Seconds of Bubu's hop out of the window, and back in. */
@@ -59,7 +62,14 @@ export class SnowboundMission extends Mission {
     this.driftX = 0;
     this.signals = 0;
     this.flash = 0;
+    /** Screen x of the plough's blade (the front, facing the train). */
     this.ploughX = 0;
+    /** @type {'come' | 'push' | 'leave'} what the plough is doing */
+    this.ploughDoes = 'come';
+    /** The plough has been heard coming (its engine starts when it comes into view). */
+    this.ploughHeard = false;
+    /** Screen x left of which the drift is still there (the plough clears it from the right). */
+    this.cleared = Infinity;
     /** @type {{x: number, y: number} | null} last pointer position while rubbing */
     this.rubbing = null;
     /** @type {import('../journey/journey.js').Controls | null} */
@@ -105,10 +115,7 @@ export class SnowboundMission extends Mission {
         this.signals += 1;
         this.flash = 1;
         this.sound('ding', l.x);
-        if (this.signals >= 3) {
-          this.setStep('plough');
-          this.sound('plough');
-        }
+        if (this.signals >= 3) this.setStep('plough');
       }
     }
   }
@@ -171,6 +178,8 @@ export class SnowboundMission extends Mission {
     if (step === 'plough') {
       hud.instruct(this.config.title, this.config.ploughText);
       this.ploughX = this.ctx.stage.viewRight + 300;
+      this.ploughDoes = 'come';
+      this.ploughHeard = false;
     }
   }
 
@@ -190,17 +199,7 @@ export class SnowboundMission extends Mission {
     if (this.step === 'out' && this.stepT >= HOP_TIME) this.setStep('dig');
     if (this.step === 'back' && this.stepT >= HOP_TIME) this.setStep('go');
     if (this.step === 'dig') this.digTime += dt;
-    if (this.step === 'plough') {
-      // the plough comes down the line, pushes through the drift and goes away
-      const target = this.driftScreenX + DRIFT_W * 0.2;
-      const t = this.stepT;
-      if (t < 2.2) this.ploughX = lerp(this.ctx.stage.viewRight + 300, target, clamp(t / 2.2, 0, 1));
-      else if (t < 3.6) {
-        this.snow = Math.max(0, lerp(PLOUGH_AT, 0, (t - 2.2) / 1.4));
-        if (Math.random() < 0.5) this.particles.burst(this.ploughX, TRACK_Y - 60 - this.ctx.world.cameraY, ['#ffffff', '#e3ecf8'], 6, 260);
-      } else this.ploughX = lerp(target, this.ctx.stage.viewRight + 400, clamp((t - 3.6) / 2, 0, 1));
-      if (t > 5.4) this.setStep('back');
-    }
+    if (this.step === 'plough') this.updatePlough(dt);
     if (this.step === 'go') {
       // the locomotive whistles first, then the train sets off again
       if (this.stepT >= this.whistleFor) {
@@ -214,26 +213,93 @@ export class SnowboundMission extends Mission {
     }
   }
 
+  /**
+   * The plough comes down the line to the drift's right edge, pushes through
+   * it from right to left — the snow is gone behind its blade, piled up and
+   * thrown up in front of it — then backs away the way it came.
+   * @private
+   * @param {number} dt
+   */
+  updatePlough(dt) {
+    const x0 = this.driftScreenX;
+    const right = x0 + DRIFT_W + 40;   // where the drift ends on the right
+    const stage = this.ctx.stage;
+    if (!this.ploughHeard && this.ploughX < stage.viewRight + 40) {
+      // its engine is heard as soon as it comes into view
+      this.ploughHeard = true;
+      this.sound('ploughEngine', stage.viewRight);
+    }
+    if (this.ploughDoes === 'come') {
+      this.ploughX = Math.max(right, this.ploughX - PLOUGH_SPEED * dt);
+      if (this.ploughX <= right) {
+        this.ploughDoes = 'push';
+        this.stepT = 0;
+        this.sound('plough', right);
+      }
+    } else if (this.ploughDoes === 'push') {
+      const k = clamp(this.stepT / PLOUGH_PUSH, 0, 1);
+      // up to the drift's left foot, just short of Bubu and her lantern
+      this.ploughX = lerp(right, x0 - 40, k);
+      this.cleared = this.ploughX;
+      if (Math.random() < 0.6) {
+        // snow thrown up and aside by the blade
+        this.particles.burst(this.ploughX - 10, TRACK_Y - 40 - this.ctx.world.cameraY, ['#ffffff', '#e3ecf8'], 5, 280);
+      }
+      if (k >= 1) {
+        this.ploughDoes = 'leave';
+        this.snow = 0;
+        this.stepT = 0;
+      }
+    } else {
+      this.ploughX += PLOUGH_SPEED * 1.2 * dt;
+      if (this.ploughX > stage.viewRight + 300) this.setStep('back');
+    }
+  }
+
   /** @param {CanvasRenderingContext2D} c */
   draw(c) {
     const w = this.ctx.world;
     const x0 = this.driftScreenX;
+    const ploughing = this.step === 'plough';
     w.drawTinted(c, TRACK_Y - 400, this.ctx.stage.viewBottom + w.cameraY + 10, b => {
-      // the drift: a big white mound over the rails
+      // the drift: a big white mound over the rails (what the plough has not cleared yet)
       const h = 60 + 220 * this.snow;
-      b.fillStyle = '#f4f8ff';
-      b.beginPath();
-      b.moveTo(x0 - 40, TRACK_Y + 30);
-      b.bezierCurveTo(x0 + 20, TRACK_Y - h, x0 + DRIFT_W - 60, TRACK_Y - h * 1.05, x0 + DRIFT_W + 40, TRACK_Y + 30);
-      b.closePath();
-      b.fill();
-      b.fillStyle = 'rgba(160,180,215,0.45)';
-      b.beginPath();
-      b.moveTo(x0 + DRIFT_W * 0.45, TRACK_Y + 30);
-      b.bezierCurveTo(x0 + DRIFT_W * 0.6, TRACK_Y - h * 0.8, x0 + DRIFT_W - 40, TRACK_Y - h * 0.9, x0 + DRIFT_W + 40, TRACK_Y + 30);
-      b.closePath();
-      b.fill();
-      if (this.step === 'plough' || this.step === 'go') this.drawPlough(b, this.ploughX);
+      b.save();
+      if (ploughing && this.ploughDoes !== 'come') {
+        b.beginPath();
+        b.rect(x0 - 100, TRACK_Y - 400, Math.max(0, this.cleared - (x0 - 100)), 500);
+        b.clip();
+      }
+      if (this.snow > 0) {
+        b.fillStyle = '#f4f8ff';
+        b.beginPath();
+        b.moveTo(x0 - 40, TRACK_Y + 30);
+        b.bezierCurveTo(x0 + 20, TRACK_Y - h, x0 + DRIFT_W - 60, TRACK_Y - h * 1.05, x0 + DRIFT_W + 40, TRACK_Y + 30);
+        b.closePath();
+        b.fill();
+        b.fillStyle = 'rgba(160,180,215,0.45)';
+        b.beginPath();
+        b.moveTo(x0 + DRIFT_W * 0.45, TRACK_Y + 30);
+        b.bezierCurveTo(x0 + DRIFT_W * 0.6, TRACK_Y - h * 0.8, x0 + DRIFT_W - 40, TRACK_Y - h * 0.9, x0 + DRIFT_W + 40, TRACK_Y + 30);
+        b.closePath();
+        b.fill();
+      }
+      b.restore();
+      if (ploughing) {
+        this.drawPlough(b, this.ploughX);
+        // the snow piled up in front of the blade while it pushes
+        if (this.ploughDoes === 'push') {
+          const px = this.ploughX;
+          const pile = 30 + 40 * Math.min(1, this.stepT / 0.6);
+          b.fillStyle = '#f4f8ff';
+          b.beginPath();
+          b.moveTo(px - 50, TRACK_Y + 28);
+          b.quadraticCurveTo(px - 30, TRACK_Y - pile, px + 10, TRACK_Y - pile * 0.9);
+          b.lineTo(px + 30, TRACK_Y + 28);
+          b.closePath();
+          b.fill();
+        }
+      }
     });
     c.save();
     c.translate(0, -w.cameraY);
