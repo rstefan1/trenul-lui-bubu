@@ -209,8 +209,14 @@ export class WorldView {
       lights: smoothstep(0.25, 0.8, light.night),
       headlight: Math.max(smoothstep(0.3, 0.8, light.night), tunnel.front),
     };
-    this.compositor.draw(c, TRACK_Y - 280, TRACK_Y + 30, b => this.train.drawBody(b, frame), [light.wash]);
-    this.compositor.draw(c, 0, stage.viewBottom + this.cameraY, b => this.features.drawFront(b, fview), [light.wash]);
+    // the train and what passes in front of it (a tunnel's mountain, a bridge's
+    // truss) are tinted together, in one pass; the band is as tall as the
+    // screen only while something is in front of the train
+    const front = this.features.hasFront(fview);
+    this.compositor.draw(c, front ? 0 : TRACK_Y - 280, front ? stage.viewBottom + this.cameraY : TRACK_Y + 30, b => {
+      this.train.drawBody(b, frame);
+      if (front) this.features.drawFront(b, fview);
+    }, [light.wash]);
     if (tunnel.any) {
       // the part of the train inside a mountain stays hidden, lights included
       c.save();

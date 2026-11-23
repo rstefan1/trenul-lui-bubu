@@ -191,6 +191,15 @@ export class TrackFeatures {
   }
 
   /** @param {CanvasRenderingContext2D} c @param {FeatureView} v */
+  /**
+   * Is anything drawn in front of the train now (a tunnel's mountain, a
+   * bridge's truss)? If not, the front pass can be skipped.
+   * @param {FeatureView} v
+   */
+  hasFront(v) {
+    return this.visible(v).some(f => f.type === 'tunnel' || f.type === 'bridge');
+  }
+
   drawFront(c, v) {
     for (const f of this.visible(v)) {
       if (f.type === 'tunnel') drawTunnelFront(c, v, f);
