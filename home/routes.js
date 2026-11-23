@@ -34,7 +34,7 @@ export const ROUTES = [
     from: 'Timișoara',
     to: 'Putna',
     when: '24–25 decembrie',
-    blurb: 'În noaptea de Ajun, Bubu traversează țara cu trenul, prin Transilvania și munții Bucovinei, ca să ajungă la Putna în dimineața de Crăciun.',
+    blurb: 'În noaptea de Ajun, Bubu merge cu trenul prin toată țara, până la Putna.',
     chapters: 4,
     stations: 14,
     saveKey: 'trenul-lui-bubu/route-01',
