@@ -35,7 +35,7 @@
  * needed.
  */
 
-import { LruCache, createOffscreen } from '../core/canvas-cache.js';
+import { LruCache, canvasBytes, createOffscreen, releaseCanvas } from '../core/canvas-cache.js';
 import { rngFor } from '../core/random.js';
 import { hexToRgb, css, mixRgb } from '../gfx/color.js';
 import { biome } from './biomes/index.js';
@@ -72,6 +72,15 @@ const SEAM = 1;
 
 /** Number of variants per biome and layer (avoids visible repetition). */
 const VARIANTS = 4;
+/**
+ * Memory the tiles may take. Enough for every tile on screen and the ones
+ * painted ahead, on all three layers, even while the ground turns white
+ * (bare and snowy tiles at once), on a sharp screen; on ordinary screens it
+ * holds many more.
+ */
+const TILES_MAX_BYTES = 128 * 1024 * 1024;
+/** Never fewer tiles than those on screen and ahead (3 layers × (3 on screen + 1 ahead)), whatever the memory. */
+const TILES_MIN = 12;
 /** How many tiles beyond the right edge of the screen are painted ahead, per layer. */
 const AHEAD = 1;
 /** Paint ahead only while at least this much of the browser's spare moment is left (ms). */
@@ -117,7 +126,15 @@ export class Landscape {
     this.compositor = compositor;
     this.biomeAt = biomeAt;
     /** @type {LruCache<Tile>} */
-    this.cache = new LruCache(30);
+    this.cache = new LruCache({
+      maxBytes: TILES_MAX_BYTES,
+      minEntries: TILES_MIN,
+      sizeOf: tile => canvasBytes(tile.body) + canvasBytes(tile.lights),
+      release: tile => {
+        releaseCanvas(tile.body);
+        releaseCanvas(tile.lights);
+      },
+    });
     stage.on('resize', () => {
       this.cache.clear();
       this.ahead.clear();
