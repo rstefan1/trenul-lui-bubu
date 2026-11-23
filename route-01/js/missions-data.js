@@ -19,8 +19,8 @@ export const WINTER_MISSIONS = {
         id: 'baubles-timisoara-arad',
         title: 'Globurile fugite',
         text: 'Vântul a luat globurile de la târgul din Timișoara! Atinge globurile, ca Bubu să le prindă.',
-        count: 'fill',
-        goal: 0.8,
+        count: 8,
+        goal: 6,
       },
     },
     {
@@ -47,7 +47,7 @@ export const WINTER_MISSIONS = {
         id: 'bells-deva-alba',
         title: 'Clopoțeii de pe linie',
         text: 'Acum conduci tu trenul! Un clopoțel sună doar dacă treci pe sub el cu viteza cerută. Alege ÎNCET sau REPEDE din butoanele din stânga.',
-        bells: 9,
+        bells: 6,
       },
     },
     {
@@ -128,7 +128,6 @@ export const WINTER_MISSIONS = {
         animals: [
           { emoji: '🦊', stop: 'Stația Vulpiței' },
           { emoji: '🐇', stop: 'Stația Iepurașului' },
-          { emoji: '🦌', stop: 'Stația Căprioarei' },
           { emoji: '🐻', stop: 'Stația Ursulețului' },
         ],
       },
@@ -326,7 +325,7 @@ export const WINTER_MISSIONS = {
         id: 'switches-dej',
         title: 'Macazurile din Dej',
         text: 'Vagonul cu daruri trebuie să ajungă pe linia cerută. Atinge cercurile albastre ca să muți macazurile, apoi pornește trenul.',
-        levels: [2, 3, 3],
+        levels: [2, 3],
         doneText: 'Toate vagoanele cu daruri au ajuns pe liniile bune!',
         fact: 'Macazul este o bucată de șină care se mută și alege drumul trenului. Funcționează ca „dacă… atunci…” dintr-un program.',
       },

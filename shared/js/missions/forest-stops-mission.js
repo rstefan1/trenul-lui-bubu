@@ -92,7 +92,8 @@ export class ForestStopsMission extends Mission {
     const end = seg.start + (hints.window ? hints.window.to : 0.9) * seg.length - 900;
     const first = j.distance + 3200;
     const n = this.config.animals.length;
-    const spacing = Math.max(2600, (end - first) / Math.max(1, n - 1));
+    // no long empty stretches between the halts
+    const spacing = clamp((end - first) / Math.max(1, n - 1), 2600, 3400);
     // seats from the front coach backwards, every other window
     const seats = this.ctx.world.train.passengerWindows.length;
     this.halts = this.config.animals.map((a, i) => ({

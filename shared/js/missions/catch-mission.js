@@ -91,7 +91,9 @@ export class CatchMission extends Mission {
     this.count = count === 'fill' ? Math.max(1, free) : count;
     /** Ornaments needed for three stars. */
     this.goal = goal < 1 ? Math.ceil(this.count * goal) : Math.min(goal, this.count);
-    this.spawnEvery = Math.max(1.4, (duration - 10) / this.count);
+    // a steady rhythm (never long waits): with few ornaments the mission
+    // simply ends sooner than its window
+    this.spawnEvery = clamp((duration - 10) / this.count, 1.4, 2.6);
     this.ctx.hud.setCounter('🎄', 0, this.goal);
   }
 

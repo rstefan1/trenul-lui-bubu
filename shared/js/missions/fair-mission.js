@@ -31,7 +31,7 @@ import { zoomed } from '../gfx/ui-style.js';
 import { SceneMission } from './scene-mission.js';
 
 /** Seconds of the ride up the hill and down again. */
-const CLIMB_TIME = 24;
+const CLIMB_TIME = 16;
 const DOWN_TIME = 6;
 /** Speed at which the coins glide towards the sleigh (stage units/s). */
 const ITEM_SPEED = 300;

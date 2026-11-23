@@ -23,6 +23,8 @@ import { drawBubu } from '../train/bubu.js';
 import { SceneMission } from './scene-mission.js';
 
 /** Where the baubles hang on the big tree, as fractions of its height (x from the axis, y from the top). */
+/** Baubles hung with every touch (the tree is decorated in a few touches). */
+const PER_TOUCH = 2;
 const SPOTS = [[0, 0.22], [-0.1, 0.36], [0.12, 0.4], [-0.2, 0.52], [0.04, 0.55], [0.22, 0.6], [-0.26, 0.7], [-0.06, 0.72], [0.16, 0.76], [0.3, 0.82], [-0.32, 0.84], [0, 0.88]];
 
 /**
@@ -47,7 +49,7 @@ export class PutnaMission extends SceneMission {
     this.swingV = 0;
     /** @type {number[]} seconds since each sound wave started */
     this.waves = [];
-    /** Baubles hung on the tree so far (one per touch). */
+    /** Baubles hung on the tree so far ({@link PER_TOUCH} per touch). */
     this.hung = 0;
     this.particles = new Particles();
   }
@@ -110,11 +112,12 @@ export class PutnaMission extends SceneMission {
       const t = L.tree;
       if (Math.abs(p.x - t.x) > t.h * 0.45 || p.y < t.y - t.h - 20 || p.y > t.y + 10) return;
       if (this.hung >= SPOTS.length) return;
-      const [u, v] = SPOTS[this.hung];
-      this.particles.burst(t.x + u * t.h, t.y - t.h + v * t.h, SPARKS, 10, 160);
-      this.sound('collect', t.x + u * t.h);
-      this.hung += 1;
-      this.ctx.hud.setCounter('🎄', this.hung, SPOTS.length);
+      for (const [u, v] of SPOTS.slice(this.hung, this.hung + PER_TOUCH)) {
+        this.particles.burst(t.x + u * t.h, t.y - t.h + v * t.h, SPARKS, 10, 160);
+      }
+      this.sound('collect', t.x + SPOTS[this.hung][0] * t.h);
+      this.hung = Math.min(SPOTS.length, this.hung + PER_TOUCH);
+      this.ctx.hud.setCounter('🎄', Math.ceil(this.hung / PER_TOUCH), Math.ceil(SPOTS.length / PER_TOUCH));
       if (this.hung >= SPOTS.length) this.finish();
     }
   }
@@ -124,7 +127,7 @@ export class PutnaMission extends SceneMission {
     if (this.phase === 'finished') return;
     this.step = 'tree';
     this.stepT = 0;
-    this.ctx.hud.setCounter('🎄', 0, SPOTS.length);
+    this.ctx.hud.setCounter('🎄', 0, Math.ceil(SPOTS.length / PER_TOUCH));
     this.ctx.hud.instruct(this.config.title, this.config.treeText);
   }
 

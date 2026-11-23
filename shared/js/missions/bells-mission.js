@@ -101,7 +101,9 @@ export class BellsMission extends Mission {
     const end = seg.start + (hints.window ? hints.window.to : 0.85) * seg.length - 900;
     const first = j.distance + 3200;
     const n = this.config.bells;
-    const spacing = Math.max(2200, (end - first) / Math.max(1, n - 1));
+    // close enough that there is always a bell to get ready for (a few
+    // bells end before the window does, rather than with long waits)
+    const spacing = clamp((end - first) / Math.max(1, n - 1), 2200, 2800);
     /** @type {Array<Gear>} */
     const pattern = ['slow', 'fast', 'slow', 'slow', 'fast', 'fast', 'slow', 'fast', 'fast', 'slow'];
     for (let i = 0; i < n; i++) {
