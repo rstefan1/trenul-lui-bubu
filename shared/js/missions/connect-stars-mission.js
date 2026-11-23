@@ -13,7 +13,6 @@
 import { clamp } from '../core/math.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillStar, glow } from '../gfx/shapes.js';
-import { TRACK_Y } from '../world/track.js';
 import { Mission } from './mission.js';
 
 /**
@@ -33,6 +32,9 @@ const SHAPES = Object.freeze({
 /**
  * @typedef {import('./mission.js').MissionConfig & {shapes: string[]}} ConnectStarsConfig
  */
+
+/** How much wider than tall the drawing may be (the stars stay easy to recognise, and farther apart). */
+const WIDEN = 1.3;
 
 export class ConnectStarsMission extends Mission {
   /**
@@ -67,19 +69,21 @@ export class ConnectStarsMission extends Mission {
   }
 
   /**
-   * Where the drawing is: big, so the stars are easy to touch — from below
-   * the heads-up display (with room for the numbers above the top stars)
-   * down over the mountains, to just above the train.
+   * Where the drawing is: as big as the screen allows, so the stars are easy
+   * to touch — from just below the heads-up display (with room for the
+   * numbers above the top stars) down over the landscape and the train, to
+   * near the bottom of the screen; a little wider than tall, on wide screens.
    */
   get box() {
     const stage = this.ctx.stage;
     const hud = this.ctx.hud;
     const below = Math.max(hud.hudBottom, hud.cardBottom);
-    const top = Math.max(stage.viewTop + 60, stage.toStage(0, below).y + 60);
-    const bottom = TRACK_Y - 150 - this.ctx.world.cameraY;
-    const size = clamp(Math.min(bottom - top, stage.width * 0.8), 220, 640);
+    const top = Math.max(stage.viewTop + 50, stage.toStage(0, below).y + 50);
+    const bottom = stage.viewBottom - 30;
+    const size = clamp(Math.min(bottom - top, stage.width * 0.8), 240, 900);
+    const width = Math.min(size * WIDEN, (stage.viewRight - stage.viewLeft) * 0.85);
     const y = size <= bottom - top ? top + (bottom - top - size) / 2 : top;
-    return { x: stage.width / 2 - size / 2, y, size };
+    return { x: stage.width / 2 - width / 2, y, size, width };
   }
 
   /**
@@ -89,7 +93,7 @@ export class ConnectStarsMission extends Mission {
   at(i) {
     const b = this.box;
     const [u, v] = this.points[i];
-    return { x: b.x + u * b.size, y: b.y + v * b.size };
+    return { x: b.x + u * b.width, y: b.y + v * b.size };
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */
@@ -125,8 +129,8 @@ export class ConnectStarsMission extends Mission {
     this.step = 'shine';
     this.stepT = 0;
     const b = this.box;
-    this.particles.burst(b.x + b.size / 2, b.y + b.size / 2, SPARKS, 36, 300);
-    this.sound('sparkle', b.x + b.size / 2);
+    this.particles.burst(b.x + b.width / 2, b.y + b.size / 2, SPARKS, 36, 300);
+    this.sound('sparkle', b.x + b.width / 2);
     this.ctx.hud.setCounter('⭐', this.shape + 1, this.config.shapes.length);
   }
 
@@ -166,7 +170,7 @@ export class ConnectStarsMission extends Mission {
     const shine = this.step === 'shine' ? clamp(this.stepT / 0.6, 0, 1) : 0;
     // a soft patch of night sky behind the drawing, so the stars stand out over the mountains
     const b0 = this.box;
-    glow(c, b0.x + b0.size / 2, b0.y + b0.size / 2, b0.size * 0.75, 'rgba(5,11,44,0.55)', 'rgba(5,11,44,0)');
+    glow(c, b0.x + b0.width / 2, b0.y + b0.size / 2, Math.max(b0.width, b0.size) * 0.7, 'rgba(5,11,44,0.55)', 'rgba(5,11,44,0)');
     // the lines joined so far (closed when the drawing is complete)
     if (this.joined > 1 || shine) {
       c.strokeStyle = `rgba(255,214,90,${0.8 + 0.2 * shine})`;
@@ -184,7 +188,7 @@ export class ConnectStarsMission extends Mission {
     }
     if (shine) {
       const b = this.box;
-      glow(c, b.x + b.size / 2, b.y + b.size / 2, b.size * 0.7, `rgba(255,230,140,${0.35 * shine})`, 'rgba(255,230,140,0)');
+      glow(c, b.x + b.width / 2, b.y + b.size / 2, b.size * 0.7, `rgba(255,230,140,${0.35 * shine})`, 'rgba(255,230,140,0)');
     }
     // the stars, with their numbers
     for (let i = 0; i < n; i++) {
