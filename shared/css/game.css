@@ -895,6 +895,13 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .gear-btn__kmh { display: block; font-size: .62em; font-weight: 700; opacity: .85; line-height: 1; }
 .gear-btn[aria-pressed="true"] { background: var(--gear); border-color: #fff; opacity: 1; transform: scale(1.06); }
 
+@media (max-height: 520px) and (orientation: landscape) {
+  /* sideways phones: the gears side by side, so the train stays in view */
+  .gearbox { flex-direction: row; align-items: stretch; padding: 6px; gap: 6px; }
+  .gearbox__title { display: none; }
+  .gear-btn { min-width: 0; padding: 4px 12px; font-size: 17px; }
+}
+
 /* ---------- Program panel (Dej switches) ---------- */
 .program-panel { gap: 8px; }
 .program-title { margin: 0; font-size: clamp(15px, 2.3vmin, 19px); font-weight: 700; }

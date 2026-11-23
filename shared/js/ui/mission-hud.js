@@ -160,6 +160,20 @@ export class MissionHud {
   }
 
   /**
+   * Bottom edge of the HUD together with the mission's "?" button and
+   * counter (wherever they are), in CSS pixels: what a mission puts in the
+   * top left corner goes below this.
+   * @returns {number}
+   */
+  get controlsBottom() {
+    let bottom = this.hudBottom;
+    for (const node of [this.el.help, this.el.counter]) {
+      if (!node.hidden) bottom = Math.max(bottom, node.getBoundingClientRect().bottom);
+    }
+    return bottom;
+  }
+
+  /**
    * Bottom edge of the announcement card in CSS pixels (0 when hidden), so
    * that a mission can keep important things below it.
    * @returns {number}

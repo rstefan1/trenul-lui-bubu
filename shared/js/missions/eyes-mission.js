@@ -13,6 +13,7 @@
 import { between, createRng } from '../core/random.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { drawFir, fillCircle, glow } from '../gfx/shapes.js';
+import { zoomed } from '../gfx/ui-style.js';
 import { SceneMission } from './scene-mission.js';
 
 /**
@@ -64,8 +65,10 @@ export class EyesMission extends SceneMission {
   /** The free part of the screen. */
   get area() {
     const stage = this.ctx.stage;
-    const cardBottom = this.ctx.hud.cardBottom;
-    const top = Math.max(stage.viewTop + 140, cardBottom ? stage.toStage(0, cardBottom + 20).y : 0);
+    const hud = this.ctx.hud;
+    const cardBottom = hud.cardBottom;
+    const top = Math.max(stage.viewTop + 140, stage.toStage(0, hud.controlsBottom + 30).y,
+      cardBottom ? stage.toStage(0, cardBottom + 20).y : -Infinity);
     return { left: stage.viewLeft + 40, top, w: stage.viewRight - stage.viewLeft - 80, h: stage.viewBottom - 40 - top };
   }
 
@@ -181,28 +184,41 @@ export class EyesMission extends SceneMission {
       }
     });
     // the animals: eyes while hidden, the animal once found
+    // bigger eyes and animals on phones (the eyes even more: they are small)
+    const ui = stage.ui;
     for (const h of this.hidden) {
       const q = this.at(h);
-      if (h.found) {
-        const k = Math.min(1, h.t / 0.3);
-        glow(c, q.x, q.y, 70, 'rgba(255,240,180,0.45)', 'rgba(255,240,180,0)');
-        c.font = `${Math.round(64 * k)}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-        c.textAlign = 'center';
-        c.textBaseline = 'middle';
-        c.fillText(h.emoji, q.x, q.y);
-        continue;
-      }
-      const blink = Math.sin(this.time * 1.3 + h.phase) > 0.93;
-      if (blink) continue;
-      glow(c, q.x, q.y, 34, 'rgba(255,240,120,0.35)', 'rgba(255,240,120,0)');
-      c.fillStyle = '#fff59d';
-      fillCircle(c, q.x - 9, q.y, 5);
-      fillCircle(c, q.x + 9, q.y, 5);
-      c.fillStyle = '#1b1b1b';
-      fillCircle(c, q.x - 9, q.y, 2);
-      fillCircle(c, q.x + 9, q.y, 2);
+      const k = h.found ? ui : ui > 1 ? ui * 1.4 : 1;
+      zoomed(c, k, q.x, q.y, () => this.drawAnimal(c, h, q));
     }
     this.particles.draw(c);
     c.restore();
+  }
+
+  /**
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {Hidden} h
+   * @param {{x: number, y: number}} q
+   */
+  drawAnimal(c, h, q) {
+    if (h.found) {
+      const k = Math.min(1, h.t / 0.3);
+      glow(c, q.x, q.y, 70, 'rgba(255,240,180,0.45)', 'rgba(255,240,180,0)');
+      c.font = `${Math.round(64 * k)}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(h.emoji, q.x, q.y);
+      return;
+    }
+    const blink = Math.sin(this.time * 1.3 + h.phase) > 0.93;
+    if (blink) return;
+    glow(c, q.x, q.y, 34, 'rgba(255,240,120,0.35)', 'rgba(255,240,120,0)');
+    c.fillStyle = '#fff59d';
+    fillCircle(c, q.x - 9, q.y, 5);
+    fillCircle(c, q.x + 9, q.y, 5);
+    c.fillStyle = '#1b1b1b';
+    fillCircle(c, q.x - 9, q.y, 2);
+    fillCircle(c, q.x + 9, q.y, 2);
   }
 }

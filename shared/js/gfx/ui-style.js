@@ -43,3 +43,39 @@ export function drawGlassBox(c, x, y, w, h, o = {}) {
   c.lineWidth = o.active ? UI.activeWidth : UI.lineWidth;
   c.stroke();
 }
+
+/**
+ * Draws something enlarged `k` times around the point (x, y): a box and
+ * everything in it can be drawn in its usual units and still come out big
+ * enough on a phone (see Stage#ui). Pair it with {@link unzoom} for touches.
+ * @param {CanvasRenderingContext2D} c
+ * @param {number} k
+ * @param {number} x
+ * @param {number} y
+ * @param {() => void} draw
+ */
+export function zoomed(c, k, x, y, draw) {
+  if (k === 1) {
+    draw();
+    return;
+  }
+  c.save();
+  c.translate(x, y);
+  c.scale(k, k);
+  c.translate(-x, -y);
+  draw();
+  c.restore();
+}
+
+/**
+ * The point that a touch at `p` falls on, in the units of something drawn
+ * with {@link zoomed} (same `k`, x and y).
+ * @param {{x: number, y: number}} p
+ * @param {number} k
+ * @param {number} x
+ * @param {number} y
+ * @returns {{x: number, y: number}}
+ */
+export function unzoom(p, k, x, y) {
+  return { x: x + (p.x - x) / k, y: y + (p.y - y) / k };
+}

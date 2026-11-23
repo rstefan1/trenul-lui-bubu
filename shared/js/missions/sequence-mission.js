@@ -17,7 +17,7 @@ import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillCircle, glow } from '../gfx/shapes.js';
 import { WIRE_Y } from '../world/track.js';
 import { Mission, starsForMistakes } from './mission.js';
-import { drawGlassBox } from '../gfx/ui-style.js';
+import { drawGlassBox, unzoom, zoomed } from '../gfx/ui-style.js';
 
 const BULBS = [
   { color: '#e53935', dim: '#6b2a2a', name: 'roșu', note: 'C5' },
@@ -85,14 +85,20 @@ export class SequenceMission extends Mission {
     s.push(next);
   }
 
-  /** Where the panel with the bulbs is (stage units). */
+  /**
+   * Where the panel with the bulbs is (stage units). It is drawn `k` times
+   * bigger around its top left corner (bigger on phones); `w` and `h` are
+   * its size before that.
+   */
   get panel() {
     const stage = this.ctx.stage;
+    const hud = this.ctx.hud;
+    const k = stage.ui;
     const w = 470;
     const h = 170;
-    const cardBottom = this.ctx.hud.cardBottom;
-    const y = Math.max(cardBottom ? stage.toStage(0, cardBottom + 12).y : 0, WIRE_Y - 40 - h - this.ctx.world.cameraY);
-    return { x: stage.width / 2 - w / 2, y, w, h };
+    const below = stage.toStage(0, Math.max(hud.hudBottom, hud.cardBottom) + 12).y;
+    const y = Math.max(below, WIRE_Y - 40 - h * k - this.ctx.world.cameraY);
+    return { x: stage.width / 2 - (w * k) / 2, y, w, h, k };
   }
 
   /**
@@ -106,9 +112,11 @@ export class SequenceMission extends Mission {
 
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerDown(p) {
+    const box = this.panel;
+    const q = unzoom(p, box.k, box.x, box.y);
     for (let i = 0; i < BULBS.length; i++) {
       const b = this.bulbAt(i);
-      if (Math.hypot(p.x - b.x, p.y - b.y) < TOUCH_R) {
+      if (Math.hypot(q.x - b.x, q.y - b.y) < TOUCH_R) {
         this.press(i);
         return;
       }
@@ -139,7 +147,7 @@ export class SequenceMission extends Mission {
     this.ctx.state.setLightBulbs(this.round / this.config.rounds);
     this.ctx.hud.setCounter('💡', this.round, this.config.rounds);
     const p = this.panel;
-    this.particles.burst(p.x + p.w / 2, p.y + 80, SPARKS, 24, 260);
+    this.particles.burst(p.x + (p.w * p.k) / 2, p.y + 80 * p.k, SPARKS, 24, 260);
     if (this.round >= this.config.rounds) {
       this.step = 'done';
       this.message = 'Bravo! Toată ghirlanda trenului strălucește!';
@@ -203,6 +211,16 @@ export class SequenceMission extends Mission {
   /** @param {CanvasRenderingContext2D} c */
   draw(c) {
     const p = this.panel;
+    zoomed(c, p.k, p.x, p.y, () => this.drawPanel(c, p));
+    this.particles.draw(c);
+  }
+
+  /**
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {{x: number, y: number, w: number, h: number}} p
+   */
+  drawPanel(c, p) {
     drawGlassBox(c, p.x, p.y, p.w, p.h, { active: this.step === 'input' });
     c.fillStyle = '#ffffff';
     c.font = '700 20px "Baloo 2", system-ui, sans-serif';
@@ -239,7 +257,6 @@ export class SequenceMission extends Mission {
         fillCircle(c, p.x + p.w / 2 + (i - (n - 1) / 2) * 20, p.y + p.h - 14, 6);
       }
     }
-    this.particles.draw(c);
   }
 
   dispose() {

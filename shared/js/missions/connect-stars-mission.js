@@ -97,7 +97,7 @@ export class ConnectStarsMission extends Mission {
     const stage = this.ctx.stage;
     const hud = this.ctx.hud;
     const below = Math.max(hud.hudBottom, hud.cardBottom);
-    const top = Math.max(stage.viewTop + 40, stage.toStage(0, below).y + 40);
+    const top = Math.max(stage.viewTop + 40, stage.toStage(0, below).y + 20 + 40 * stage.ui);
     const bottom = Math.min(stage.viewBottom - 30, TRACK_Y - 90 - this.ctx.world.cameraY);
     const size = Math.max(240, Math.min(bottom - top, stage.width * 0.8));
     const widen = WIDEN[this.config.shapes[this.shape]] ?? 1.5;
@@ -187,6 +187,7 @@ export class ConnectStarsMission extends Mission {
   /** @param {CanvasRenderingContext2D} c */
   draw(c) {
     const n = this.points.length;
+    const k = this.ctx.stage.ui;   // bigger stars and numbers on phones
     const shine = this.step === 'shine' ? clamp(this.stepT / 0.6, 0, 1) : 0;
     // a soft patch of night sky behind the drawing, so the stars stand out over the mountains
     const b0 = this.box;
@@ -194,7 +195,7 @@ export class ConnectStarsMission extends Mission {
     // the lines joined so far (closed when the drawing is complete)
     if (this.joined > 1 || shine) {
       c.strokeStyle = `rgba(255,214,90,${0.8 + 0.2 * shine})`;
-      c.lineWidth = 4 + 3 * shine;
+      c.lineWidth = (4 + 3 * shine) * k;
       c.lineJoin = 'round';
       c.lineCap = 'round';
       c.beginPath();
@@ -215,17 +216,17 @@ export class ConnectStarsMission extends Mission {
       const q = this.at(i);
       const done = i < this.joined;
       const next = i === this.joined && this.step === 'draw';
-      const wob = Math.sin(this.wobble[i] * 40) * this.wobble[i] * 14;
+      const wob = Math.sin(this.wobble[i] * 40) * this.wobble[i] * 14 * k;
       const pulse = next ? 1 + 0.18 * Math.sin(this.time * 6) : 1;
-      if (next) glow(c, q.x, q.y, 44, 'rgba(255,240,170,0.6)', 'rgba(255,240,170,0)');
+      if (next) glow(c, q.x, q.y, 44 * k, 'rgba(255,240,170,0.6)', 'rgba(255,240,170,0)');
       c.fillStyle = done ? '#ffd23f' : '#ffffff';
-      fillStar(c, q.x + wob, q.y, 18 * pulse, 8 * pulse);
+      fillStar(c, q.x + wob, q.y, 18 * pulse * k, 8 * pulse * k);
       if (!done) {
         c.fillStyle = next ? '#ffe082' : 'rgba(255,255,255,0.85)';
-        c.font = `800 ${next ? 26 : 22}px "Baloo 2", system-ui, sans-serif`;
+        c.font = `800 ${Math.round((next ? 26 : 22) * k)}px "Baloo 2", system-ui, sans-serif`;
         c.textAlign = 'center';
         c.textBaseline = 'middle';
-        c.fillText(String(i + 1), q.x + wob, q.y - 32);
+        c.fillText(String(i + 1), q.x + wob, q.y - 32 * k);
       }
     }
     this.particles.draw(c);

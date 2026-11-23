@@ -20,12 +20,12 @@
 import { clamp } from '../core/math.js';
 import { Particles } from '../gfx/particles.js';
 import { fillCircle, fillRoundRect, glow } from '../gfx/shapes.js';
-import { WIRE_Y } from '../world/track.js';
+import { TRACK_Y, WIRE_Y } from '../world/track.js';
 import { MANUAL } from '../journey/journey.js';
 import { el } from '../ui/dom.js';
 import { ringBell } from '../audio/instruments.js';
 import { Mission } from './mission.js';
-import { drawGlassBox } from '../gfx/ui-style.js';
+import { drawGlassBox, zoomed } from '../gfx/ui-style.js';
 import { leave } from '../ui/panel.js';
 
 /** Train speed (world units/s) → the km/h shown to the child. */
@@ -244,14 +244,16 @@ export class BellsMission extends Mission {
     const swing = b.state === 'rung' ? Math.sin(b.t * 12) * 0.5 * Math.exp(-b.t * 1.2)
       : b.state === 'missed' ? Math.sin(b.t * 30) * 0.08 * Math.exp(-b.t * 4) : Math.sin(this.time * 2 + x * 0.01) * 0.05;
     const top = WIRE_Y;
-    // the sign above the wire
-    fillRoundRect(c, x - 52, top - 92, 104, 50, 12, '#ffffff');
-    fillRoundRect(c, x - 48, top - 88, 96, 42, 10, b.state === 'missed' ? '#9aa3b2' : band.color);
-    c.fillStyle = '#ffffff';
-    c.font = '800 22px "Baloo 2", system-ui, sans-serif';
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.fillText(band.label, x, top - 66);
+    // the sign above the wire (bigger on phones)
+    zoomed(c, this.ctx.stage.ui, x, top - 42, () => {
+      fillRoundRect(c, x - 52, top - 92, 104, 50, 12, '#ffffff');
+      fillRoundRect(c, x - 48, top - 88, 96, 42, 10, b.state === 'missed' ? '#9aa3b2' : band.color);
+      c.fillStyle = '#ffffff';
+      c.font = '800 22px "Baloo 2", system-ui, sans-serif';
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(band.label, x, top - 66);
+    });
     c.strokeStyle = '#3b4250';
     c.lineWidth = 2;
     c.beginPath();
@@ -308,6 +310,21 @@ export class BellsMission extends Mission {
     const j = this.ctx.journey;
     const box = this.gearbox?.getBoundingClientRect();
     const left = box ? stage.toStage(box.right, box.bottom).x + 16 : stage.viewLeft + 15;
+    // bigger on phones, as far as there is room next to the gearbox and
+    // under the train's windows
+    const room = Math.min((stage.viewRight - 10 - left) / 270, (stage.viewBottom - TRACK_Y + 100 + this.ctx.world.cameraY) / 175);
+    const k = clamp(room, 1, stage.ui);
+    zoomed(c, k, left, stage.viewBottom - 20, () => this.drawSpeedometer(c, left));
+  }
+
+  /**
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {number} left
+   */
+  drawSpeedometer(c, left) {
+    const stage = this.ctx.stage;
+    const j = this.ctx.journey;
     const cx = left + 135;
     const cy = stage.viewBottom - 70;
     const R = 105;
@@ -351,19 +368,36 @@ export class BellsMission extends Mission {
    */
   drawNextBells(c) {
     const stage = this.ctx.stage;
-    const j = this.ctx.journey;
     const upcoming = this.bells.filter(b => b.state === 'waiting').slice(0, 3);
     if (!upcoming.length) return;
-    const next = upcoming[0];
-    const band = BANDS[next.band];
-    const ok = this.gear === next.band;
-    const cardBottom = this.ctx.hud.cardBottom;
+    const ok = this.gear === upcoming[0].band;
+    const hud = this.ctx.hud;
     const w = 460;
     const h = 150;
-    const x = stage.width / 2 - w / 2;
-    // below the instructions card while it is shown, otherwise just above the bells' signs
-    const y = Math.max(cardBottom ? stage.toStage(0, cardBottom + 12).y : 0, WIRE_Y - 110 - h - this.ctx.world.cameraY);
+    // below the HUD and the instructions card, otherwise just above the
+    // bells' signs; bigger on phones, as far as there is room
+    const below = stage.toStage(0, Math.max(hud.hudBottom, hud.cardBottom) + 12).y;
+    const above = WIRE_Y - 60 - 50 * stage.ui - this.ctx.world.cameraY;
+    const k = clamp((above - below) / h, 1, stage.ui);
+    const x0 = stage.width / 2 - (w * k) / 2;
+    const y0 = Math.max(below, above - h * k);
+    zoomed(c, k, x0, y0, () => this.drawNextBell(c, x0, y0, upcoming, ok));
+  }
 
+  /**
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {number} x
+   * @param {number} y
+   * @param {Bell[]} upcoming
+   * @param {boolean} ok
+   */
+  drawNextBell(c, x, y, upcoming, ok) {
+    const j = this.ctx.journey;
+    const next = upcoming[0];
+    const band = BANDS[next.band];
+    const w = 460;
+    const h = 150;
     drawGlassBox(c, x, y, w, h, { active: ok });
     c.textAlign = 'center';
     c.textBaseline = 'alphabetic';

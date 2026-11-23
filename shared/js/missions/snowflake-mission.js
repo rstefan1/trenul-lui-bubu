@@ -67,16 +67,22 @@ export class SnowflakeMission extends Mission {
     return { top, bottom: TRACK_Y - 300 - this.ctx.world.cameraY, left: stage.viewLeft, right: stage.viewRight };
   }
 
+  /** Radius of a snowflake (bigger on phones). */
+  get flakeR() {
+    return FLAKE_R * this.ctx.stage.ui;
+  }
+
   /** The frame with the model snowflake (on the left under the counter, out of the train's way). */
   get frame() {
     const s = this.sky;
-    const top = this.ctx.stage.toStage(0, this.ctx.hud.hudBottom + 80).y;
-    return { x: s.left + 120, y: Math.max(s.top + 74, top + 70), r: 58 };
+    const r = 58 * this.ctx.stage.ui;
+    const top = this.ctx.stage.toStage(0, this.ctx.hud.controlsBottom + 12).y;
+    return { x: s.left + 50 + r, y: Math.max(s.top + 16, top) + r, r };
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerDown(p) {
-    const reach = Math.max(FLAKE_R + 14, 34 / this.ctx.stage.scale);
+    const reach = Math.max(this.flakeR + 14, 34 / this.ctx.stage.scale);
     let best = null;
     let bestD = reach;
     for (const f of this.flakes) {
@@ -126,10 +132,10 @@ export class SnowflakeMission extends Mission {
       let kind = this.model;
       if (!twin) while (kind === this.model) kind = Math.floor(Math.random() * KINDS);
       const f = this.frame;
-      const minX = f.x + f.r + FLAKE_R + 20;
+      const minX = f.x + f.r + this.flakeR + 20;
       this.flakes.push({
-        x: minX + Math.random() * Math.max(10, s.right - 60 - minX),
-        y: s.top - FLAKE_R,
+        x: minX + Math.random() * Math.max(10, s.right - this.flakeR - 20 - minX),
+        y: s.top - this.flakeR,
         kind,
         spin: (Math.random() - 0.5) * 0.6,
         phase: Math.random() * TAU,
@@ -142,7 +148,7 @@ export class SnowflakeMission extends Mission {
       else fl.y += FALL * dt;
       fl.wobble = Math.max(0, fl.wobble - dt);
     }
-    this.flakes = this.flakes.filter(fl => (fl.caught ? fl.caught < 0.5 : fl.y < s.bottom + FLAKE_R));
+    this.flakes = this.flakes.filter(fl => (fl.caught ? fl.caught < 0.5 : fl.y < s.bottom + this.flakeR));
     if (this.caught >= this.config.goal || this.phase === 'wrapping') this.finishMission();
   }
 
@@ -162,7 +168,7 @@ export class SnowflakeMission extends Mission {
       const k = f.caught ? 1 + f.caught * 2 : 1;
       c.save();
       c.globalAlpha = f.caught ? clamp(1 - f.caught * 2, 0, 1) : 1;
-      drawFlake(c, f.x + sway, f.y, FLAKE_R * k, f.kind, this.time * f.spin);
+      drawFlake(c, f.x + sway, f.y, this.flakeR * k, f.kind, this.time * f.spin);
       c.restore();
     }
     // the model, in a frame
@@ -171,10 +177,10 @@ export class SnowflakeMission extends Mission {
     drawGlassBox(c, m.x - m.r, m.y - m.r, m.r * 2, m.r * 2, { radius: 18 });
     drawFlake(c, m.x, m.y + 4, m.r * 0.72, this.model, 0);
     c.fillStyle = '#ffe082';
-    c.font = '800 18px "Baloo 2", system-ui, sans-serif';
+    c.font = `800 ${Math.round(18 * this.ctx.stage.ui)}px "Baloo 2", system-ui, sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText('Caută:', m.x, m.y - m.r + 14);
+    c.fillText('Caută:', m.x, m.y - m.r * 0.76);
     this.particles.draw(c);
   }
 }
