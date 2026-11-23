@@ -57,9 +57,10 @@ export function releaseCanvas(canvas) {
  * @template T
  * @typedef {object} LruOptions
  * @property {number} maxBytes                the memory the cache may hold
- * @property {number} minEntries              never fewer entries than this (those on screen)
  * @property {(value: T) => number} sizeOf    memory of one value, in bytes
  * @property {(value: T) => void} release     frees a value that is dropped
+ * @property {(value: T) => boolean} [isProtected]  a value that must not be dropped now
+ *           (e.g. one on screen): the cache rather holds more than maxBytes for a while
  */
 
 /**
@@ -92,10 +93,12 @@ export class LruCache {
     const value = build();
     this.map.set(key, value);
     this.bytes += this.options.sizeOf(value);
-    // drop the least recently used until the memory fits (the newest ones stay)
-    const { maxBytes, minEntries } = this.options;
-    while (this.bytes > maxBytes && this.map.size > minEntries) {
-      const [oldKey, old] = /** @type {[string, T]} */ (this.map.entries().next().value);
+    // drop the least recently used until the memory fits, never a protected one
+    // (nor the value just built)
+    const { maxBytes, isProtected } = this.options;
+    for (const [oldKey, old] of [...this.map]) {
+      if (this.bytes <= maxBytes) break;
+      if (old === value || isProtected?.(old)) continue;
       this.drop(oldKey, old);
     }
     return value;
