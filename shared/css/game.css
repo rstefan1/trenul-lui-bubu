@@ -192,7 +192,6 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   inset: 0;
   z-index: 30;
   display: grid;
-  place-items: center;
   padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
   background: rgba(6, 14, 34, .35);
   opacity: 0;
@@ -203,6 +202,8 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .overlay.is-visible { opacity: 1; }
 
 .overlay-card {
+  /* centred by its margins: a card taller than the screen scrolls from its top */
+  margin: auto;
   width: min(760px, 100%);
   display: flex;
   flex-direction: column;
@@ -346,6 +347,24 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   .intro-body { flex-direction: column; text-align: center; }
   .speech::before { display: none; }
   .intro-bubu { width: clamp(90px, 18vmin, 140px); }
+}
+/* sideways phones: the screens get low and wide, so that the main button
+   is in view without scrolling */
+@media (max-height: 520px) and (orientation: landscape) {
+  .overlay { padding: 8px 16px; }
+  .overlay-card { padding: 10px 20px 14px; }
+  .intro-title { font-size: 32px; }
+  .intro-subtitle { font-size: 18px; }
+  .intro-body { flex-direction: row; text-align: left; margin: 6px 0 10px; }
+  .intro-bubu { width: 84px; }
+  .speech { padding: 8px 14px; font-size: 15px; line-height: 1.3; }
+  .big-btn { padding: 6px 28px 8px; font-size: 24px; }
+  .intro-text { margin-top: 6px; font-size: 16px; line-height: 1.35; }
+  .finale .intro-bubu { width: 64px; margin-bottom: 0; }
+  .finale-stars { margin: 6px 0 8px; font-size: 18px; }
+  .finale .big-btn { margin-top: 8px; }
+  .chapter-end-stars { margin-top: 4px; font-size: 28px; }
+  .chapter-end-buttons { margin-top: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -895,6 +914,17 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .chapter-end-stars { margin: 10px 0 0; font-size: clamp(30px, 6vmin, 48px); font-weight: 800; color: #c79400; }
 .chapter-end-next { margin: 8px 0 0; max-width: 520px; font-size: clamp(16px, 2.5vmin, 20px); }
 .chapter-end-buttons { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 16px; }
+@media (max-height: 520px) and (orientation: landscape) {
+  .menu-card { width: min(860px, 100%); gap: 6px; }
+  .menu-bubu { width: 56px; }
+  .menu-head .intro-title { font-size: 28px; }
+  .chapter-list { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .chapter-card { padding: 4px 10px; gap: 10px; }
+  .chapter-card__number { width: 34px; height: 34px; font-size: 19px; }
+  .chapter-card__title { font-size: 16px; }
+  .chapter-card__route { font-size: 13px; }
+  .link-btn { font-size: 15px; padding: 2px 4px; }
+}
 @media (prefers-reduced-motion: reduce) { .menu-bubu { animation: none; } }
 
 /* ---------- Gearbox (driving missions) ---------- */

@@ -163,6 +163,14 @@ body {
 /* ---------- Footer ---------- */
 .home-foot { margin: 28px 0 8px; text-align: center; font-size: 15px; opacity: .75; }
 
+/* sideways phones: a low header, so the journeys come into view */
+@media (max-height: 520px) and (orientation: landscape) {
+  .home-head { margin: 6px auto 12px; }
+  .home-bubu { width: 64px; }
+  .home-title { font-size: 34px; }
+  .home-subtitle { font-size: 17px; margin-top: 2px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-bubu, .route-card { animation: none; }
   .route-card { transition: none; }
