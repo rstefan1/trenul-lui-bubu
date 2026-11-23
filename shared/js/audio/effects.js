@@ -64,7 +64,7 @@ const MIX = {
   collect: -3, oops: -5, star: -2, chirp: -8, crunch: -10, brush: -12, shutter: -3,
   hop: -4, flame: -5, whoosh: -6, ding: -5, drum: -2, thud: -5,
   // things around the train
-  doorsOpen: -9, doorsClose: -9, gust: -6, plough: -4,
+  doorsOpen: -9, doorsClose: -9, gust: -6, plough: -4, ploughEngine: -6,
   // the big moments
   success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 10,
   // the sounds of places (heard now and then, far away, under everything)
@@ -293,10 +293,30 @@ const SOUNDS = {
   },
   /** The snow plough going by: a long rumble with snow thrown aside. */
   plough(ctx, out, t) {
-    noisePuff(ctx, out, { t, length: 3, level: 0.16, type: 'lowpass', from: 300, to: 500, q: 0.7, attack: 1 });
-    for (let i = 0; i < 8; i++) {
-      noisePuff(ctx, out, { t: t + 0.6 + i * 0.25 + Math.random() * 0.1, length: 0.14, level: 0.07, type: 'lowpass', from: 1800, to: 600 });
+    // the blade pushing through the snow: a heavy rush and the snow thrown aside
+    noisePuff(ctx, out, { t, length: 2.2, level: 0.16, type: 'lowpass', from: 350, to: 550, q: 0.7, attack: 0.3 });
+    for (let i = 0; i < 9; i++) {
+      noisePuff(ctx, out, { t: t + 0.1 + i * 0.22 + Math.random() * 0.08, length: 0.14, level: 0.07, type: 'lowpass', from: 1800, to: 600 });
     }
+  },
+  /** The plough engine coming down the line: a diesel's low throb that grows. */
+  ploughEngine(ctx, out, t) {
+    const length = 2.4;
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(hz(48), t);
+    osc.frequency.linearRampToValueAtTime(hz(56), t + length);
+    const dark = ctx.createBiquadFilter();
+    dark.type = 'lowpass';
+    dark.frequency.value = 260;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.12, t + length * 0.7);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + length + 0.6);
+    osc.connect(dark).connect(g).connect(out);
+    osc.start(t);
+    osc.stop(t + length + 0.7);
+    noisePuff(ctx, out, { t, length: length + 0.5, level: 0.05, type: 'lowpass', from: 400, attack: length * 0.6 });
   },
   /** The big bell of a monastery's bell tower. */
   churchBell(ctx, out, t) {
