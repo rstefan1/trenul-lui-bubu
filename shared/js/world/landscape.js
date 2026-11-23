@@ -79,8 +79,11 @@ const VARIANTS = 4;
  * holds many more.
  */
 const TILES_MAX_BYTES = 128 * 1024 * 1024;
-/** Never fewer tiles than those on screen and ahead (3 layers × (3 on screen + 1 ahead)), whatever the memory. */
-const TILES_MIN = 12;
+/**
+ * A tile painted ahead is kept for at least this many frames, waiting to come
+ * into view (the far mountains move slowly: theirs can wait half a minute).
+ */
+const AHEAD_KEEP = 60 * 60;
 /** How many tiles beyond the right edge of the screen are painted ahead, per layer. */
 const AHEAD = 1;
 /** Paint ahead only while at least this much of the browser's spare moment is left (ms). */
@@ -95,6 +98,8 @@ const GROUND_DEEP_SNOWY = hexToRgb(paletteFor(true).groundDeep);
  * @typedef {object} Tile
  * @property {HTMLCanvasElement} body
  * @property {HTMLCanvasElement | null} lights
+ * @property {number} usedIn     the last frame it was on screen
+ * @property {number} keepUntil  painted ahead: kept at least until this frame
  */
 
 /**
@@ -126,9 +131,13 @@ export class Landscape {
     this.compositor = compositor;
     this.biomeAt = biomeAt;
     /** @type {LruCache<Tile>} */
+    /** Frames drawn so far (to know which tiles are on screen now). */
+    this.frame = 0;
+    // the tiles on screen now and the ones painted ahead are never dropped, so
+    // none has to be painted again while it is needed
     this.cache = new LruCache({
       maxBytes: TILES_MAX_BYTES,
-      minEntries: TILES_MIN,
+      isProtected: tile => tile.usedIn === this.frame || tile.keepUntil > this.frame,
       sizeOf: tile => canvasBytes(tile.body) + canvasBytes(tile.lights),
       release: tile => {
         releaseCanvas(tile.body);
@@ -175,6 +184,7 @@ export class Landscape {
    */
   drawLayer(c, layer, view, extras = {}) {
     const { extra, extraLights, clip } = extras;
+    if (layer === LAYERS[0]) this.frame++;   // the far layer is drawn first in every frame
     const { light } = view;
     const dy = -view.cameraY * layer.parallaxY;
     const washes = [
@@ -266,7 +276,7 @@ export class Landscape {
     for (const [key, job] of jobs) {
       this.ahead.delete(key);
       if (this.cache.has(key)) continue;
-      this.tile(job.layer, job.biome, job.variant, job.snowy);
+      this.tile(job.layer, job.biome, job.variant, job.snowy, true);
       if (!deadline || deadline.timeRemaining() < IDLE_MARGIN) return;
     }
   }
@@ -334,10 +344,11 @@ export class Landscape {
    * @param {string} biomeId
    * @param {number} variant
    * @param {boolean} snowy
+   * @param {boolean} [ahead=false]  painted ahead (not on screen yet)
    * @returns {Tile}
    */
-  tile(layer, biomeId, variant, snowy) {
-    return this.cache.get(this.keyOf(layer, biomeId, variant, snowy), () => {
+  tile(layer, biomeId, variant, snowy, ahead = false) {
+    const tile = this.cache.get(this.keyOf(layer, biomeId, variant, snowy), () => {
       const ratio = this.ratioOf(layer);
       const req = { x: 0, y: layer.top, width: TILE_WIDTH, height: layer.bottom - layer.top, ratio };
       const body = createOffscreen(req);
@@ -350,7 +361,13 @@ export class Landscape {
         lights: () => (lights ??= createOffscreen(req)).ctx,
       };
       biome(biomeId)[layer.id](body.ctx, ctx);
-      return { body: body.canvas, lights: lights ? lights.canvas : null };
+      return { body: body.canvas, lights: lights ? lights.canvas : null, usedIn: -1, keepUntil: 0 };
     });
+    if (ahead) tile.keepUntil = this.frame + AHEAD_KEEP;
+    else {
+      tile.usedIn = this.frame;
+      tile.keepUntil = 0;
+    }
+    return tile;
   }
 }
