@@ -177,7 +177,7 @@ export class BirdsMission extends Mission {
     c.closePath();
     c.fill();
     c.stroke();
-    c.font = '800 24px "Baloo 2", system-ui, sans-serif';
+    c.font = `800 ${Math.round(24 * this.ctx.stage.ui)}px "Baloo 2", system-ui, sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.lineWidth = 6;

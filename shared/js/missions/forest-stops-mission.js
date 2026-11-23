@@ -21,6 +21,7 @@ import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillRoundRect, glow } from '../gfx/shapes.js';
 import { TRACK_Y } from '../world/track.js';
 import { el } from '../ui/dom.js';
+import { zoomed } from '../gfx/ui-style.js';
 import { Mission } from './mission.js';
 import { leave } from '../ui/panel.js';
 
@@ -250,7 +251,7 @@ export class ForestStopsMission extends Mission {
         c.save();
         c.globalAlpha = 1 - h.t / 2;
         c.fillStyle = '#ffffff';
-        c.font = '700 20px "Baloo 2", system-ui, sans-serif';
+        c.font = `700 ${Math.round(20 * stage.ui)}px "Baloo 2", system-ui, sans-serif`;
         c.textAlign = 'center';
         c.fillText('Pa! Altă dată!', x + 10, TRACK_Y - 160 - cam);
         c.restore();
@@ -262,18 +263,24 @@ export class ForestStopsMission extends Mission {
       const sx = this.toScreen(next.worldX);
       const gap = next.worldX - this.ctx.journey.distance;
       if (sx > stage.viewRight - 40 && gap < ANNOUNCE_AHEAD) {
-        const bx = stage.viewRight - 126;
-        const by = stage.toStage(0, this.ctx.hud.hudBottom).y + 70;
+        // (bigger on phones, from the top right corner)
+        const k = stage.ui;
+        const right = stage.viewRight - 20;
+        const top = stage.toStage(0, this.ctx.hud.hudBottom).y + 24;
+        const bx = right - 106;
+        const by = top + 46;
         const bob = Math.sin(this.time * 4) * 3;
-        glow(c, bx, by + bob, 90, 'rgba(255,230,140,0.45)', 'rgba(255,230,140,0)');
-        fillRoundRect(c, bx - 100, by - 46 + bob, 200, 92, 22, '#fffaf0');
-        this.drawAnimal(c, next.emoji, bx - 52, by + bob, 50);
-        c.fillStyle = '#1b2440';
-        c.font = '800 18px "Baloo 2", system-ui, sans-serif';
-        c.textAlign = 'center';
-        c.textBaseline = 'middle';
-        c.fillText('te așteaptă', bx + 32, by - 12 + bob);
-        c.fillText(`peste ${Math.max(1, Math.round(gap / 100)) * 10} m`, bx + 32, by + 14 + bob);
+        zoomed(c, k, right, top, () => {
+          glow(c, bx, by + bob, 90, 'rgba(255,230,140,0.45)', 'rgba(255,230,140,0)');
+          fillRoundRect(c, bx - 100, by - 46 + bob, 200, 92, 22, '#fffaf0');
+          this.drawAnimal(c, next.emoji, bx - 52, by + bob, 50);
+          c.fillStyle = '#1b2440';
+          c.font = '800 18px "Baloo 2", system-ui, sans-serif';
+          c.textAlign = 'center';
+          c.textBaseline = 'middle';
+          c.fillText('te așteaptă', bx + 32, by - 12 + bob);
+          c.fillText(`peste ${Math.max(1, Math.round(gap / 100)) * 10} m`, bx + 32, by + 14 + bob);
+        });
       }
     }
     this.particles.draw(c);
