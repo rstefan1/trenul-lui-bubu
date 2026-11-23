@@ -14,6 +14,12 @@
  * (its average loudness, RMS) and scaled so that level 1 is exactly as loud
  * as the reference. Recordings made louder or softer need no new numbers.
  *
+ * Memory. A minute of sound takes about 10 MB once decoded, so the
+ * recordings of a place are loaded only when the train gets there; each is
+ * kept only as its looping copy (the original is forgotten), and the
+ * recordings no other place needs right now are forgotten once their place
+ * has faded out. They are simply loaded again if a later place uses them.
+ *
  * A place can also have events: short sounds that happen now and then, at
  * random moments and from a random side — a sleigh going by, a bird. They are played by the game's sound effects (the ambience
  * only decides when).
@@ -64,8 +70,10 @@ export class Ambience {
     this.place = null;
     /** @type {Array<{gain: GainNode, src: AudioBufferSourceNode}>} its layers while they play */
     this.playing = [];
-    /** @type {Map<string, AudioBuffer>} recordings already prepared for looping */
+    /** @type {Map<string, AudioBuffer>} recordings prepared for looping (the only copy kept) */
     this.loops = new Map();
+    /** Audio time when the recordings the current place does not use can be forgotten. */
+    this.forgetAt = /** @type {number | null} */ (null);
   }
 
   /**
@@ -77,12 +85,19 @@ export class Ambience {
     if (!e.ready || !e.ctx || !e.master) return;
     if (place === this.place) {
       this.events(e.ctx.currentTime);
+      if (this.forgetAt !== null && e.ctx.currentTime >= this.forgetAt) this.forgetUnused();
       return;
     }
-    // wait until every recording of the new place (and the reference) is loaded
-    if (place && ![...place.layers.map(l => l.sound), this.reference.sound].every(s => e.buffers.has(s))) return;
+    // load what the new place needs (and the reference), and wait until it is there
+    if (place) {
+      const needed = place.layers.map(l => l.sound).filter(s => !this.loops.has(s));
+      e.load(this.reference.sound);
+      for (const s of needed) e.load(s);
+      if (!e.buffers.has(this.reference.sound) || !needed.every(s => e.buffers.has(s))) return;
+    }
     const ctx = e.ctx;
     const now = ctx.currentTime;
+    this.forgetAt = now + FADE_OUT + 0.5;   // once the old place has faded out
     for (const { gain, src } of this.playing) {
       gain.gain.cancelScheduledValues(now);
       gain.gain.setValueAtTime(gain.gain.value, now);
@@ -131,14 +146,32 @@ export class Ambience {
   loopOf(ctx, name) {
     let b = this.loops.get(name);
     if (!b) {
-      b = makeSeamless(ctx, /** @type {AudioBuffer} */ (this.engine.buffers.get(name)), LOOP_BLEND);
+      const original = /** @type {AudioBuffer} */ (this.engine.buffers.get(name));
+      b = makeSeamless(ctx, original, LOOP_BLEND);
       this.loops.set(name, b);
       const ref = /** @type {AudioBuffer} */ (this.engine.buffers.get(this.reference.sound));
       const target = rms(ref) * this.reference.volume;
-      const own = rms(/** @type {AudioBuffer} */ (this.engine.buffers.get(name)));
+      const own = rms(original);
       if (own > 1e-6) this.match.set(name, Math.min(4, target / own));
+      // only the looping copy is kept
+      this.engine.forget(name);
     }
     return b;
+  }
+
+  /**
+   * Forgets the recordings the current place does not use (the previous
+   * place has faded out by now).
+   * @private
+   */
+  forgetUnused() {
+    this.forgetAt = null;
+    const used = new Set(this.place?.layers.map(l => l.sound) ?? []);
+    for (const name of [...this.loops.keys()]) {
+      if (used.has(name)) continue;
+      this.loops.delete(name);
+      this.engine.forget(name);
+    }
   }
 }
 
