@@ -300,7 +300,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'maze-alba-iulia',
         title: 'Labirintul cetății',
-        text: 'Aleile din cetate sunt un labirint! Du-o pe Bubu la brad și adună stelele de pe drum.',
+        text: 'Aleile din cetate sunt un labirint! Du-o pe Bubu la brad și adună stelele. Atinge aleea pe unde vrei să meargă.',
         hidden: 3,
         doneText: 'Bubu a ajuns la bradul din mijlocul cetății!',
         fact: 'Cetatea Alba Carolina are forma unei stele. Aici s-a hotărât Marea Unire, la 1 Decembrie 1918.',
@@ -313,7 +313,7 @@ export const WINTER_MISSIONS = {
       config: {
         id: 'circuit-cluj',
         title: 'Bradul din Piața Unirii',
-        text: 'Bradul din piață nu se aprinde. Atinge bucățile de cablu ca să le rotești, până când curentul ajunge la brad.',
+        text: 'Bradul din piață nu se aprinde. Atinge bucățile de cablu ca să le rotești după linia punctată, până la brad.',
         doneText: 'Bradul s-a aprins și toată piața strălucește!',
         fact: 'În Piața Unirii din Cluj-Napoca este Biserica Sfântul Mihail, una dintre cele mai mari biserici din țară.',
       },
