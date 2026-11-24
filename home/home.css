@@ -32,7 +32,7 @@ body {
   /* tall enough that the train and the children are big, low enough that
      the journeys show under it; on a tall phone not so tall that the train
      is cut at the sides */
-  height: clamp(270px, min(56svh, 125vw), 740px);
+  height: clamp(230px, min(42svh, 125vw), 560px);
   overflow: hidden;
   background: var(--ground);
 }
@@ -80,6 +80,11 @@ body {
 @media (min-aspect-ratio: 4/3) {
   .home-head { justify-content: flex-start; padding-left: max(3vw, env(safe-area-inset-left)); }
   .land-engine { transform: translateX(-360px); }
+  /* the landscape is a low strip there: a smaller name, so it stays above the engine */
+  .home-head { padding-top: max(10px, env(safe-area-inset-top)); }
+  .home-bubu { width: clamp(56px, 6vw, 84px); }
+  .home-title { font-size: clamp(30px, 3.4vw, 50px); }
+  .home-subtitle { font-size: clamp(16px, 1.5vw, 21px); }
 }
 
 /* ---------- Season filter (only with journeys of several seasons) ---------- */
@@ -346,7 +351,7 @@ body {
 
 /* sideways phones: the landscape fills the screen, with a low sign */
 @media (max-height: 520px) and (orientation: landscape) {
-  .home-hero { height: 76svh; }
+  .home-hero { height: 64svh; }
   .home-head { padding-top: max(8px, env(safe-area-inset-top)); }
   .home-bubu { width: 56px; }
   .home-title { font-size: 30px; }

@@ -6,18 +6,24 @@
  *
  * It is one SVG, drawn once and never again: nothing moves on the home page.
  *
- * The picture is 2000 × 1000 (x from -200 to 1800) and is cut to fit the
+ * The picture is 2800 × 970 (x from -600 to 2200) and is cut to fit the
  * screen (the bottom is always shown): on a tall phone only the middle
- * (x 450–1150) is seen, on a wide screen the top of the sky is cut away. So
- * the train, the children and the season's main things stay in the middle
- * and in the lower part; the two sides (x < 0, x > 1600) are only meadow,
- * forest and mountains, for very wide screens.
+ * (x 300–1300) is seen, on a wide and low strip the top of the sky is cut
+ * away. So the engine, the children and the season's main things stay in
+ * the middle and in the lower part; the two sides (x < 0, x > 1600) are
+ * mostly meadow, forest and mountains, for wide screens.
+ *
+ * The meadow and the scenery under the landscape (meadow(), ground()) are
+ * 2000 wide (x from -200 to 1800).
  */
 
 /** @typedef {'winter' | 'spring' | 'summer' | 'autumn'} Season */
 
 const H = 1000;
-/** the whole picture, wider than its middle (0–1600) at both sides */
+/** the landscape, much wider than its middle (0–1600) at both sides */
+const LX0 = -600;
+const LX1 = 2200;
+/** the pictures under the landscape */
 const X0 = -200;
 const X1 = 1800;
 /** the top of the rails */
@@ -69,10 +75,10 @@ function seeded(seed = 7) {
 const r1 = n => Math.round(n * 10) / 10;
 
 /** The top line of a ridge, as the points of a closed shape down to `bottom`. */
-function ridge(/** @type {(x: number) => number} */ top, /** @type {number} */ bottom, step = 20) {
-  let d = `M${X0} ${bottom} L${X0} ${r1(top(X0))}`;
-  for (let x = X0 + step; x <= X1; x += step) d += ` L${x} ${r1(top(x))}`;
-  return `${d} L${X1} ${bottom}Z`;
+function ridge(/** @type {(x: number) => number} */ top, /** @type {number} */ bottom, x0 = X0, x1 = X1, step = 20) {
+  let d = `M${x0} ${bottom} L${x0} ${r1(top(x0))}`;
+  for (let x = x0 + step; x <= x1; x += step) d += ` L${x} ${r1(top(x))}`;
+  return `${d} L${x1} ${bottom}Z`;
 }
 
 /** the forested ridge in front of the mountains */
@@ -202,10 +208,10 @@ function sunflower(/** @type {number} */ x, /** @type {number} */ y, /** @type {
 }
 
 /** Small flowers spread over the meadow. */
-function flowers(/** @type {() => number} */ rnd, /** @type {number} */ count, /** @type {string[]} */ colors, top = 850, depth = 145) {
+function flowers(/** @type {() => number} */ rnd, /** @type {number} */ count, /** @type {string[]} */ colors, top = 850, depth = 145, x0 = X0, x1 = X1) {
   let out = '';
   for (let i = 0; i < count; i++) {
-    const x = X0 + rnd() * (X1 - X0);
+    const x = x0 + rnd() * (x1 - x0);
     const y = top + rnd() * depth;
     const k = 0.6 + (y - top) / depth;         // bigger in front
     const c = colors[Math.floor(rnd() * colors.length)];
@@ -234,7 +240,7 @@ function kite(/** @type {number} */ x, /** @type {number} */ y) {
 /** The track along the whole picture, on its embankment, with telegraph poles behind it. */
 function railway() {
   let sleepers = '';
-  for (let x = X0 + 4; x < X1; x += 20) sleepers += `<rect x="${x}" y="${RAIL + 4}" width="12" height="8" rx="2"/>`;
+  for (let x = LX0 + 4; x < LX1; x += 20) sleepers += `<rect x="${x}" y="${RAIL + 4}" width="12" height="8" rx="2"/>`;
   let poles = '';
   let wires = '';
   const poleXs = [80, 300];
@@ -247,11 +253,11 @@ function railway() {
     wires += `<path d="M${a - 14} ${RAIL - 112} Q${(a + b) / 2} ${RAIL - 88} ${b - 14} ${RAIL - 112} M${a + 14} ${RAIL - 112} Q${(a + b) / 2} ${RAIL - 88} ${b + 14} ${RAIL - 112}" stroke="#4a4f5a" stroke-width="1.6" fill="none"/>`;
   }
   return `<g>${wires}${poles}</g>`
-    + `<path d="M${X0} ${RAIL + 4} H${X1} V${RAIL + 44} H${X0}Z" fill="#a89580"/>`
-    + `<path d="M${X0} ${RAIL + 30} H${X1} V${RAIL + 44} H${X0}Z" fill="#8c7a66"/>`
+    + `<path d="M${LX0} ${RAIL + 4} H${LX1} V${RAIL + 44} H${LX0}Z" fill="#a89580"/>`
+    + `<path d="M${LX0} ${RAIL + 30} H${LX1} V${RAIL + 44} H${LX0}Z" fill="#8c7a66"/>`
     + `<g fill="#6b4a32">${sleepers}</g>`
-    + `<rect x="${X0}" y="${RAIL - 4}" width="${X1 - X0}" height="8" fill="#5b616c"/>`
-    + `<rect x="${X0}" y="${RAIL - 4}" width="${X1 - X0}" height="2.5" fill="#c8ced8"/>`;
+    + `<rect x="${LX0}" y="${RAIL - 4}" width="${LX1 - LX0}" height="8" fill="#5b616c"/>`
+    + `<rect x="${LX0}" y="${RAIL - 4}" width="${LX1 - LX0}" height="2.5" fill="#c8ced8"/>`;
 }
 
 /** The little station at the right. */
@@ -396,17 +402,17 @@ const THINGS = {
     },
     foreground: () => {
       const rnd = seeded(11);
-      let out = flowers(rnd, 36, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0']);
+      let out = flowers(rnd, 50, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 850, 120, LX0, LX1);
       // a boy with a kite, at the right (its string goes up past the station)
-      out += kite(1320, 450) + `<path d="M1324 858 Q1300 700 1320 502" stroke="#fff" stroke-width="2" fill="none"/>`;
-      out += child(1302, 975, { shirt: '#26a69a', hair: '#c0612b', pose: 'up', s: 1.1 });
+      out += kite(1400, 450) + `<path d="M1404 858 Q1380 700 1400 502" stroke="#fff" stroke-width="2" fill="none"/>`;
+      out += child(1382, 975, { shirt: '#26a69a', hair: '#c0612b', pose: 'up', s: 1.1 });
       // a girl waving at the train
       out += child(700, 960, { shirt: '#ec407a', hair: '#5b3a26', pose: 'wave', girl: true, s: 1.05 });
       // a boy kicking a ball
       out += child(900, 965, { shirt: '#ff7043', hair: '#2b2f38', pose: 'kick', s: 1.05 });
       out += `<circle cx="985" cy="925" r="17" fill="#fff" stroke="#2b2f38" stroke-width="3"/><path d="M973 917 q12 6 24 0 M978 937 q8 -10 16 -2" stroke="#e53935" stroke-width="4" fill="none" stroke-linecap="round"/>`;
       // a big haystack and two tall sunflowers at the right
-      out += haystack(1440, 935, 1.05);
+      out += haystack(1540, 935, 1.05);
       out += sunflower(1160, H + 10, 165, -6) + sunflower(1200, H + 10, 135, 6);
       return out;
     },
@@ -527,8 +533,8 @@ export function landscape(season) {
   const rnd = seeded(3);
 
   // the mountains, with a lighter face on the sunny side of every peak
-  const peaks = [[-200, 470], [-90, 420], [0, 520], [110, 440], [190, 490], [330, 380], [450, 470], [560, 420], [690, 500], [820, 400], [930, 455], [1040, 360], [1180, 470], [1290, 410], [1420, 480], [1520, 420], [1600, 450], [1700, 390], [1800, 470]];
-  const mountains = `M${X0} 660 ${peaks.map(([x, y]) => `L${x} ${y}`).join(' ')} L${X1} 660Z`;
+  const peaks = [[-600, 500], [-490, 420], [-380, 505], [-290, 430], [-200, 470], [-90, 420], [0, 520], [110, 440], [190, 490], [330, 380], [450, 470], [560, 420], [690, 500], [820, 400], [930, 455], [1040, 360], [1180, 470], [1290, 410], [1420, 480], [1520, 420], [1600, 450], [1700, 390], [1800, 470], [1900, 400], [2000, 490], [2100, 420], [2200, 480]];
+  const mountains = `M${LX0} 660 ${peaks.map(([x, y]) => `L${x} ${y}`).join(' ')} L${LX1} 660Z`;
   let faces = '';
   for (let i = 1; i < peaks.length - 1; i += 2) {
     const [px, py] = peaks[i];
@@ -538,14 +544,14 @@ export function landscape(season) {
 
   // the forest on the ridge in front of the mountains
   let forest = '';
-  for (let x = X0 - 10; x < X1 + 20; x += 13 + rnd() * 8) {
+  for (let x = LX0 - 10; x < LX1 + 20; x += 13 + rnd() * 8) {
     forest += fir(x, forestTop(x) + 12 + rnd() * 10, 34 + rnd() * 22, p.conifer);
   }
 
   // the village on its hill: houses, trees and the wooden church in the middle
   const roofs = ['#b5452b', '#8f3a24', '#c0612b'];
   let village = '';
-  const homes = [500, 640, 990, 1130];
+  const homes = [-420, -260, 500, 640, 990, 1130, 1880, 2040];
   for (const [i, x] of homes.entries()) {
     village += tree(x - 40, villageTop(x - 40) + 24, 62 + rnd() * 20, p);
     village += house(x, villageTop(x) + 26, 0.9 + rnd() * 0.25, roofs[i % roofs.length], '#fdf8ee');
@@ -554,7 +560,7 @@ export function landscape(season) {
     + tree(-60, villageTop(-60) + 30, 78, p) + tree(1690, villageTop(1690) + 30, 84, p);
 
   return `
-    <svg viewBox="${X0} 0 ${X1 - X0} ${H - 30}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+    <svg viewBox="${LX0} 0 ${LX1 - LX0} ${H - 30}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id="land-sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="${p.sky[0]}"/><stop offset=".62" stop-color="${p.sky[1]}"/>
@@ -563,23 +569,23 @@ export function landscape(season) {
           <stop offset="0" stop-color="${p.meadow}"/><stop offset=".75" stop-color="${p.meadowDark}"/>
         </linearGradient>
       </defs>
-      <rect x="${X0}" width="${X1 - X0}" height="${H}" fill="url(#land-sky)"/>
+      <rect x="${LX0}" width="${LX1 - LX0}" height="${H}" fill="url(#land-sky)"/>
       <circle cx="1040" cy="300" r="105" fill="${p.sun}" opacity=".22"/>
       <circle cx="1040" cy="300" r="78" fill="${p.sun}" opacity=".35"/>
       <circle cx="1040" cy="300" r="56" fill="${p.sun}"/>
       ${things.sky(p)}
       <path d="${mountains}" fill="${p.mountains[0]}"/>
       <path d="${faces}" fill="${p.mountains[1]}"/>
-      <path d="${ridge(forestTop, 720)}" fill="${p.mountains[2]}"/>
+      <path d="${ridge(forestTop, 720, LX0, LX1)}" fill="${p.mountains[2]}"/>
       ${forest}
-      <path d="${ridge(villageTop, RAIL)}" fill="${p.hills[0]}"/>
-      <path d="${ridge(x => villageTop(x) + 40, RAIL)}" fill="${p.hills[1]}"/>
+      <path d="${ridge(villageTop, RAIL, LX0, LX1)}" fill="${p.hills[0]}"/>
+      <path d="${ridge(x => villageTop(x) + 40, RAIL, LX0, LX1)}" fill="${p.hills[1]}"/>
       ${things.fields(p)}
       ${village}
       ${railway()}
       ${station()}
       ${train()}
-      <path d="M${X0} ${RAIL + 44} H${X1} V${H} H${X0}Z" fill="url(#land-meadow)"/>
+      <path d="M${LX0} ${RAIL + 44} H${LX1} V${H} H${LX0}Z" fill="url(#land-meadow)"/>
       ${things.foreground(p)}
     </svg>`;
 }
