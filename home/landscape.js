@@ -367,7 +367,7 @@ function engine(/** @type {number} */ x) {
     // the cab, with Bubu at the window
     + `<rect x="${X(0)}" y="${Y(172)}" width="84" height="118" rx="3" fill="url(#tr-cab)"/>`
     + `<rect x="${X(8)}" y="${Y(102)}" width="68" height="34" rx="3" fill="none" stroke="#f0c75e" stroke-width="2"/>`
-    + `<svg x="${X(14)}" y="${Y(156)}" width="48" height="44"><rect width="48" height="44" fill="url(#tr-glass)"/><image href="shared/assets/bubu.webp" x="-2" y="1" width="52" height="52"/></svg>`
+    + `<svg x="${X(14)}" y="${Y(156)}" width="48" height="44"><rect width="48" height="44" fill="url(#tr-glass)"/><path d="M0 30 L30 0 H40 L0 40Z" fill="#fff" opacity=".25"/></svg>`
     + `<rect x="${X(14)}" y="${Y(156)}" width="48" height="44" rx="4" fill="none" stroke="#7a1a15" stroke-width="3"/>`
     + `<path d="M${X(-8)} ${Y(170)} Q${X(-6)} ${Y(186)} ${X(12)} ${Y(186)} H${X(76)} Q${X(94)} ${Y(186)} ${X(94)} ${Y(170)}Z" fill="url(#tr-roof)"/>`
     + `<rect x="${X(0)}" y="${Y(60)}" width="84" height="6" fill="#2b3038"/>`
@@ -382,8 +382,8 @@ function smoke(/** @type {number} */ x) {
 
 /**
  * The whole train, long and bright on the green hills: four long red cars
- * full of children, the tender and the black steam engine with Bubu, going
- * to the right.
+ * full of children, the tender and the black steam engine, going to the
+ * right.
  */
 function train() {
   const carW = 290;
