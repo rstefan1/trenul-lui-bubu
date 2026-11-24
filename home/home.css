@@ -10,7 +10,13 @@ html { min-height: 100%; }
 
 /* the colours of every season (home/season.js marks <html> with it):
    the ground under the landscape, continuing its meadow */
-:root[data-season="summer"] { --ground: #6cb851; --ground-2: #3f8a3a; --ground-ink: #fff; }
+:root[data-season="summer"] {
+  --ground: #6cb851;
+  --ground-ink: #fff;
+  --flower-1: #e53935;
+  --flower-2: #ffffff;
+  --flower-3: #ffcf3f;
+}
 
 body {
   margin: 0;
@@ -18,7 +24,13 @@ body {
   padding: 0 0 max(16px, env(safe-area-inset-bottom));
   font-family: var(--font);
   color: var(--ground-ink, var(--snow));
-  background: linear-gradient(var(--ground, var(--night)), var(--ground-2, var(--night-2)) 70vh) var(--ground-2, var(--night-2));
+  /* the meadow of the landscape goes on under the journeys, with a few
+     flowers (painted once; tiles of different sizes, so they do not line up) */
+  background:
+    radial-gradient(circle at 18% 22%, var(--flower-1, transparent) 0 3px, transparent 4px) 0 0 / 290px 230px,
+    radial-gradient(circle at 64% 58%, var(--flower-2, transparent) 0 3px, transparent 4px) 0 0 / 370px 310px,
+    radial-gradient(circle at 40% 86%, var(--flower-3, transparent) 0 3px, transparent 4px) 0 0 / 330px 410px,
+    var(--ground, var(--night));
 }
 
 /* ---------- The landscape, with the name of the game on a station sign ---------- */
@@ -99,21 +111,51 @@ body {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
-  gap: clamp(16px, 3vw, 28px);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: var(--list-gap) var(--list-gap);
+  --list-gap: clamp(14px, 2.4vw, 24px);
+}
+/* every journey is a train car: on wheels, on a track that runs along the row */
+.route-item { position: relative; padding-bottom: 30px; }
+.route-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  height: 34px;
+  background:
+    radial-gradient(circle at 14% 50%, #ffcf3f 0 4px, #2b2f38 5px 15px, transparent 16px),
+    radial-gradient(circle at 30% 50%, #ffcf3f 0 4px, #2b2f38 5px 15px, transparent 16px),
+    radial-gradient(circle at 70% 50%, #ffcf3f 0 4px, #2b2f38 5px 15px, transparent 16px),
+    radial-gradient(circle at 86% 50%, #ffcf3f 0 4px, #2b2f38 5px 15px, transparent 16px);
+}
+.route-item::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--list-gap) / -2 - 1px);
+  right: calc(var(--list-gap) / -2 - 1px);
+  bottom: 0;
+  height: 14px;
+  background:
+    linear-gradient(#c8ced8 0 2px, #5b616c 2px 5px, transparent 5px) 0 0 / 100% 100% no-repeat,
+    repeating-linear-gradient(90deg, #6b4a32 0 10px, transparent 10px 20px) 0 5px / 100% 5px no-repeat,
+    linear-gradient(#a89580, #8c7a66) 0 5px / 100% 9px no-repeat;
 }
 .route-item[hidden] { display: none; }
 
 .route-card {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100% - 4px);
   overflow: hidden;
   background: var(--paper-card);
   color: var(--ink);
   border: var(--paper-line);
-  border-radius: var(--radius-l);
-  box-shadow: var(--shadow-l);
+  border-radius: var(--radius-m);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, .2);
   text-decoration: none;
 }
 .route-card:hover, .route-card:focus-visible { transform: translateY(-4px); }
@@ -127,28 +169,28 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px 20px 20px;
+  gap: 4px;
+  padding: 10px 14px 14px;
 }
 .route-kicker {
   margin: 0;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: .08em;
+  letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--season, var(--green));
 }
-.route-title { margin: 0; font-size: clamp(26px, 4vw, 32px); font-weight: 800; line-height: 1.05; color: var(--red); }
-.route-way { margin: 0; font-size: 20px; font-weight: 700; }
-.route-blurb { margin: 0; font-size: 17px; line-height: 1.35; }
+.route-title { margin: 0; font-size: clamp(21px, 2.6vw, 24px); font-weight: 800; line-height: 1.05; color: var(--red); }
+.route-way { margin: 0; font-size: 16px; font-weight: 700; }
+.route-blurb { margin: 0; font-size: 14.5px; line-height: 1.3; }
 .route-facts {
   list-style: none;
   margin: 4px 0 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
-  font-size: 16px;
+  gap: 4px 10px;
+  font-size: 14px;
   font-weight: 700;
 }
 .route-status { padding: 0 10px; border-radius: 999px; background: #e9e2d2; }
@@ -158,14 +200,14 @@ body {
 .route-go {
   align-self: center;
   margin-top: auto;
-  padding: 8px 30px 10px;
-  border: 4px solid #fff;
+  padding: 4px 22px 6px;
+  border: 3px solid #fff;
   border-radius: 999px;
   background: radial-gradient(circle at 35% 30%, #5fd68a, var(--green) 60%, var(--green-dark));
   color: #fff;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 800;
-  box-shadow: 0 6px 0 #155a30;
+  box-shadow: 0 4px 0 #155a30;
 }
 
 /* each season colours its card's kicker */
