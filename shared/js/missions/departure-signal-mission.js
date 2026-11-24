@@ -6,7 +6,9 @@
  * forest workers.
  *
  * Both wait on the second track, in front of Bubu's train, heading down to
- * the valley (to the left). For each one the child:
+ * the valley (to the left), and are as big as Bubu's own train: the log
+ * train has a steam locomotive like hers (drawn by the same painters, turned
+ * round) and flat wagons loaded with logs. For each one the child:
  *
  *   1. throws the lever of the switch (it sets the way out of the station);
  *   2. raises the green paddle ("Ridică paleta"): the driver whistles and
@@ -20,9 +22,12 @@
  *   fact     shown at the end
  */
 
-import { clamp } from '../core/math.js';
+import { createOffscreen, releaseCanvas } from '../core/canvas-cache.js';
+import { TAU, clamp } from '../core/math.js';
 import { drawTouchNote } from '../gfx/hints.js';
 import { fillCircle, fillRoundRect } from '../gfx/shapes.js';
+import { CAR_PAINTERS, WHEEL_R } from '../train/cars.js';
+import { SteamPlume } from '../train/steam.js';
 import { TRACK_Y } from '../world/track.js';
 import { el } from '../ui/dom.js';
 import { leave } from '../ui/panel.js';
@@ -36,8 +41,26 @@ import { Mission, starsForMistakes } from './mission.js';
 /** The rail of the second track, in front of the train (stage units; the ground below the
  *  line is narrow on wide screens, so the track runs close to it). */
 const RAIL_Y = TRACK_Y + 78;
+/**
+ * The cars of the log train, from its front: a black steam locomotive like
+ * Bubu's (without her ladybug) and three flat wagons with logs.
+ * @type {import('../train/specs.js').CarSpec[]}
+ */
+const LOG_TRAIN = [
+  { kind: 'steamLoco', length: 250, colors: { body: '#23252b', band: '#c62828', roof: '#16171b', accent: '#d9a640' }, plain: true },
+  ...[1, 2, 3].map(() => /** @type {import('../train/specs.js').CarSpec} */ ({
+    kind: 'platform', length: 250, colors: { body: '#4a5160', band: '#8d6e63', roof: '#3b4250' }, cargo: 'logs',
+  })),
+];
+/** Space between two cars, as on Bubu's train. */
+const GAP = 10;
+/** Length of the motor trolley. */
+const TROLLEY = 210;
 /** Lengths of the trains that wait there. */
-const LENGTH = { logs: 620, trolley: 150 };
+const LENGTH = { logs: LOG_TRAIN.reduce((sum, car) => sum + car.length + GAP, -GAP), trolley: TROLLEY };
+/** Vertical extent of a painted train, relative to its rail. */
+const TOP = -262;
+const BOTTOM = 8;
 /** Speed of a train leaving (stage units/s), and how fast it gets there. */
 const LEAVE_SPEED = 330;
 const LEAVE_ACCEL = 160;
@@ -64,6 +87,16 @@ export class DepartureSignalMission extends Mission {
     this.leverOn = false;
     /** Seconds the paddle has been raised (−1: down). */
     this.paddle = -1;
+    /** How far the wheels of the waiting train have turned (radians). */
+    this.spin = 0;
+    /**
+     * The log train painted once (like Bubu's train), with where its wheels
+     * and its chimney are, from its front (left end).
+     * @type {{canvas: HTMLCanvasElement, ratio: number, wheels: number[], chimney: {x: number, y: number}} | null}
+     */
+    this.painted = null;
+    /** The smoke of the log train's locomotive. */
+    this.smoke = new SteamPlume();
     /** @type {HTMLButtonElement | null} */
     this.button = null;
   }
@@ -139,6 +172,11 @@ export class DepartureSignalMission extends Mission {
     this.stepT += dt;
     this.lever = clamp(this.lever + (this.leverOn ? 1 : -1) * dt * 4, 0, 1);
     if (this.paddle >= 0) this.paddle += dt;
+    this.spin += (-this.speed * dt) / WHEEL_R;
+    const chimney = this.kind === 'logs' && this.painted
+      ? { x: this.trainX + this.painted.chimney.x, y: RAIL_Y + this.painted.chimney.y - this.ctx.world.cameraY }
+      : null;
+    this.smoke.update(dt, chimney, 0);
     if (this.step === 'arrive') {
       // the trolley rolls in and brakes in front of the lever
       const gap = this.trainX - this.stopX;
@@ -201,10 +239,11 @@ export class DepartureSignalMission extends Mission {
     if (this.index < this.config.trains.length) {
       c.save();
       c.translate(this.trainX, RAIL_Y - cam);
-      if (this.kind === 'logs') drawLogTrain(c, this.speed, this.time);
-      else drawTrolley(c, this.time);
+      if (this.kind === 'logs') this.drawLogTrain(c);
+      else drawTrolley(c, this.spin, this.time);
       c.restore();
     }
+    this.smoke.draw(c);
 
     // the lever of the switch, with its weight and a little flag showing the way
     const l = this.leverPos;
@@ -261,93 +300,109 @@ export class DepartureSignalMission extends Mission {
     }
   }
 
+  /**
+   * Paints the log train once, turned round (heading left), with the painters
+   * of Bubu's own train.
+   * @private
+   */
+  paintLogTrain() {
+    const ratio = this.ctx.stage.pixelRatio;
+    if (this.painted && this.painted.ratio === ratio) return this.painted;
+    releaseCanvas(this.painted?.canvas);
+    const { canvas, ctx } = createOffscreen({ x: -20, y: TOP, width: LENGTH.logs + 40, height: BOTTOM - TOP, ratio });
+    /** @type {number[]} */
+    const wheels = [];
+    let chimney = { x: 40, y: -180 };
+    let left = 0;
+    LOG_TRAIN.forEach((car, i) => {
+      ctx.save();
+      // the painters draw a car heading right: turned round, its front is on the left
+      ctx.translate(left + car.length, 0);
+      ctx.scale(-1, 1);
+      const geo = CAR_PAINTERS[car.kind](ctx, car, { leading: i === 0, trailing: i === LOG_TRAIN.length - 1 });
+      ctx.restore();
+      for (const wx of geo.wheels) wheels.push(left + car.length - wx);
+      const ch = geo.parts?.chimney?.[0];
+      if (ch) chimney = { x: left + car.length - (ch[0] + ch[2] / 2), y: ch[1] + 8 };
+      left += car.length + GAP;
+    });
+    this.painted = { canvas, ratio, wheels, chimney };
+    return this.painted;
+  }
+
+  /**
+   * The log train: its turning wheels, then its painted body.
+   * @private
+   * @param {CanvasRenderingContext2D} c  (x = 0 at its front, y = 0 on its rail)
+   */
+  drawLogTrain(c) {
+    const p = this.paintLogTrain();
+    for (const x of p.wheels) drawWheel(c, x, this.spin);
+    c.drawImage(p.canvas, -20, TOP, LENGTH.logs + 40, BOTTOM - TOP);
+  }
+
   dispose() {
     leave(this.button);
     this.ctx.hud.hideCounter();
+    releaseCanvas(this.painted?.canvas);
+    this.painted = null;
   }
 }
 
 /**
- * A wheel of the trains on the second track.
+ * A wheel of the trains on the second track, as big as the wheels of Bubu's
+ * train, its spokes turning.
  * @param {CanvasRenderingContext2D} c
  * @param {number} x
  * @param {number} spin
  */
-function wheel(c, x, spin) {
+function drawWheel(c, x, spin) {
+  const y = -WHEEL_R;
   c.fillStyle = '#2b2f38';
-  fillCircle(c, x, -13, 13);
-  c.strokeStyle = '#8b95a5';
+  fillCircle(c, x, y, WHEEL_R);
+  c.fillStyle = '#8b95a5';
+  fillCircle(c, x, y, WHEEL_R - 4);
+  c.strokeStyle = '#4a5160';
   c.lineWidth = 3;
   c.beginPath();
-  c.moveTo(x + Math.cos(spin) * 9, -13 + Math.sin(spin) * 9);
-  c.lineTo(x - Math.cos(spin) * 9, -13 - Math.sin(spin) * 9);
-  c.stroke();
-}
-
-/**
- * The log train: a small red diesel locomotive (heading left) and three
- * wagons with logs. x = 0 is its front (left end), y = 0 the rail.
- * @param {CanvasRenderingContext2D} c
- * @param {number} speed
- * @param {number} time
- */
-function drawLogTrain(c, speed, time) {
-  const spin = time * -speed / 13;
-  // the locomotive: a hood in front, the cab behind it
-  fillRoundRect(c, 4, -96, 110, 66, 10, '#c0392b');
-  fillRoundRect(c, 110, -150, 76, 120, 10, '#c0392b');
-  fillRoundRect(c, 104, -158, 88, 12, 6, '#5d4037');
-  fillRoundRect(c, 122, -138, 44, 38, 6, '#9fc3e6');
-  c.fillStyle = '#fbeed2';
-  c.fillRect(4, -60, 182, 8);
-  c.fillStyle = '#2b2f38';
-  c.fillRect(30, -112, 14, 18);
-  c.fillStyle = '#fff8dc';
-  fillCircle(c, 8, -78, 6);
-  for (const x of [34, 76, 132, 170]) wheel(c, x, spin);
-  // three wagons of logs
   for (let k = 0; k < 3; k++) {
-    const x0 = 200 + k * 140;
-    fillRoundRect(c, x0, -40, 130, 12, 3, '#4a5160');
-    c.fillStyle = '#2b2f38';
-    c.fillRect(x0 + 6, -78, 6, 40);
-    c.fillRect(x0 + 118, -78, 6, 40);
-    for (let row = 0; row < 3; row++) {
-      for (let n = 0; n < 4 - (row === 2 ? 1 : 0); n++) {
-        const lx = x0 + 28 + n * 25 + (row % 2) * 12;
-        const ly = -50 - row * 18;
-        c.fillStyle = '#d9a86a';
-        fillCircle(c, lx, ly, 10);
-        c.strokeStyle = '#a8743f';
-        c.lineWidth = 2;
-        c.beginPath();
-        c.arc(lx, ly, 5, 0, Math.PI * 2);
-        c.stroke();
-      }
-    }
-    // snow on the logs
-    fillRoundRect(c, x0 + 22, -96, 86, 7, 3, '#f4f8ff');
-    for (const x of [x0 + 26, x0 + 104]) wheel(c, x, spin);
+    const a = spin + (k * TAU) / 3;
+    c.moveTo(x, y);
+    c.lineTo(x + Math.cos(a) * (WHEEL_R - 4), y + Math.sin(a) * (WHEEL_R - 4));
   }
+  c.stroke();
+  c.fillStyle = '#2b2f38';
+  fillCircle(c, x, y, 3.5);
 }
 
 /**
- * The yellow motor trolley of the forest workers, heading left.
+ * The yellow motor trolley of the forest workers, heading left: a little
+ * car with a roof, as tall as a coach of Bubu's train.
  * @param {CanvasRenderingContext2D} c
+ * @param {number} spin
  * @param {number} time
  */
-function drawTrolley(c, time) {
-  fillRoundRect(c, 6, -60, 138, 30, 8, '#f2c14e');
+function drawTrolley(c, spin, time) {
+  const L = TROLLEY;
+  // the frame, the body and the bonnet with the engine at the front (left)
+  c.fillStyle = '#2f3540';
+  c.fillRect(0, -40, L, 10);
+  fillRoundRect(c, 4, -96, 64, 58, 10, '#e0a830');
+  fillRoundRect(c, 60, -84, L - 66, 46, 8, '#f2c14e');
+  c.fillStyle = 'rgba(0,0,0,0.16)';
+  for (let x = 14; x < 60; x += 9) c.fillRect(x, -88, 4, 30);
+  // the roof on four posts, open at the sides
   c.fillStyle = '#2b2f38';
-  c.fillRect(20, -130, 5, 70);
-  c.fillRect(126, -130, 5, 70);
-  fillRoundRect(c, 12, -138, 126, 12, 6, '#e0a830');
-  c.font = '44px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+  for (const x of [66, L - 12]) c.fillRect(x, -164, 6, 82);
+  fillRoundRect(c, 56, -174, L - 50, 14, 7, '#c62828');
+  // the forest workers on their bench
+  c.font = '48px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
   c.textAlign = 'center';
   c.textBaseline = 'middle';
-  c.fillText('👷', 56, -86 + Math.sin(time * 3) * 2);
-  c.fillText('👷', 100, -86 + Math.sin(time * 3 + 1) * 2);
+  c.fillText('👷', 100, -112 + Math.sin(time * 3) * 2);
+  c.fillText('👷', 154, -112 + Math.sin(time * 3 + 1) * 2);
+  // the lamp at the front
   c.fillStyle = '#fff8dc';
-  fillCircle(c, 10, -46, 5);
-  for (const x of [36, 114]) wheel(c, x, 0);
+  fillCircle(c, 6, -70, 6);
+  for (const x of [40, L - 40]) drawWheel(c, x, spin);
 }
