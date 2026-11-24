@@ -38,8 +38,8 @@ const NAMES = {
 };
 
 /** Speed of our train during the mission, and of the passing train (stage units/s). */
-const OUR_SPEED = 150;
-const THEIR_SPEED = 160;
+const OUR_SPEED = 80;
+const THEIR_SPEED = 70;
 /** The passing train's rail (in front of ours, closer to the child). */
 const RAIL_Y = TRACK_Y + 104;
 /** Its locomotive: the same as Bubu's, without her emblem. */
