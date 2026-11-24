@@ -141,7 +141,7 @@ export const WINTER_MISSIONS = {
         id: 'snowflakes-campulung-gura',
         title: 'Fulgii gemeni',
         text: 'Uită-te la fulgul din căsuța de sus, din stânga. Atinge fulgii care arată exact la fel!',
-        goal: 6,
+        goal: 7,
         models: 2,
       },
     },
