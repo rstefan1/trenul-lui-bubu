@@ -275,7 +275,6 @@ function trainDefs() {
   const v = (/** @type {string} */ id, /** @type {string[]} */ stops) =>
     `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${stops.map((c, i) => `<stop offset="${r1(i / (stops.length - 1))}" stop-color="${c}"/>`).join('')}</linearGradient>`;
   return `<defs>`
-    + v('tr-car', ['#3f9c66', '#2e7d4f', '#22603c'])
     + v('tr-roof', ['#6b7480', '#3a4049'])
     + v('tr-glass', ['#eef8ff', '#bfdff2'])
     + v('tr-cab', ['#e2463f', '#c62d26', '#9c1f19'])
@@ -307,73 +306,6 @@ function driveWheel(/** @type {number} */ x, /** @type {number} */ y, /** @type 
     + `<path d="${spokes}" stroke="#2b3038" stroke-width="2.4"/>`
     + `<path d="M${r1(x - cw * 0.87)} ${r1(y - cw * 0.5)} A${r1(cw)} ${r1(cw)} 0 0 1 ${r1(x + cw * 0.87)} ${r1(y - cw * 0.5)} Q${x} ${r1(y - cw * 0.2)} ${r1(x - cw * 0.87)} ${r1(y - cw * 0.5)}Z" fill="#8f1c16"/>`
     + `<circle cx="${x}" cy="${y}" r="${r1(r * 0.2)}" fill="url(#tr-steel)" stroke="#2b3038" stroke-width="1.5"/>`;
-}
-
-/** A child's head and shoulders in a train window (drawn inside the window). */
-function passenger(/** @type {number} */ w, /** @type {number} */ h, /** @type {string} */ hair, /** @type {string} */ shirt) {
-  const cx = w / 2;
-  return `<rect x="${cx - 9}" y="${h - 6}" width="18" height="10" rx="5" fill="${shirt}"/>`
-    + `<circle cx="${cx}" cy="${h - 13}" r="7" fill="#f6c9a0"/>`
-    + `<path d="M${cx - 7} ${h - 13} A7 7 0 0 1 ${cx + 7} ${h - 13} Q${cx} ${h - 16} ${cx - 7} ${h - 13}Z" fill="${hair}"/>`;
-}
-
-/**
- * A passenger car whose left end is at x.
- * @param {number} x
- * @param {number} w
- * @param {Array<[string, string] | null>} people  hair and shirt of the child in every window (null: empty)
- */
-function car(x, w, people) {
-  const top = RAIL - 132;
-  const bottom = RAIL - 50;
-  const winW = 26;
-  const winH = 24;
-  const doorW = 14;
-  const inner = w - 2 * (doorW + 8);
-  const gap = (inner - people.length * winW) / (people.length + 1);
-  let windows = '';
-  people.forEach((who, i) => {
-    const wx = r1(x + doorW + 8 + gap + i * (winW + gap));
-    const wy = top + 14;
-    windows += `<svg x="${wx}" y="${wy}" width="${winW}" height="${winH}"><rect width="${winW}" height="${winH}" fill="url(#tr-glass)"/>${who ? passenger(winW, winH, who[0], who[1]) : ''}<path d="M0 ${winH * 0.7} L${winW * 0.7} 0 H${winW} L0 ${winH}Z" fill="#fff" opacity=".18"/></svg>`
-      + `<rect x="${wx}" y="${wy}" width="${winW}" height="${winH}" rx="3" fill="none" stroke="#1b4a30" stroke-width="2.5"/>`;
-  });
-  const door = (/** @type {number} */ dx) =>
-    `<rect x="${dx}" y="${top + 8}" width="${doorW}" height="${bottom - top - 10}" rx="2" fill="none" stroke="#1b4a30" stroke-width="1.6"/>`
-    + `<rect x="${dx + 3}" y="${top + 14}" width="${doorW - 6}" height="16" rx="2" fill="url(#tr-glass)" stroke="#1b4a30" stroke-width="1.2"/>`;
-  const bogie = (/** @type {number} */ bx) =>
-    `<rect x="${bx - 8}" y="${RAIL - 42}" width="16" height="14" fill="#2b3038"/>`
-    + carWheel(bx - 15, RAIL - 12, 12) + carWheel(bx + 15, RAIL - 12, 12)
-    + `<rect x="${bx - 28}" y="${RAIL - 30}" width="56" height="10" rx="3" fill="#3a4049"/>`
-    + `<circle cx="${bx - 15}" cy="${RAIL - 12}" r="3" fill="#c8ced8"/><circle cx="${bx + 15}" cy="${RAIL - 12}" r="3" fill="#c8ced8"/>`;
-  return `<g>`
-    + bogie(x + 32) + bogie(x + w - 32)
-    + `<rect x="${x + 4}" y="${bottom}" width="${w - 8}" height="10" fill="#2b3038"/>`
-    + `<rect x="${x - 6}" y="${bottom - 2}" width="8" height="6" rx="2" fill="#59606b"/><rect x="${x + w - 2}" y="${bottom - 2}" width="8" height="6" rx="2" fill="#59606b"/>`
-    + `<rect x="${x}" y="${top}" width="${w}" height="${bottom - top}" rx="5" fill="url(#tr-car)"/>`
-    + `<rect x="${x}" y="${top + 46}" width="${w}" height="3" fill="#f0c75e"/>`
-    + `<rect x="${x}" y="${top + 52}" width="${w}" height="1.5" fill="#f0c75e" opacity=".7"/>`
-    + `<rect x="${x}" y="${bottom - 6}" width="${w}" height="6" fill="#1b4a30"/>`
-    + door(x + 6) + door(x + w - 6 - doorW)
-    + windows
-    + `<path d="M${x - 3} ${top + 2} Q${x - 2} ${top - 12} ${x + 14} ${top - 13} H${x + w - 14} Q${x + w + 2} ${top - 12} ${x + w + 3} ${top + 2}Z" fill="url(#tr-roof)"/>`
-    + `<rect x="${x + w * 0.3 - 7}" y="${top - 18}" width="14" height="6" rx="2" fill="#3a4049"/><rect x="${x + w * 0.7 - 7}" y="${top - 18}" width="14" height="6" rx="2" fill="#3a4049"/>`
-    + `</g>`;
-}
-
-/** The coal tender behind the engine, its left end at x. */
-function tender(/** @type {number} */ x) {
-  const w = 66;
-  const top = RAIL - 112;
-  return `<g>`
-    + `<rect x="${x + 4}" y="${RAIL - 48}" width="${w - 8}" height="18" fill="#2b3038"/>`
-    + carWheel(x + 17, RAIL - 13, 13) + carWheel(x + w - 17, RAIL - 13, 13)
-    + `<rect x="${x + 2}" y="${RAIL - 30}" width="${w - 4}" height="10" rx="3" fill="#3a4049"/>`
-    + `<path d="M${x + 6} ${top + 2} Q${x + 16} ${top - 14} ${x + 30} ${top - 8} Q${x + 44} ${top - 18} ${x + w - 6} ${top + 2}Z" fill="#2b2f38"/>`
-    + `<rect x="${x}" y="${top}" width="${w}" height="${RAIL - 50 - top}" rx="4" fill="url(#tr-boiler)"/>`
-    + `<rect x="${x + 7}" y="${top + 10}" width="${w - 14}" height="${RAIL - 72 - top}" rx="3" fill="none" stroke="#f0c75e" stroke-width="2"/>`
-    + `<rect x="${x}" y="${RAIL - 56}" width="${w}" height="8" fill="#2b3038"/>`
-    + `</g>`;
 }
 
 /** The steam engine, its cab's left side at x (it goes to the right). */
@@ -424,24 +356,17 @@ function engine(/** @type {number} */ x) {
 
 /** The steam of the engine, left behind it (still, like in a photo). */
 function smoke(/** @type {number} */ x) {
-  const puffs = [[222, 196, 16, 13], [204, 212, 22, 17], [176, 224, 28, 20], [140, 230, 30, 20], [104, 232, 24, 16]];
+  const puffs = [[222, 194, 16, 12], [200, 204, 21, 15], [170, 210, 25, 16], [134, 212, 25, 15], [100, 210, 20, 12]];
   return `<g fill="url(#tr-smoke)" opacity=".9">${puffs.map(([dx, dy, rx, ry]) => `<ellipse cx="${x + dx}" cy="${RAIL - dy}" rx="${rx}" ry="${ry}"/>`).join('')}</g>`;
 }
 
-/** The whole train: two cars full of children, the tender and the engine with Bubu, in the middle of the picture. */
+/**
+ * The engine with Bubu, at the left of the village (on wide screens it goes
+ * further left, see .land-engine in home/home.css), so the village shows.
+ */
 function train() {
-  const carW = 140;
-  const left = 486;
-  const car2 = left + carW + 10;
-  const tenderX = car2 + carW + 10;
-  const enginex = tenderX + 66 + 6;
-  return trainDefs()
-    + smoke(enginex)
-    + `<path d="M${left + carW} ${RAIL - 50} h10 M${car2 + carW} ${RAIL - 50} h10 M${tenderX + 66} ${RAIL - 50} h6" stroke="#2b3038" stroke-width="6"/>`
-    + car(left, carW, [['#5b3a26', '#ff8a3d'], ['#f2c14e', '#7e57c2'], ['#2b2f38', '#26a69a']])
-    + car(car2, carW, [['#c0612b', '#ec407a'], null, ['#3b2617', '#42a5f5']])
-    + tender(tenderX)
-    + engine(enginex);
+  const x = 500;
+  return trainDefs() + `<g class="land-engine">${smoke(x)}${engine(x)}</g>`;
 }
 
 /* ---------------------------------------------------------------------------
@@ -465,18 +390,8 @@ const THINGS = {
       return cloud(700, 200, 0.8) + cloud(1380, 360, 1.1);
     },
     fields: () => {
-      // meadows and a mown field, with haystacks on it
-      const strips = [
-        { x0: X0, x1: 330, fill: '#9bd36f' },
-        { x0: 330, x1: 600, fill: '#c9dc74' },
-        { x0: 600, x1: X1, fill: '#9bd36f' },
-      ];
-      const top = (/** @type {number} */ x) => villageTop(x) + 40;
-      let out = '';
-      for (const s of strips) {
-        out += `<path d="M${s.x0} ${RAIL} L${s.x0} ${r1(top(s.x0))} L${s.x1} ${r1(top(s.x1))} L${s.x1} ${RAIL}Z" fill="${s.fill}"/>`;
-      }
-      out += haystack(390, 752, 0.5) + haystack(480, 760, 0.45);
+      // haystacks on the field under the village
+      let out = haystack(640, 756, 0.5) + haystack(720, 762, 0.45);
       return out;
     },
     foreground: () => {

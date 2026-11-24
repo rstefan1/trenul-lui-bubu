@@ -75,9 +75,11 @@ body {
   paint-order: stroke fill;
 }
 
-/* wide screens: the name goes to the left, out of the way of the sun */
+/* wide screens: the name goes to the left, out of the way of the sun, and
+   the engine goes further left too (the whole width of the landscape shows) */
 @media (min-aspect-ratio: 4/3) {
   .home-head { justify-content: flex-start; padding-left: max(3vw, env(safe-area-inset-left)); }
+  .land-engine { transform: translateX(-360px); }
 }
 
 /* ---------- Season filter (only with journeys of several seasons) ---------- */
