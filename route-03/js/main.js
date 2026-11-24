@@ -44,6 +44,7 @@ import { TicketsMission } from '../../shared/js/missions/tickets-mission.js';
 import { TrackRepairMission } from '../../shared/js/missions/track-repair-mission.js';
 import { WaterCraneMission } from '../../shared/js/missions/water-crane-mission.js';
 import { WheelTapMission } from '../../shared/js/missions/wheel-tap-mission.js';
+import { CHILD_LOOKS, drawChild } from '../../shared/js/gfx/children.js';
 import { loadBubu } from '../../shared/js/train/bubu.js';
 import { SteamPlume } from '../../shared/js/train/steam.js';
 import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
@@ -59,6 +60,7 @@ import { O_BRAD_FRUMOS } from '../../shared/js/audio/songs.js';
 import { setupExitButton, setupFullscreen, showOverlay } from '../../shared/js/ui/screens.js';
 import { keepScreenAwake } from '../../shared/js/ui/wake-lock.js';
 import { DAY } from '../../shared/js/world/clock.js';
+import { TRACK_Y } from '../../shared/js/world/track.js';
 import { WorldView } from '../../shared/js/world/world-view.js';
 import { FOREST_CHAPTERS } from './chapters-data.js';
 import { BOARDED_FLAG, CHILDREN, CLEARING_FLAG, FOREST_MISSIONS } from './missions-data.js';
@@ -185,7 +187,57 @@ function keepChildren() {
     return;
   }
   if (seated.length === CHILDREN.length) return;
-  train.passengers = CHILDREN.map(c => ({ emoji: c.emoji, seat: c.seat, leaving: -1 }));
+  // (the train keeps only their seats; drawChildren draws them)
+  train.passengers = CHILDREN.map(c => ({ emoji: '', seat: c.seat, leaving: -1 }));
+}
+
+/** The look of the child sitting at every window seat. */
+const LOOK_AT_SEAT = new Map(CHILDREN.map(c => [c.seat, CHILD_LOOKS[c.look]]));
+/** Size of a child's head at a window, and of a window (stage units). */
+const KID_AT_WINDOW = 25;
+const WINDOW = { w: 46, h: 44 };
+/** Seconds a child needs to hop out of the coach and walk away (as the train's passengers do). */
+const HOP_OUT = 2.6;
+
+/**
+ * The children at the windows of the coaches, drawn in their winter clothes
+ * (the train only knows where they sit), and hopping out when they get off.
+ * @param {CanvasRenderingContext2D} ctx
+ */
+function drawChildren(ctx) {
+  const train = world.train;
+  if (!train.passengers.length) return;
+  const windows = train.passengerWindows;
+  const { dx, dy } = train.ride;
+  for (const p of train.passengers) {
+    const look = LOOK_AT_SEAT.get(p.seat);
+    const w = windows[p.seat];
+    if (!look || !w) continue;
+    const c = world.trainToStage(w);
+    const x = c.x + dx;
+    const y = c.y + dy;
+    if (p.leaving < 0) {
+      // inside the window, looking out, swaying a little with the train
+      const top = y - WINDOW.h * 0.55;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x - WINDOW.w / 2, top, WINDOW.w, WINDOW.h);
+      ctx.clip();
+      drawChild(ctx, x, top + WINDOW.h * 0.52 + Math.sin(world.time * 3 + p.seat) * 1.5, KID_AT_WINDOW, look);
+      ctx.restore();
+      continue;
+    }
+    // they hop down in front of the train, then walk off to the right and fade
+    const t = p.leaving;
+    const hop = Math.min(1, t / 0.8);
+    const ground = TRACK_Y + 70 - world.cameraY - KID_AT_WINDOW * 0.8 * 2.2;
+    const hx = x + hop * 60 + Math.max(0, t - 0.8) * 120;
+    const hy = y + (ground - y) * hop - Math.sin(hop * Math.PI) * 90;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, (HOP_OUT - t) / 0.6));
+    drawChild(ctx, hx, hy, KID_AT_WINDOW * 0.8, look, { full: true, wave: 1 });
+    ctx.restore();
+  }
 }
 
 /** The smoke of the locomotive: from the top of its chimney, while it is on screen. */
@@ -278,9 +330,10 @@ function render() {
   ctx.rect(stage.viewLeft, stage.viewTop, stage.viewRight - stage.viewLeft, stage.viewBottom - stage.viewTop);
   ctx.clip();
   world.draw(ctx);
-  // the smoke rises over the world, through the camera's zoom
+  // the children at the windows and the smoke, over the world, through the camera's zoom
   ctx.save();
   world.applyZoom(ctx);
+  drawChildren(ctx);
   steam.draw(ctx);
   ctx.restore();
   director.draw(ctx);

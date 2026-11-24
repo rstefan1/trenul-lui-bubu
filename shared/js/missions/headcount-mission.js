@@ -13,13 +13,14 @@
  *      laughs, runs to the train and sits at the window.
  *
  * Configuration (besides id/title/text):
- *   children   [{emoji, seat}] — the children on the list, and their window seats
+ *   children   [{look, seat}] — the children on the list (their look in CHILD_LOOKS), and their window seats
  *   hiding     index of the child who hides
  *   snowmen    how many snowmen stand in the snow
  *   hideIn     index of the snowman the child hides behind
  *   fact       shown at the end
  */
 
+import { CHILD_LOOKS, drawChild } from '../gfx/children.js';
 import { drawTouchNote } from '../gfx/hints.js';
 import { fillCircle } from '../gfx/shapes.js';
 import { TRACK_Y } from '../world/track.js';
@@ -28,7 +29,7 @@ import { leave } from '../ui/panel.js';
 import { Mission, starsForMistakes } from './mission.js';
 
 /**
- * @typedef {{emoji: string, seat: number}} ListedChild
+ * @typedef {{look: number, seat: number}} ListedChild
  * @typedef {import('./mission.js').MissionConfig & {
  *   children: ListedChild[], hiding: number, snowmen: number, hideIn: number, fact: string,
  * }} HeadcountConfig
@@ -39,6 +40,8 @@ import { Mission, starsForMistakes } from './mission.js';
 const GROUND_Y = TRACK_Y + 104;
 /** Size of the snowmen (1 = as tall as a child's arm can reach). */
 const SNOWMAN = 0.62;
+/** Size of the head of a child playing in the snow (stage units). */
+const KID = 20;
 /** Seconds the children play before they can be called back. */
 const PLAY = 2.6;
 const EMOJI_FONT = '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
@@ -165,12 +168,13 @@ export class HeadcountMission extends Mission {
         this.stepT = 0;
         const i = /** @type {number} */ (this.playing.shift());
         const c = this.config.children[i];
-        train.addPassenger(c.emoji, c.seat);
+        // (the train only keeps the seat: the journey draws the child at the window)
+        train.addPassenger('', c.seat);
         this.sound('hop');
       } else if (!this.playing.length && this.stepT > 0.8) this.ask();
     } else if (this.step === 'found' && this.stepT > 1.6) {
       const c = this.config.children[this.config.hiding];
-      train.addPassenger(c.emoji, c.seat);
+      train.addPassenger('', c.seat);
       this.sound('collect');
       this.step = 'done';
       this.stepT = 0;
@@ -211,15 +215,12 @@ export class HeadcountMission extends Mission {
       }
     }
     // the children playing, throwing snowballs
-    c.font = `44px ${EMOJI_FONT}`;
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
     // (they appear once they have hopped out of the coaches)
     if ((this.step === 'play' && this.stepT > 1.4) || this.step === 'call' || this.step === 'board') {
       this.playing.forEach((i, k) => {
         const x = s.viewLeft + (s.viewRight - s.viewLeft) * (0.32 + k * 0.1);
         const hop = Math.abs(Math.sin(this.time * 4 + k * 1.7)) * 14;
-        c.fillText(this.config.children[i].emoji, x, y - 22 - hop);
+        drawChild(c, x, y - KID * 2.2 - hop, KID, CHILD_LOOKS[this.config.children[i].look], { full: true, wave: hop / 14, face: k % 2 ? -1 : 1 });
         // a snowball flying between two of them
         const u = (this.time * 0.8 + k * 0.37) % 1;
         c.fillStyle = '#ffffff';
@@ -231,8 +232,7 @@ export class HeadcountMission extends Mission {
       const x0 = this.snowmanX(this.config.hideIn) + 50;
       const u = Math.min(1, this.stepT / 1.6);
       const hop = Math.abs(Math.sin(u * Math.PI * 4)) * 26;
-      c.font = `44px ${EMOJI_FONT}`;
-      c.fillText(this.config.children[this.config.hiding].emoji, x0 - u * 260, y - 30 - hop - u * 60);
+      drawChild(c, x0 - u * 260, y - KID * 2.2 - hop - u * 60, KID, CHILD_LOOKS[this.config.children[this.config.hiding].look], { full: true, wave: 1, face: -1 });
       c.font = '800 26px "Baloo 2", system-ui, sans-serif';
       c.lineWidth = 6;
       c.strokeStyle = '#1b2440';

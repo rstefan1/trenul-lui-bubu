@@ -20,7 +20,7 @@
  *
  * Configuration (besides id/title/text):
  *   rockets    how many rockets to set up (each on its own mark)
- *   children   emojis of the children around the campfire
+ *   children   the looks of the children around the campfire (indexes in CHILD_LOOKS)
  *   flag       set when the children leave the train (they stay out)
  *   midnight   the journey's clock at midnight (minutes since the first day)
  *   wish       the words written in the sky at the end
@@ -28,6 +28,7 @@
  */
 
 import { clamp, smoothstep } from '../core/math.js';
+import { CHILD_LOOKS, drawChild } from '../gfx/children.js';
 import { Fireworks } from '../gfx/fireworks.js';
 import { drawTouchNote } from '../gfx/hints.js';
 import { drawFir, fillCircle, fillRoundRect, glow } from '../gfx/shapes.js';
@@ -38,7 +39,7 @@ import { Mission, starsForMistakes } from './mission.js';
 
 /**
  * @typedef {import('./mission.js').MissionConfig & {
- *   rockets: number, children: string[], flag: string, midnight: number, wish: string, fact: string,
+ *   rockets: number, children: number[], flag: string, midnight: number, wish: string, fact: string,
  * }} FireworksConfig
  *
  * @typedef {{x: number, y: number, safe: boolean, why?: string, placed: boolean, t: number}} Mark
@@ -355,15 +356,15 @@ export class FireworksMission extends Mission {
     }
     c.restore();
     // the children: by the train at first, around the campfire later
-    c.font = `46px ${EMOJI_FONT}`;
     const kids = this.config.children;
-    kids.forEach((emoji, i) => {
+    kids.forEach((look, i) => {
       const a = Math.PI * (0.95 + (i / Math.max(1, kids.length - 1)) * 1.1);
       const x = f.x + Math.cos(a) * 110;
       const y = fy - 24 + Math.sin(a) * 26;
       const happy = this.step === 'show' || this.step === 'done';
       const hop = happy ? Math.abs(Math.sin(this.time * 6 + i)) * 22 : Math.abs(Math.sin(this.time * 2 + i)) * 4;
-      c.fillText(emoji, x, y - hop);
+      // the children behind the fire face it; they cheer when the fireworks start
+      drawChild(c, x, y - 44 - hop, 18, CHILD_LOOKS[look % CHILD_LOOKS.length], { full: true, wave: happy ? 1 : 0, face: x < f.x ? 1 : -1 });
     });
   }
 

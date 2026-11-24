@@ -16,17 +16,18 @@
 import { DAY } from '../../shared/js/world/clock.js';
 
 /**
- * The children of the camp, with their coach and their window seat. The
- * seats are the windows of the coaches as the train lists them (back of the
- * train first): coach 3 has seats 0–2, coach 2 has 3–5, coach 1 has 6–8.
+ * The children of the camp: their look (shared/js/gfx/children.js), their
+ * coach and their window seat. The seats are the windows of the coaches as
+ * the train lists them (back of the train first): coach 3 has seats 0–2,
+ * coach 2 has 3–5, coach 1 has 6–8.
  */
 export const CHILDREN = [
-  { emoji: '👧', coach: 1, seat: 6 },
-  { emoji: '👦', coach: 2, seat: 3 },
-  { emoji: '🧒', coach: 3, seat: 0 },
-  { emoji: '👧🏼', coach: 1, seat: 8 },
-  { emoji: '👦🏻', coach: 2, seat: 5 },
-  { emoji: '🧒🏽', coach: 3, seat: 2 },
+  { look: 0, coach: 1, seat: 6 },
+  { look: 1, coach: 2, seat: 3 },
+  { look: 2, coach: 3, seat: 0 },
+  { look: 3, coach: 1, seat: 8 },
+  { look: 4, coach: 2, seat: 5 },
+  { look: 5, coach: 3, seat: 2 },
 ];
 
 /** Set when the children are on the train (after their tickets were checked). */
@@ -134,7 +135,7 @@ export const FOREST_MISSIONS = {
         title: 'Controlorul de bilete',
         text: 'Azi, Bubu lucrează la mocănița din Vișeu de Sus, una dintre ultimele căi ferate forestiere cu abur din Europa. Copiii vin cu biletele: verifică-le și arată-le vagonul.',
         route: { from: 'Vișeu de Sus', to: 'Paltin', toIcon: '🌲', day: 31, otherPlace: '🏙️ Vișeu de Jos' },
-        children: CHILDREN.map((c, i) => ({ emoji: c.emoji, coach: c.coach, ticket: /** @type {const} */ (['good', 'day', 'good', 'drawing', 'place', 'good'])[i] })),
+        children: CHILDREN.map((c, i) => ({ look: c.look, coach: c.coach, ticket: /** @type {const} */ (['good', 'day', 'good', 'drawing', 'place', 'good'])[i] })),
         seats: [[6, 8], [3, 5], [0, 2]],
         flag: BOARDED_FLAG,
       },
@@ -201,7 +202,7 @@ export const FOREST_MISSIONS = {
         id: 'headcount-novicior',
         title: 'Numărătoarea',
         text: 'Copiii coboară să se joace în zăpadă. Când îi chemi înapoi, numără-i: e toată lumea în tren?',
-        children: CHILDREN.map(c => ({ emoji: c.emoji, seat: c.seat })),
+        children: CHILDREN.map(c => ({ look: c.look, seat: c.seat })),
         hiding: 4,
         snowmen: 3,
         hideIn: 2,
@@ -216,7 +217,7 @@ export const FOREST_MISSIONS = {
         title: 'Lada misterioasă',
         text: 'Am ajuns la Paltin! Copiii deschid lada din tabără: sunt artificii pentru Revelion! Pune rachetele pe semnele din luminiș, departe de brazi și de tren.',
         rockets: 5,
-        children: CHILDREN.map(c => c.emoji),
+        children: CHILDREN.map(c => c.look),
         flag: CLEARING_FLAG,
         midnight: DAY,
         wish: 'La mulți ani!',

@@ -3,6 +3,8 @@
    Loaded after game.css, whose panels and buttons they reuse. */
 
 /* ---------- Tickets ---------- */
+/* the child at the steps of the train (drawn on a little canvas) */
+.ticket-child { width: 64px; height: 64px; flex: none; }
 .ticket-row {
   display: flex;
   flex-wrap: wrap;
@@ -93,6 +95,7 @@
   .ticket-big { font-size: 16px; }
   .ticket-drawing { font-size: 36px; }
   .wood-box__slot { width: 22px; height: 22px; }
+  .ticket-child { width: 46px; height: 46px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ticket-card.is-punched .ticket-hole { animation: none; }

@@ -18,18 +18,20 @@
  * Configuration (besides id/title/text):
  *   route      {from, to, toIcon, day, otherPlace} — what a good ticket says (and
  *              where the ticket for another trip goes)
- *   children   [{emoji, coach, ticket}] — in order; ticket: "good" | "day" | "place" | "drawing"
+ *   children   [{look, coach, ticket}] — in order; look: index in CHILD_LOOKS;
+ *              ticket: "good" | "day" | "place" | "drawing"
  *   seats      [[seat, seat…] per coach] — window seats of every coach (see TrainRenderer.passengerWindows)
  *   flag       set at the end (all the children are on the train)
  */
 
+import { CHILD_LOOKS, drawChild } from '../gfx/children.js';
 import { el } from '../ui/dom.js';
 import { showPanel } from '../ui/panel.js';
 import { Mission, starsForMistakes } from './mission.js';
 
 /**
  * @typedef {'good' | 'day' | 'place' | 'drawing'} TicketKind
- * @typedef {{emoji: string, coach: number, ticket: TicketKind}} TicketChild
+ * @typedef {{look: number, coach: number, ticket: TicketKind}} TicketChild
  * @typedef {import('./mission.js').MissionConfig & {
  *   route: {from: string, to: string, toIcon: string, day: number, otherPlace: string},
  *   children: TicketChild[], seats: number[][], flag: string,
@@ -73,7 +75,8 @@ export class TicketsMission extends Mission {
 
   start() {
     this.phase = 'running';
-    const face = el('span', { class: 'wish-child', 'aria-hidden': 'true' });
+    // the child at the steps of the train, drawn in winter clothes
+    const face = el('canvas', { class: 'ticket-child', width: '120', height: '120', 'aria-hidden': 'true' });
     const says = el('p', { class: 'wish-says' });
     const count = el('span', { class: 'wish-count' });
     const ticket = el('div', { class: 'ticket-card' });
@@ -96,7 +99,7 @@ export class TicketsMission extends Mission {
     const c = this.config.children[this.current];
     this.ticket = c.ticket;
     this.punched = false;
-    this.ui.face.textContent = c.emoji;
+    paintChild(/** @type {HTMLCanvasElement} */ (this.ui.face), c.look);
     this.ui.says.textContent = '„Bună ziua! Poftiți biletul meu.”';
     this.ui.count.textContent = `${this.current + 1} / ${this.config.children.length}`;
     this.ui.reply.textContent = 'E bun biletul?';
@@ -213,7 +216,8 @@ export class TicketsMission extends Mission {
     this.sound('hop');
     const seats = this.config.seats[coach - 1];
     const seat = seats[this.taken[coach - 1]++ % seats.length];
-    this.ctx.world.train.addPassenger(c.emoji, seat);
+    // (the train only keeps the seat: the journey draws the child at the window)
+    this.ctx.world.train.addPassenger('', seat);
     this.ui.reply.textContent = `Drum bun! Copilul urcă în vagonul ${coach}.`;
     this.ui.actions.replaceChildren();
     this.current += 1;
@@ -226,7 +230,7 @@ export class TicketsMission extends Mission {
 
   /** @private Everyone is on the train. */
   showEnd() {
-    this.ui.face.textContent = '🎉';
+    this.ui.face.hidden = true;
     this.ui.says.textContent = 'Toți copiii sunt în tren, cu biletele compostate!';
     this.ui.count.textContent = '';
     this.ui.ticket.replaceChildren();
@@ -254,6 +258,17 @@ export class TicketsMission extends Mission {
   dispose() {
     showPanel(this.ctx.panel, null);
   }
+}
+
+/**
+ * Draws a child (head and shoulders, waving) on the little canvas of the panel.
+ * @param {HTMLCanvasElement} canvas
+ * @param {number} look  index in CHILD_LOOKS
+ */
+function paintChild(canvas, look) {
+  const c = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
+  c.clearRect(0, 0, canvas.width, canvas.height);
+  drawChild(c, canvas.width / 2, canvas.height * 0.42, canvas.width * 0.4, CHILD_LOOKS[look % CHILD_LOOKS.length], { wave: 0.8 });
 }
 
 /**
