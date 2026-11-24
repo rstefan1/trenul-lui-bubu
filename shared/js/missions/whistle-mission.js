@@ -164,10 +164,17 @@ export class WhistleMission extends Mission {
       if (g.state === 'cheered' && g.t < 2.5) {
         c.save();
         c.globalAlpha = Math.min(1, 2.5 - g.t);
-        c.fillStyle = '#ff5252';
         c.font = '800 26px "Baloo 2", system-ui, sans-serif';
         c.textAlign = 'center';
-        c.fillText('❤ Crăciun fericit! ❤', x, GROUND - 150 - cam - g.t * 20);
+        // a white outline: the words stay readable over the train behind them
+        const words = '❤ Crăciun fericit! ❤';
+        const y = GROUND - 150 - cam - g.t * 20;
+        c.lineWidth = 6;
+        c.lineJoin = 'round';
+        c.strokeStyle = '#ffffff';
+        c.strokeText(words, x, y);
+        c.fillStyle = '#e53935';
+        c.fillText(words, x, y);
         c.restore();
       }
     }
