@@ -17,6 +17,7 @@ home/            the home page's script and style, and the list of journeys (rou
 shared/          code and assets shared by every journey of the game
 route-01/        the first journey (winter: Timișoara → Putna)
 route-02/        the second journey (winter, by day: Putna → Vișeu de Jos, freight train)
+route-03/        the third journey (New Year's Eve: Vișeu de Sus → Paltin, on the forest railway)
 ```
 
 Every new journey gets a folder of its own (`route-02/`, `route-03/`, …),
@@ -64,7 +65,7 @@ do not save anything):
 | `?debug`         | expose the game objects as `window.trenulDebug`           |
 
 They can be combined: `?from=ilva-mica&speed=3` shows the viaducts quickly.
-Station ids are listed in `route-01/js/route-data.js` and `route-02/js/route-data.js`.
+Station ids are listed in the `js/route-data.js` file of every journey (`route-01/`, `route-02/`, `route-03/`).
 
 The game is published inside [lumea-lui-bubu](../lumea-lui-bubu), in its
 folder `trenul-lui-bubu/`: the “← Lumea lui Bubu” button of the home page

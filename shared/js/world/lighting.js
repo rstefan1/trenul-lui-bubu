@@ -9,8 +9,9 @@
  *
  * Times are minutes since midnight of the first day (see clock.js). Every
  * journey picks one of the skies below, for the hours it crosses: the night
- * of Christmas (an afternoon, the whole night and the next morning) or a
- * winter day (from sunrise to the late afternoon).
+ * of Christmas (an afternoon, the whole night and the next morning), a
+ * winter day (from sunrise to the late afternoon) or New Year's Eve (from
+ * the morning to past midnight).
  */
 
 import { hexToRgb, mixRgb, css } from '../gfx/color.js';
@@ -54,6 +55,22 @@ const DAY_KEYS = [
   { t: 15 * 60, top: '#5a98df', mid: '#a5c8ee', bottom: '#ffe6bf', wash: '#ffbe78', washAlpha: 0.07, night: 0 },
   { t: 16 * 60 + 15, top: '#5577c4', mid: '#e8a88a', bottom: '#ffcf7a', wash: '#ff9a55', washAlpha: 0.13, night: 0.03 },
   { t: 16 * 60 + 55, top: '#25306e', mid: '#7b5a9e', bottom: '#f08a78', wash: '#46328a', washAlpha: 0.35, night: 0.6 },
+];
+
+/**
+ * @type {LightKey[]} New Year's Eve in the mountains: a blue winter morning
+ * and midday, a golden afternoon, the sunset, and then the whole night,
+ * past midnight (the fireworks).
+ */
+const NEW_YEAR_KEYS = [
+  { t: 7 * 60 + 50, top: '#5d7fc8', mid: '#f3b49a', bottom: '#ffd98a', wash: '#ff9a5a', washAlpha: 0.13, night: 0.04 },
+  { t: 9 * 60, top: '#4a98e8', mid: '#9fd0f5', bottom: '#e6f5ff', wash: '#ffffff', washAlpha: 0, night: 0 },
+  { t: 14 * 60, top: '#4f9be6', mid: '#8cc4f2', bottom: '#d8efff', wash: '#ffffff', washAlpha: 0, night: 0 },
+  { t: 15 * 60 + 20, top: '#5a98df', mid: '#a5c8ee', bottom: '#ffe6bf', wash: '#ffbe78', washAlpha: 0.07, night: 0 },
+  { t: 16 * 60 + 15, top: '#4b62b0', mid: '#ea8c7a', bottom: '#ffc46b', wash: '#ff8a4a', washAlpha: 0.17, night: 0.1 },
+  { t: 16 * 60 + 55, top: '#25306e', mid: '#7b5a9e', bottom: '#f08a78', wash: '#46328a', washAlpha: 0.35, night: 0.6 },
+  { t: 17 * 60 + 40, top: '#050b2c', mid: '#132a66', bottom: '#30508f', wash: '#0c1640', washAlpha: 0.55, night: 1 },
+  { t: DAY + 2 * 60, top: '#050b2c', mid: '#132a66', bottom: '#30508f', wash: '#0c1640', washAlpha: 0.55, night: 1 },
 ];
 
 /** @param {LightKey[]} keys */
@@ -108,18 +125,34 @@ function daySun(minutes) {
   return { x: lerp(0.1, 0.9, u), y: HORIZON - 320 * Math.sin(clamp(u, 0, 1) * Math.PI), alpha: k > -0.04 && k < 1.04 ? 1 : 0 };
 }
 
+/** Sunset on New Year's Eve, in the mountains (the sun goes behind the ridges early). */
+const NEW_YEAR_SUNSET = 16 * 60 + 25;
+
+/**
+ * Where the sun is on New Year's Eve: as on the winter day, but it sets a
+ * little earlier, behind the mountains, and stays down all night.
+ * @param {number} minutes
+ * @returns {{x: number, y: number, alpha: number}}
+ */
+function newYearSun(minutes) {
+  const k = (minutes - DAY_SUNRISE) / (NEW_YEAR_SUNSET - DAY_SUNRISE);
+  const u = clamp(k, -0.05, 1.05);
+  return { x: lerp(0.1, 0.9, u), y: HORIZON - 320 * Math.sin(clamp(u, 0, 1) * Math.PI), alpha: k > -0.04 && k < 1.04 ? 1 : 0 };
+}
+
 /**
  * @typedef {object} SkyPlan
  * @property {ReturnType<typeof parse>} keys
  * @property {(minutes: number) => {x: number, y: number, alpha: number}} sun
  */
 
-/** @typedef {'night' | 'day'} SkyId */
+/** @typedef {'night' | 'day' | 'newYear'} SkyId */
 
 /** @type {Readonly<Record<SkyId, SkyPlan>>} */
 const SKIES = Object.freeze({
   night: { keys: parse(NIGHT_KEYS), sun: nightSun },
   day: { keys: parse(DAY_KEYS), sun: daySun },
+  newYear: { keys: parse(NEW_YEAR_KEYS), sun: newYearSun },
 });
 
 /**

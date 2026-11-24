@@ -57,4 +57,17 @@ export const ROUTES = [
     day: true,
     train: 'freight',
   },
+  {
+    number: 3,
+    path: 'route-03/',
+    title: 'Mocănița de Revelion',
+    from: 'Vișeu de Sus',
+    to: 'Paltin',
+    when: '31 decembrie',
+    blurb: 'Bubu lucrează la mocănița de pe Valea Vaserului și duce copiii din tabără la artificiile de la miezul nopții.',
+    chapters: 1,
+    stations: 7,
+    saveKey: 'trenul-lui-bubu/route-03',
+    season: 'winter',
+  },
 ];

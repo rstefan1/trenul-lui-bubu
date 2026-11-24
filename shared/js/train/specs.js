@@ -19,7 +19,7 @@
 
 /**
  * @typedef {object} CarSpec
- * @property {'electricLoco' | 'dieselLoco' | 'coach' | 'railcarFront' | 'railcarRear' | 'flatcar' | 'platform'} kind
+ * @property {'electricLoco' | 'dieselLoco' | 'steamLoco' | 'coach' | 'forestCoach' | 'railcarFront' | 'railcarRear' | 'flatcar' | 'platform'} kind
  * @property {number} length
  * @property {CarColors} colors
  * @property {number} [bubuWindow]  index of the window where Bubu sits (from the front)
@@ -89,5 +89,24 @@ export const FREIGHT_TRAIN = Object.freeze({
   ],
 });
 
+const FOREST_COACH = { body: '#2e7d46', band: '#f1e3b8', roof: '#4a5160' };
+
+/**
+ * The forest railway of Vișeu de Sus (the mocănița): a small black steam
+ * locomotive burning wood, without a tender (the wood sits in a box by the
+ * cab), and three green coaches with the children at the windows.
+ */
+export const FOREST_TRAIN = Object.freeze({
+  id: 'forest',
+  electric: false,
+  gap: 10,
+  cars: [
+    { kind: 'steamLoco', length: 250, colors: { body: '#23252b', band: '#c62828', roof: '#16171b', accent: '#d9a640' } },
+    { kind: 'forestCoach', length: 240, colors: FOREST_COACH, number: 1 },
+    { kind: 'forestCoach', length: 240, colors: FOREST_COACH, number: 2 },
+    { kind: 'forestCoach', length: 240, colors: FOREST_COACH, number: 3 },
+  ],
+});
+
 /** @type {Readonly<Record<string, TrainSpec>>} */
-export const TRAINS = Object.freeze({ night: NIGHT_TRAIN, regional: REGIONAL_TRAIN, freight: FREIGHT_TRAIN });
+export const TRAINS = Object.freeze({ night: NIGHT_TRAIN, regional: REGIONAL_TRAIN, freight: FREIGHT_TRAIN, forest: FOREST_TRAIN });

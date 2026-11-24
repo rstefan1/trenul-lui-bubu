@@ -33,7 +33,12 @@ const WIRE_H = TRACK_Y - WIRE_Y;
  *                                         (the driver checks them before leaving)
  */
 
-/** @typedef {'headlights' | 'wheels' | 'brakes' | 'sandbox' | 'fuel' | 'horn'} LocoPart */
+/**
+ * @typedef {'headlights' | 'wheels' | 'brakes' | 'sandbox' | 'fuel' | 'horn'
+ *   | 'chimney' | 'bunker' | 'cab'} LocoPart
+ * (the last three only on the steam locomotive: its chimney, the wood box
+ * by the cab and the cab where the fire is fed)
+ */
 
 /**
  * @callback CarPainter
@@ -617,10 +622,237 @@ function platform(c, car, pos) {
   return { windows: [], bubuWindow: null, wheels, headlight: null, taillight: pos.trailing ? { x: 4, y: -40 } : null, roofY: -60 };
 }
 
+/*
+ * The narrow-gauge forest railway (the mocănița): a small black steam
+ * locomotive and green wooden coaches with open platforms at both ends.
+ */
+
+/** Where the parts of the steam locomotive are, for a length L (car coordinates). */
+const steamLayout = (/** @type {number} */ L) => ({
+  // four coupled wheels spread under the whole locomotive, the cab included
+  wheels: [L * 0.16, L * 0.39, L * 0.62, L * 0.85],
+  /** the wood box on the running board, right in front of the cab */
+  bunker: /** @type {Rect} */ ([92, -106, 50, 64]),
+  /** the cab, at the back (Bubu feeds the fire from it) */
+  cab: /** @type {Rect} */ ([4, -184, 84, 144]),
+  chimneyX: L - 40,
+});
+
+/** @type {CarPainter} The black steam locomotive of the forest railway, without a tender. */
+function steamLoco(c, car, pos) {
+  const L = car.length;
+  const col = car.colors;
+  const brass = col.accent || '#d9a640';
+  const { wheels, bunker, cab, chimneyX } = steamLayout(L);
+  drawBuffers(c, L, 1);
+  drawBuffers(c, 0, -1);
+
+  // the red frame over the wheels, and the red buffer beam at the front
+  c.fillStyle = col.band;
+  c.fillRect(0, -44, L, 14);
+  c.fillRect(L - 8, -62, 10, 30);
+  c.fillStyle = 'rgba(0,0,0,0.25)';
+  c.fillRect(0, -32, L, 2);
+  // the coupling rod joining the wheels
+  c.fillStyle = '#9aa3ae';
+  fillRoundRect(c, wheels[0] - 6, -19, wheels[3] - wheels[0] + 12, 7, 3, '#9aa3ae');
+  // a little cowcatcher at the front, close to the rail
+  c.strokeStyle = '#2b2f38';
+  c.lineWidth = 3;
+  c.beginPath();
+  for (let k = 0; k < 4; k++) {
+    c.moveTo(L - 4 - k * 9, -30);
+    c.lineTo(L + 6 - k * 4, -4);
+  }
+  c.stroke();
+
+  // the cylinder in front of the wheels
+  fillRoundRect(c, L - 64, -64, 46, 26, 9, '#3a3e47');
+  c.fillStyle = 'rgba(255,255,255,0.15)';
+  c.fillRect(L - 58, -60, 34, 4);
+
+  // the boiler, long and round, with brass bands; the smokebox at the front is darker
+  const bTop = -124;
+  const bBottom = -60;
+  fillRoundRect(c, 84, bTop, L - 94, bBottom - bTop, 30, col.body);
+  fillRoundRect(c, L - 58, bTop, 48, bBottom - bTop, 26, '#15171b');
+  c.fillStyle = 'rgba(255,255,255,0.13)';
+  c.fillRect(96, bTop + 10, L - 160, 6);
+  c.fillStyle = brass;
+  for (let x = 120; x < L - 70; x += 44) c.fillRect(x, bTop + 2, 4, bBottom - bTop - 4);
+  // the domes on top: steam, and a smaller one for the sand
+  fillRoundRect(c, L * 0.55 - 17, bTop - 20, 34, 26, 12, col.body);
+  fillRoundRect(c, L * 0.55 - 12, bTop - 24, 24, 8, 4, brass);
+  fillRoundRect(c, L * 0.74 - 11, bTop - 13, 22, 18, 9, col.body);
+  // the tall chimney, wide at the top (it catches the sparks of the wood fire)
+  c.fillStyle = col.body;
+  c.fillRect(chimneyX - 10, bTop - 36, 20, 40);
+  c.beginPath();
+  c.moveTo(chimneyX - 11, bTop - 34);
+  c.lineTo(chimneyX - 21, bTop - 58);
+  c.lineTo(chimneyX + 21, bTop - 58);
+  c.lineTo(chimneyX + 11, bTop - 34);
+  c.closePath();
+  c.fill();
+  fillRoundRect(c, chimneyX - 24, bTop - 64, 48, 9, 4, '#15171b');
+  // the headlamp on the smokebox
+  fillRoundRect(c, L - 22, bTop - 6, 18, 18, 5, '#2b2f38');
+  c.fillStyle = '#fff8dc';
+  fillCircle(c, L - 6, bTop + 3, 6);
+
+  // the water tank along the boiler, with a red line and Bubu's ladybug
+  const tx = bunker[0] + bunker[2] + 4;
+  fillRoundRect(c, tx, -90, L - 70 - tx, 48, 6, '#2c2f36');
+  c.strokeStyle = col.band;
+  c.lineWidth = 2;
+  c.beginPath();
+  roundRectPath(c, tx + 6, -84, L - 82 - tx, 36, 4);
+  c.stroke();
+  if (!car.plain) drawLadybugEmblem(c, (tx + L - 70) / 2, -66, 11);
+
+  // the wood box: firewood stacked with its round ends towards us
+  const [wx, wy, ww, wh] = bunker;
+  fillRoundRect(c, wx, wy, ww, wh, 4, '#6d4524');
+  c.fillStyle = '#4a2f18';
+  c.fillRect(wx, wy + wh - 8, ww, 8);
+  const r = 7.5;
+  for (let row = 0; row < 3; row++) {
+    for (let k = 0; k < 3; k++) {
+      const x = wx + 9 + k * 16 + (row % 2) * 4;
+      const y = wy + 12 + row * 16;
+      c.fillStyle = '#d9a86a';
+      fillCircle(c, x, y, r);
+      c.strokeStyle = '#a8743f';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(x, y, r * 0.5, 0, Math.PI * 2);
+      c.stroke();
+    }
+  }
+
+  // the cab, at the back, with a rounded roof
+  const [cx, cy, cw, ch] = cab;
+  c.fillStyle = col.body;
+  c.fillRect(cx, cy + 10, cw, ch - 10);
+  fillRoundRect(c, cx - 8, cy, cw + 16, 14, 7, col.roof);
+  c.strokeStyle = col.band;
+  c.lineWidth = 2;
+  c.strokeRect(cx + 5, -112, cw - 10, 64);
+  // the whistle on the roof, in brass
+  fillRoundRect(c, cx + cw - 22, cy - 16, 8, 18, 3, brass);
+  fillRoundRect(c, cx + cw - 26, cy - 20, 16, 6, 3, brass);
+  /** @type {Rect} Bubu's window: she drives and feeds the fire */
+  const win = [cx + 18, cy + 26, 46, 44];
+  drawWindow(c, win);
+
+  // the red lamp at the back
+  c.fillStyle = '#c62828';
+  fillCircle(c, 5, -56, 4);
+
+  return {
+    windows: [],
+    bubuWindow: win,
+    wheels,
+    headlight: pos.leading ? { x: L - 6, y: bTop + 3 } : null,
+    taillight: pos.trailing ? { x: 4, y: -56 } : null,
+    roofY: cy,
+    parts: {
+      wheels: [[wheels[0] - 22, -34, wheels[3] - wheels[0] + 44, 36]],
+      chimney: [[chimneyX - 26, bTop - 66, 52, 70]],
+      bunker: [bunker],
+      cab: [cab],
+    },
+  };
+}
+
+/** @type {CarPainter} A green wooden coach of the forest railway, with open platforms at both ends. */
+function forestCoach(c, car, pos) {
+  const L = car.length;
+  const col = car.colors;
+  const wheels = wheelsFor(L);
+  drawBogies(c, wheels);
+  drawBuffers(c, L, 1);
+  drawBuffers(c, 0, -1);
+  const top = -164;
+  const end = 22;   // the platforms at both ends
+
+  // the frame under the whole coach, and the floor of the platforms
+  c.fillStyle = '#2f3540';
+  c.fillRect(0, -40, L, 10);
+  // the body: green wooden planks, a darker lower half, a cream line
+  c.fillStyle = col.body;
+  c.fillRect(end, top + 6, L - 2 * end, -40 - top - 6);
+  c.fillStyle = 'rgba(0,0,0,0.16)';
+  c.fillRect(end, -86, L - 2 * end, 46);
+  c.strokeStyle = 'rgba(0,0,0,0.14)';
+  c.lineWidth = 1.5;
+  c.beginPath();
+  for (let x = end + 12; x < L - end; x += 12) {
+    c.moveTo(x, -84);
+    c.lineTo(x, -42);
+  }
+  c.stroke();
+  c.fillStyle = col.band;
+  c.fillRect(end, -90, L - 2 * end, 5);
+  // the roof, reaching over the platforms
+  fillRoundRect(c, 2, top - 6, L - 4, 14, 7, col.roof);
+  c.fillStyle = 'rgba(255,255,255,0.12)';
+  c.fillRect(10, top - 4, L - 20, 3);
+  // the platforms: posts holding the roof, a railing and the steps
+  c.strokeStyle = '#2b2f38';
+  c.lineWidth = 3;
+  c.beginPath();
+  for (const x of [4, L - 4]) {
+    c.moveTo(x, top + 6);
+    c.lineTo(x, -40);
+  }
+  for (const [a, b] of [[4, end], [L - end, L - 4]]) {
+    c.moveTo(a, -96);
+    c.lineTo(b, -96);
+    c.moveTo(a, -72);
+    c.lineTo(b, -72);
+  }
+  c.stroke();
+  c.fillStyle = '#2b2f38';
+  c.fillRect(6, -30, 14, 4);
+  c.fillRect(L - 20, -30, 14, 4);
+
+  // three windows, listed from the front
+  const n = 3;
+  const ww = 46;
+  const wh = 44;
+  const left = end + 10;
+  const right = L - end - 10;
+  const gap = (right - left - n * ww) / (n + 1);
+  /** @type {Rect[]} */
+  const windows = [];
+  let bubuWindow = null;
+  for (let i = 0; i < n; i++) {
+    const x = right - gap - ww - i * (ww + gap);
+    /** @type {Rect} */
+    const rect = [x, top + 20, ww, wh];
+    drawWindow(c, rect);
+    if (car.bubuWindow === i) bubuWindow = rect;
+    else windows.push(rect);
+  }
+  if (car.number !== undefined) drawCarNumber(c, L / 2, -62, car.number);
+
+  return {
+    windows,
+    bubuWindow,
+    wheels,
+    headlight: null,
+    taillight: pos.trailing ? { x: 3, y: -50 } : null,
+    roofY: top - 6,
+  };
+}
+
 /** @type {Readonly<Record<import('./specs.js').CarSpec['kind'], CarPainter>>} */
 export const CAR_PAINTERS = Object.freeze({
   electricLoco,
   dieselLoco,
+  steamLoco,
+  forestCoach,
   platform,
   coach,
   railcarFront: (c, car, pos) => railcar(c, car, pos, true),
