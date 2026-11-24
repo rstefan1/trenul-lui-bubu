@@ -156,7 +156,7 @@ export class CouplingMission extends Mission {
     this.state = 'coupled';
     this.stateT = 0;
     this.speed = 0;
-    this.sound('thud');
+    this.sound('couple', this.toStage(this.wagonBack, 0).x);
     const p = this.toStage(this.wagonBack + (BUFFERS / 2) * SCALE, -50);
     this.particles.burst(p.x, p.y, SPARKS, 22, 220);
     this.ctx.state.setFlag(this.config.flag);

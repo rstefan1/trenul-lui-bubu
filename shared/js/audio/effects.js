@@ -64,7 +64,7 @@ const MIX = {
   collect: -3, oops: -5, star: -2, chirp: -8, crunch: -10, brush: -12, shutter: -3,
   hop: -4, flame: -5, whoosh: -6, ding: -5, drum: -2, thud: -5,
   // things around the train
-  doorsOpen: -9, doorsClose: -9, gust: -6, plough: -4, ploughEngine: -6,
+  doorsOpen: -9, doorsClose: -9, gust: -6, plough: -4, ploughEngine: -6, couple: -2,
   // the big moments
   success: 0, sparkle: -4, chime: 0, chapterEnd: 1, finale: 2, churchBell: 10,
   // the sounds of places (heard now and then, far away, under everything)
@@ -290,6 +290,25 @@ const SOUNDS = {
   thud(ctx, out, t) {
     sweep(ctx, out, { t, from: 120, to: 45, slide: 0.18, level: 0.3, length: 0.25, attack: 0.005 });
     noisePuff(ctx, out, { t, length: 0.2, level: 0.08, type: 'lowpass', from: 700, to: 200 });
+  },
+  /**
+   * Two railway cars coupled: the buffers meet with a heavy clunk, the steel
+   * coupler hook drops into place with a ringing clank, and the brake hoses
+   * are joined with a hiss of air.
+   */
+  couple(ctx, out, t) {
+    // the buffers
+    sweep(ctx, out, { t, from: 140, to: 50, slide: 0.16, level: 0.32, length: 0.3, attack: 0.002 });
+    noisePuff(ctx, out, { t, length: 0.12, level: 0.12, type: 'bandpass', from: 900, to: 400, q: 0.9, attack: 0.001 });
+    // the hook: struck steel, with the inharmonic ring of a heavy bar
+    for (const [at, level] of [[0.09, 0.1], [0.2, 0.05]]) {
+      noisePuff(ctx, out, { t: t + at, length: 0.05, level: level * 1.4, type: 'highpass', from: 2500, attack: 0.001 });
+      for (const [f, decay] of [[523, 0.45], [1347, 0.3], [2290, 0.2], [3410, 0.12]]) {
+        sweep(ctx, out, { t: t + at, from: f, to: f * 0.99, slide: decay, level: level * (600 / f), length: decay, type: 'triangle', attack: 0.001 });
+      }
+    }
+    // the brake hoses joined: a short hiss of air
+    noisePuff(ctx, out, { t: t + 0.55, length: 0.5, level: 0.06, type: 'highpass', from: 4000, to: 3000, attack: 0.03 });
   },
   /** The snow plough going by: a long rumble with snow thrown aside. */
   plough(ctx, out, t) {
