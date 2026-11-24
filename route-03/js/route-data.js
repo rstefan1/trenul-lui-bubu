@@ -57,9 +57,10 @@ export const FOREST_ROUTE = {
       cover: [[0, 1]],
       train: 'forest',
     },
-    // Glîmboaca → Cozia: the wild part of the valley, with animals on the line
+    // Glîmboaca → Cozia: the wild part of the valley, with animals on the line (short:
+    // the last animal is not far from Cozia)
     {
-      duration: 32,
+      duration: 22,
       biomes: [[0, 'forest']],
       snowfall: [[0, 0], [0.7, 0.1]],
       cover: [[0, 1]],

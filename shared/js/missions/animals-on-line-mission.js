@@ -39,8 +39,8 @@ export class AnimalsOnLineMission extends LineStopMission {
    * @param {AnimalsConfig} config
    */
   constructor(ctx, config) {
-    // the view stays on an animal from the moment it is seen until it has run away
-    super(ctx, config, { speed: 320, firstAhead: 2600, spacing: 2900, stopBefore: 260, room: 200, holdView: true });
+    // once the view has moved forward to the first animal, it stays there until the last one has run away
+    super(ctx, config, { speed: 320, firstAhead: 2600, spacing: 2600, stopBefore: 260, room: 200, holdView: true });
     this.config = config;
     this.quick = 0;
     /** @type {HTMLButtonElement | null} */
