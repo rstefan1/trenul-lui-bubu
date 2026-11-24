@@ -120,19 +120,6 @@ function house(/** @type {number} */ x, /** @type {number} */ y, /** @type {numb
     + `</g>`;
 }
 
-/** A wooden church with a tall spire (like those of Maramureș), base at (x, y). */
-function church(/** @type {number} */ x, /** @type {number} */ y) {
-  return `<g>`
-    + `<rect x="${x - 42}" y="${y - 46}" width="84" height="46" fill="#8a5a3b"/>`
-    + `<path d="M${x - 54} ${y - 40} L${x - 30} ${y - 82} L${x + 30} ${y - 82} L${x + 54} ${y - 40}Z" fill="#5b3a26"/>`
-    + `<rect x="${x - 14}" y="${y - 118}" width="28" height="40" fill="#8a5a3b"/>`
-    + `<path d="M${x - 20} ${y - 114} L${x} ${y - 210} L${x + 20} ${y - 114}Z" fill="#5b3a26"/>`
-    + `<path d="M${x} ${y - 210} V${y - 232} M${x - 8} ${y - 224} H${x + 8}" stroke="#e8b923" stroke-width="4" stroke-linecap="round"/>`
-    + `<rect x="${x - 8}" y="${y - 24}" width="16" height="24" rx="8" fill="#3b2617"/>`
-    + `<rect x="${x - 6}" y="${y - 108}" width="12" height="16" rx="6" fill="#3b2617"/>`
-    + `</g>`;
-}
-
 /** A child standing with feet at (x, y), about 100 tall at scale 1. */
 function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shirt: string, hair: string, skin?: string, legs?: string, pose?: 'wave' | 'up' | 'catch' | 'kick' | 'sit', girl?: boolean, s?: number, flip?: boolean}} */ o) {
   const s = o.s ?? 1;
@@ -273,22 +260,6 @@ function railway() {
     + `<g fill="#6b4a32">${sleepers}</g>`
     + `<rect x="${LX0}" y="${RAIL - 4}" width="${LX1 - LX0}" height="8" fill="#5b616c"/>`
     + `<rect x="${LX0}" y="${RAIL - 4}" width="${LX1 - LX0}" height="2.5" fill="#c8ced8"/>`;
-}
-
-/** The little station at the right. */
-function station() {
-  const x = 1440;
-  const y = RAIL - 10;
-  return `<g>`
-    + `<rect x="${x - 150}" y="${y - 6}" width="300" height="12" fill="#b9b3a8"/>`
-    + `<rect x="${x - 110}" y="${y - 96}" width="220" height="90" fill="#fdf1d6"/>`
-    + `<path d="M${x - 130} ${y - 92} L${x - 90} ${y - 140} L${x + 90} ${y - 140} L${x + 130} ${y - 92}Z" fill="#b5452b"/>`
-    + `<rect x="${x - 90}" y="${y - 76}" width="34" height="44" rx="4" fill="#3b6fb6" stroke="#fff" stroke-width="3"/>`
-    + `<rect x="${x + 56}" y="${y - 76}" width="34" height="44" rx="4" fill="#3b6fb6" stroke="#fff" stroke-width="3"/>`
-    + `<rect x="${x - 20}" y="${y - 70}" width="40" height="64" rx="4" fill="#8a5a3b"/>`
-    + `<circle cx="${x}" cy="${y - 118}" r="13" fill="#fff" stroke="#2b2f38" stroke-width="3"/>`
-    + `<path d="M${x} ${y - 118} V${y - 127} M${x} ${y - 118} H${x + 7}" stroke="#2b2f38" stroke-width="2.5" stroke-linecap="round"/>`
-    + `</g>`;
 }
 
 /** The shading of the train (gradients, defined once). */
@@ -524,10 +495,6 @@ export function landscape(season) {
     forest += fir(x, forestTop(x) + 12 + rnd() * 10, 34 + rnd() * 22, p.conifer);
   }
 
-  // the wooden church and a few trees on the hill
-  const village = church(810, villageTop(810) + 22)
-    + [[-60, 78], [380, 70], [600, 76], [1060, 72], [1230, 80], [1690, 84], [1980, 76]].map(([x, h]) => tree(x, villageTop(x) + 30, h, p)).join('');
-
   return `
     <svg viewBox="${LX0} 0 ${LX1 - LX0} ${H - 30}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
       <defs>
@@ -550,9 +517,7 @@ export function landscape(season) {
       <path d="${ridge(villageTop, RAIL, LX0, LX1)}" fill="${p.hills[0]}"/>
       <path d="${ridge(x => villageTop(x) + 40, RAIL, LX0, LX1)}" fill="${p.hills[1]}"/>
       ${things.fields(p)}
-      ${village}
       ${railway()}
-      ${station()}
       ${train()}
       <path d="M${LX0} ${RAIL + 44} H${LX1} V${H} H${LX0}Z" fill="url(#land-meadow)"/>
       ${things.foreground(p)}
