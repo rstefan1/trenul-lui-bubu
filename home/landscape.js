@@ -134,7 +134,7 @@ function church(/** @type {number} */ x, /** @type {number} */ y) {
 }
 
 /** A child standing with feet at (x, y), about 100 tall at scale 1. */
-function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shirt: string, hair: string, skin?: string, legs?: string, pose?: 'wave' | 'up' | 'catch' | 'kick' | 'sit' | 'rope', girl?: boolean, s?: number, flip?: boolean}} */ o) {
+function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shirt: string, hair: string, skin?: string, legs?: string, pose?: 'wave' | 'up' | 'catch' | 'kick' | 'sit', girl?: boolean, s?: number, flip?: boolean}} */ o) {
   const s = o.s ?? 1;
   const skin = o.skin ?? '#f6c9a0';
   const legs = o.legs ?? '#3a5ba8';
@@ -148,7 +148,6 @@ function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shi
     catch: [[-24, 96], [24, 96]],
     kick: [[-26, 70], [26, 62]],
     sit: [[-22, 40], [22, 40]],
-    rope: [[-26, 58], [26, 58]],
   }[pose];
   const feet = pose === 'kick' ? [[-8, 0], [26, 16]] : [[-9, 0], [9, 0]];
   const line = (/** @type {number[]} */ a, /** @type {number[]} */ b, /** @type {string} */ c, /** @type {number} */ w) =>
@@ -429,72 +428,33 @@ const MEADOW = {
     const rnd = seeded(23);
     const hill = (/** @type {number} */ x) => 160 + 26 * Math.sin(x / 240 + 1) + 14 * Math.sin(x / 97);
     let out = `<path d="${ridge(hill, 300)}" fill="${p.hills[0]}"/>`;
-    // the edge of the village on the hill, at both sides
-    const roofs = ['#b5452b', '#c0612b', '#8f3a24'];
-    for (const [i, x] of [180, 320, 1290, 1430].entries()) {
-      out += tree(x - 46, hill(x - 46) + 26, 70 + rnd() * 16, p) + house(x, hill(x) + 28, 1 + rnd() * 0.15, roofs[i % roofs.length], '#fdf8ee');
+    // a few houses and trees on the hill, at both sides
+    const roofs = ['#b5452b', '#c0612b'];
+    for (const [i, x] of [220, 1380].entries()) {
+      out += tree(x - 50, hill(x - 50) + 26, 76, p) + house(x, hill(x) + 28, 1.05, roofs[i], '#fdf8ee');
     }
-    out += tree(640, hill(640) + 30, 84, p) + tree(1040, hill(1040) + 30, 76, p);
+    out += tree(800, hill(800) + 30, 80, p);
     // the meadow in front, the colour of the page under it
     out += `<path d="${ridge(x => 258 + 6 * Math.sin(x / 150), 300)}" fill="${p.meadowDark}"/>`;
-    out += flowers(rnd, 40, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 262, 30);
-    // a haystack, a girl skipping rope, a boy waving, sunflowers
-    out += haystack(540, 288, 0.95);
-    out += child(780, 270, { shirt: '#ffcf3f', hair: '#3b2617', pose: 'rope', girl: true, s: 1.05 })
-      + `<path d="M${r1(780 - 26 * 1.05)} ${r1(270 - 58 * 1.05)} Q780 ${r1(2 * 290 - (270 - 58 * 1.05))} ${r1(780 + 26 * 1.05)} ${r1(270 - 58 * 1.05)}" stroke="#e53935" stroke-width="3" fill="none"/>`
-      + `<ellipse cx="780" cy="290" rx="20" ry="4" fill="#2b2f38" opacity=".15"/>`;
-    out += child(990, 290, { shirt: '#42a5f5', hair: '#c0612b', pose: 'wave', s: 1.05, flip: true });
-    out += sunflower(1110, 305, 170, -6) + sunflower(1150, 305, 140, 6);
+    out += flowers(rnd, 14, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 262, 30);
     return out;
   },
 };
 
-/** A village well with its sweep (fântână cu cumpănă), the post's foot at (x, y). */
-function well(/** @type {number} */ x, /** @type {number} */ y) {
-  const wx = x + 100;
-  return `<g stroke-linecap="round">`
-    + `<path d="M${x} ${y} V${y - 128}" stroke="#7a5235" stroke-width="9"/>`
-    + `<path d="M${x - 70} ${y - 76} L${wx + 4} ${y - 168}" stroke="#8a5a3b" stroke-width="6"/>`
-    + `<circle cx="${x - 66}" cy="${y - 74}" r="10" fill="#8d8f94"/>`
-    + `<path d="M${wx + 4} ${y - 168} V${y - 50}" stroke="#4a4f5a" stroke-width="2"/>`
-    + `<path d="M${wx - 6} ${y - 52} h20 l-3 14 h-14Z" fill="#8a5a3b"/>`
-    + `<rect x="${wx - 30}" y="${y - 40}" width="68" height="40" rx="4" fill="#9a6a45"/>`
-    + `<path d="M${wx - 30} ${y - 27} h68 M${wx - 30} ${y - 14} h68" stroke="#7a5235" stroke-width="2.5"/>`
-    + `</g>`;
-}
-
-/** A wooden fence from x0 to x1, standing on y. */
-function fence(/** @type {number} */ x0, /** @type {number} */ x1, /** @type {number} */ y) {
-  let pickets = '';
-  for (let x = x0; x <= x1; x += 18) pickets += `<path d="M${x} ${y} V${y - 40} l4 -6 l4 6 V${y}Z"/>`;
-  return `<g fill="#c9925a">`
-    + `<rect x="${x0 - 4}" y="${y - 32}" width="${x1 - x0 + 16}" height="5"/><rect x="${x0 - 4}" y="${y - 14}" width="${x1 - x0 + 16}" height="5"/>`
-    + pickets
-    + `</g>`;
-}
-
 /**
  * The scenery behind the journeys' cards (2000 × 700, x from -200 to 1800),
  * so the meadow is not empty: the cards stand in the middle, the village
- * and the children are at the sides. On wide screens the top and the bottom
- * are cut, so everything stands between y 150 and 560.
+ * and a few things are at the sides. On wide screens the top and the bottom
+ * are cut, so everything stands between y 150 and 580.
  * @type {Record<string, (p: Palette) => string>}
  */
 const GROUND = {
   summer: p => {
     const rnd = seeded(41);
-    let out = flowers(rnd, 120, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 20, 660);
-    // at the left: a house with its fence and tree, the well, a girl
-    out += tree(-160, 330, 170, p) + house(-30, 340, 1.7, '#b5452b', '#fdf8ee') + fence(-200, 110, 380) + tree(130, 300, 120, p);
-    out += well(150, 480);
-    // a girl with a balloon
-    out += `<path d="M${r1(40 + 22 * 1.15)} ${r1(545 - 108 * 1.15)} Q80 380 95 330" stroke="#4a4f5a" stroke-width="1.6" fill="none"/>`
-      + `<ellipse cx="95" cy="302" rx="24" ry="29" fill="#e53935"/><path d="M90 330 l5 -6 l5 6Z" fill="#c62828"/><ellipse cx="87" cy="292" rx="6" ry="9" fill="#fff" opacity=".35"/>`
-      + child(40, 545, { shirt: '#7e57c2', hair: '#f2c14e', pose: 'up', girl: true, s: 1.15 });
-    // at the right: a haystack, sunflowers, a boy waving and a tree
-    out += tree(1770, 320, 160, p) + haystack(1430, 420, 1.2);
-    out += sunflower(1550, 600, 200, -6) + sunflower(1595, 600, 170, 4) + sunflower(1640, 600, 210, 8);
-    out += child(1730, 545, { shirt: '#43a047', hair: '#5b3a26', pose: 'wave', s: 1.15, flip: true });
+    let out = flowers(rnd, 40, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 60, 560);
+    // at the left a house with its tree, at the right a haystack with two sunflowers
+    out += tree(-120, 360, 150, p) + house(10, 370, 1.5, '#b5452b', '#fdf8ee');
+    out += haystack(1450, 440, 1.1) + sunflower(1580, 580, 190, -6) + sunflower(1625, 580, 160, 6);
     return out;
   },
 };
