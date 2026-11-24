@@ -108,19 +108,30 @@ function routeCard(route) {
   const picture = el('div', { class: 'route-pic' });
   // the SVG is built here from fixed values (no text from outside goes into it)
   picture.innerHTML = scene(route.season, route.number);
+  picture.append(
+    el('span', { class: 'route-num', 'aria-hidden': 'true' }, [String(route.number)]),
+    el('span', { class: 'route-season' }, [`${season.icon} ${season.name}`]),
+  );
   return el('li', { class: `route-item season--${route.season}`, 'data-season': route.season }, [
     el('a', { class: 'route-card', href: route.path }, [
       picture,
       el('div', { class: 'route-body' }, [
-        el('p', { class: 'route-kicker' }, [`Ruta ${route.number} · ${season.icon} ${season.name} · ${route.when}`]),
+        el('p', { class: 'sr-only' }, [`Ruta ${route.number}`]),
         el('h2', { class: 'route-title' }, [route.title]),
-        el('p', { class: 'route-way' }, [`${route.from} → ${route.to}`]),
+        // the two ends of the journey, joined like on a railway map
+        el('p', { class: 'route-way' }, [
+          el('span', {}, [route.from]),
+          el('span', { class: 'route-line', 'aria-hidden': 'true' }),
+          el('span', { class: 'sr-only' }, [' → ']),
+          el('span', {}, [route.to]),
+        ]),
+        el('p', { class: 'route-when' }, [route.when]),
         el('p', { class: 'route-blurb' }, [route.blurb]),
         el('ul', { class: 'route-facts' }, [
           el('li', {}, [`📖 ${route.chapters} capitole`]),
           el('li', {}, [`🚉 ${route.stations} stații`]),
-          el('li', { class: `route-status route-status--${p.status}` }, [STATUS[p.status].label]),
           p.stars > 0 && el('li', { class: 'route-stars' }, [`★ ${p.stars}`]),
+          el('li', { class: `route-status route-status--${p.status}` }, [STATUS[p.status].label]),
         ]),
         el('span', { class: 'route-go' }, [STATUS[p.status].button]),
       ]),

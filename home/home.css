@@ -139,10 +139,10 @@ body {
   bottom: 12px;
   height: 34px;
   background:
-    radial-gradient(circle at 14% 50%, #ffcf3f 0 4px, #2b2f38 5px 15px, transparent 16px),
-    radial-gradient(circle at 30% 50%, #ffcf3f 0 4px, #2b2f38 5px 15px, transparent 16px),
-    radial-gradient(circle at 70% 50%, #ffcf3f 0 4px, #2b2f38 5px 15px, transparent 16px),
-    radial-gradient(circle at 86% 50%, #ffcf3f 0 4px, #2b2f38 5px 15px, transparent 16px);
+    radial-gradient(circle at 14% 50%, #e3e7ec 0 3px, #2b3038 3.5px 5px, #b8261f 5.5px 11px, #2b3038 11.5px 15px, transparent 15.5px),
+    radial-gradient(circle at 30% 50%, #e3e7ec 0 3px, #2b3038 3.5px 5px, #b8261f 5.5px 11px, #2b3038 11.5px 15px, transparent 15.5px),
+    radial-gradient(circle at 70% 50%, #e3e7ec 0 3px, #2b3038 3.5px 5px, #b8261f 5.5px 11px, #2b3038 11.5px 15px, transparent 15.5px),
+    radial-gradient(circle at 86% 50%, #e3e7ec 0 3px, #2b3038 3.5px 5px, #b8261f 5.5px 11px, #2b3038 11.5px 15px, transparent 15.5px);
 }
 .route-item::after {
   content: "";
@@ -158,6 +158,9 @@ body {
 }
 .route-item[hidden] { display: none; }
 
+/* a journey's card: a warm paper ticket with a thick white edge, its
+   picture framed inside, its name and its two stations joined like on a
+   railway map, and one big button */
 .route-card {
   position: relative;
   z-index: 1;
@@ -165,66 +168,139 @@ body {
   flex-direction: column;
   height: calc(100% - 4px);
   overflow: hidden;
-  background: var(--paper-card);
+  background: linear-gradient(#fffdf7, #fff4dc);
   color: var(--ink);
-  border: var(--paper-line);
-  border-radius: var(--radius-m);
-  box-shadow: 0 6px 0 rgba(0, 0, 0, .2);
+  border: 4px solid #fff;
+  border-radius: 28px;
+  box-shadow: 0 7px 0 rgba(30, 70, 25, .3), 0 16px 30px rgba(20, 50, 20, .22);
   text-decoration: none;
 }
 .route-card:hover, .route-card:focus-visible { transform: translateY(-4px); }
-.route-card:active { transform: translateY(2px) scale(.99); }
+.route-card:active { transform: translateY(2px); }
+.route-card:hover .route-go, .route-card:focus-visible .route-go { filter: brightness(1.08); }
 .route-card:focus-visible { outline: 5px solid var(--gold); outline-offset: 3px; }
 .route-card--plain { padding: 20px; font-size: 20px; font-weight: 700; }
-.route-pic { aspect-ratio: 20 / 9; background: var(--night-2); }
+
+.route-pic {
+  position: relative;
+  margin: 8px 8px 0;
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  border-radius: 21px;
+  background: var(--night-2);
+}
 .route-pic svg { display: block; width: 100%; height: 100%; }
+/* the journey's number, like the number on a train */
+.route-num {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .25);
+}
+.route-season {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 2px 11px 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .94);
+  color: var(--season, var(--green));
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .18);
+}
 
 .route-body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 10px 14px 14px;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px 16px;
+  text-align: center;
 }
-.route-kicker {
+.route-title { margin: 0; font-size: clamp(23px, 2.8vw, 27px); font-weight: 800; line-height: 1.05; color: var(--red); }
+.route-way {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin: 0;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 800;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--season, var(--green));
+  color: var(--station-blue);
 }
-.route-title { margin: 0; font-size: clamp(21px, 2.6vw, 24px); font-weight: 800; line-height: 1.05; color: var(--red); }
-.route-way { margin: 0; font-size: 16px; font-weight: 700; }
-.route-blurb { margin: 0; font-size: 14.5px; line-height: 1.3; }
+/* the line between the two stations: a dashed track with a dot at each end */
+.route-line {
+  position: relative;
+  flex: 0 0 64px;
+  height: 12px;
+  background: repeating-linear-gradient(90deg, var(--station-blue) 0 7px, transparent 7px 11px) center / calc(100% - 16px) 3px no-repeat;
+}
+.route-line::before, .route-line::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  border: 3px solid var(--station-blue);
+  border-radius: 50%;
+  background: #fff;
+}
+.route-line::before { left: 0; }
+.route-line::after { right: 0; }
+.route-when { margin: -4px 0 0; font-size: 13px; font-weight: 700; color: #8a7558; }
+.route-blurb { margin: 0; font-size: 14.5px; line-height: 1.32; color: #4a4f5a; }
 .route-facts {
   list-style: none;
-  margin: 4px 0 0;
+  margin: 2px 0 4px;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 10px;
-  font-size: 14px;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13.5px;
   font-weight: 700;
 }
-.route-status { padding: 0 10px; border-radius: 999px; background: #e9e2d2; }
-.route-status--started { background: #fff1b8; }
-.route-status--finished { background: #c8efd5; color: var(--green-dark); }
-.route-stars { color: #c79400; }
+.route-facts li { padding: 1px 10px 2px; border-radius: 999px; background: #f3e8cf; }
+.route-status--started { background: #ffe9a3 !important; }
+.route-status--finished { background: #c8efd5 !important; color: var(--green-dark); }
+.route-stars { color: #b07f00; }
 .route-go {
-  align-self: center;
+  align-self: stretch;
   margin-top: auto;
-  padding: 4px 22px 6px;
-  border: 3px solid #fff;
-  border-radius: 999px;
-  background: radial-gradient(circle at 35% 30%, #5fd68a, var(--green) 60%, var(--green-dark));
+  padding: 7px 16px 9px;
+  border-radius: 18px;
+  background: linear-gradient(#55cf82, var(--green) 55%, var(--green-dark));
   color: #fff;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 800;
-  box-shadow: 0 4px 0 #155a30;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .2);
+  box-shadow: 0 5px 0 #155a30, inset 0 2px 0 rgba(255, 255, 255, .35);
 }
 
-/* each season colours its card's kicker */
+/* hidden on the screen, read by screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* each season colours its card's season label */
 .season--winter { --season: #1f4f9c; }
 .season--spring { --season: #c2477a; }
 .season--summer { --season: #c27a00; }
