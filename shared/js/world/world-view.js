@@ -13,7 +13,7 @@
  * The world view only reads the journey; it never changes it.
  */
 
-import { approach, smoothstep } from '../core/math.js';
+import { approach, clamp, smoothstep } from '../core/math.js';
 import { BandCompositor } from '../gfx/compositor.js';
 import { TrainRenderer } from '../train/train-renderer.js';
 import { TRAINS } from '../train/specs.js';
@@ -46,6 +46,14 @@ export class WorldView {
     /** How far the view is panned forward (the whole world moves left), and where it is heading. */
     this.pan = 0;
     this.panTarget = 0;
+    /**
+     * The camera's zoom: how far it has moved in (0 = not at all, 1 = fully)
+     * and what it shows close up (see {@link zoomOn}).
+     * @type {{x: number, y: number, k: number}}
+     */
+    this.zoomFocus = { x: 0, y: 0, k: 1 };
+    this.zoom = 0;
+    this.zoomTarget = 0;
 
     this.time = 0;
     /** What the player changed in the world (set by the game, e.g. lit torches). */
@@ -74,6 +82,70 @@ export class WorldView {
   lookAhead(share) {
     const stage = this.stage;
     this.panTarget = share === null ? 0 : Math.max(0, this.baseAnchorX - (stage.viewLeft + (stage.viewRight - stage.viewLeft) * share));
+  }
+
+  /**
+   * Moves the camera in, smoothly, so that a region of the stage fills the
+   * middle of the screen (a mission that wants something seen close up, like
+   * the parts of the locomotive); null moves it back out.
+   * @param {{left: number, right: number, top: number, bottom: number} | null} region  in stage units
+   */
+  zoomOn(region) {
+    if (!region) {
+      this.zoomTarget = 0;
+      return;
+    }
+    const stage = this.stage;
+    const k = Math.max(1, Math.min(
+      (stage.viewRight - stage.viewLeft) / (region.right - region.left),
+      (stage.viewBottom - stage.viewTop) / (region.bottom - region.top),
+    ));
+    this.zoomFocus = { x: (region.left + region.right) / 2, y: (region.top + region.bottom) / 2, k };
+    this.zoomTarget = 1;
+  }
+
+  /**
+   * The camera's zoom now, as a scale and an offset: a point p of the stage
+   * is seen at p·k + (ox, oy).
+   * @returns {{k: number, ox: number, oy: number}}
+   */
+  get zoomTransform() {
+    const f = this.zoomFocus;
+    const z = smoothstep(0, 1, this.zoom);
+    const k = 1 + (f.k - 1) * z;
+    const stage = this.stage;
+    // the focus moves to the middle of the screen as the camera moves in
+    const cx = f.x + ((stage.viewLeft + stage.viewRight) / 2 - f.x) * z;
+    const cy = f.y + ((stage.viewTop + stage.viewBottom) / 2 - f.y) * z;
+    // but never past the edges of the world drawn on screen (beyond them is nothing)
+    const ox = clamp(cx - f.x * k, stage.viewRight * (1 - k), stage.viewLeft * (1 - k));
+    const oy = clamp(cy - f.y * k, stage.viewBottom * (1 - k), stage.viewTop * (1 - k));
+    return { k, ox, oy };
+  }
+
+  /**
+   * Sets a context to draw through the camera's zoom (the world and the
+   * missions are drawn through it).
+   * @param {CanvasRenderingContext2D} c
+   */
+  applyZoom(c) {
+    if (this.zoom <= 0) return;
+    const { k, ox, oy } = this.zoomTransform;
+    c.translate(ox, oy);
+    c.scale(k, k);
+  }
+
+  /**
+   * Converts a point seen on screen (stage units) to the stage point under
+   * it, through the camera's zoom (for what the child touches).
+   * @template {{x: number, y: number}} P
+   * @param {P} p
+   * @returns {P}
+   */
+  unzoom(p) {
+    if (this.zoom <= 0) return p;
+    const { k, ox, oy } = this.zoomTransform;
+    return { ...p, x: (p.x - ox) / k, y: (p.y - oy) / k };
   }
 
   /** Screen x of the front of the train (missions may pan the view to show what is ahead). */
@@ -142,6 +214,8 @@ export class WorldView {
     const target = this.features.cameraLift(j.distance, this.train.length);
     this.cameraY = approach(this.cameraY, target, 1.6, dt);
     this.pan = approach(this.pan, this.panTarget, 1.6, dt);
+    this.zoom = approach(this.zoom, this.zoomTarget, 2.2, dt);
+    if (Math.abs(this.zoom - this.zoomTarget) < 0.002) this.zoom = this.zoomTarget;
     const w = j.weather;
     this.cover = approach(this.cover, w.cover, 3, dt);
     this.snow.update(dt, w.snowfall, j.speed, this.time);
@@ -154,6 +228,8 @@ export class WorldView {
     this.light = light;
     const stage = this.stage;
     this.compositor.resize(stage.canvas);
+    c.save();
+    this.applyZoom(c);
 
     this.sky.draw(c, light, this.time);
 
@@ -232,5 +308,6 @@ export class WorldView {
     c.restore();
 
     this.snow.draw(c);
+    c.restore();
   }
 }

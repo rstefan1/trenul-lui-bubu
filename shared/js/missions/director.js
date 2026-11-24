@@ -158,6 +158,7 @@ export class MissionDirector extends Emitter {
     this.pending = null;
     this.ctx.hud.hideCounter();
     this.ctx.hud.hideAnnouncement();
+    this.ctx.world.zoomOn(null);
   }
 
   /** @param {number} dt  game seconds */
@@ -212,26 +213,30 @@ export class MissionDirector extends Emitter {
 
   /** @param {CanvasRenderingContext2D} c */
   draw(c) {
+    // the missions are seen through the camera's zoom, like the world
+    c.save();
+    this.ctx.world.applyZoom(c);
     for (const m of this.active) m.draw(c);
+    c.restore();
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerDown(p) {
     // the most recent mission gets the input
     const m = this.active[this.active.length - 1];
-    if (m) m.pointerDown(p);
+    if (m) m.pointerDown(this.ctx.world.unzoom(p));
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerMove(p) {
     const m = this.active[this.active.length - 1];
-    if (m) m.pointerMove(p);
+    if (m) m.pointerMove(this.ctx.world.unzoom(p));
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerUp(p) {
     const m = this.active[this.active.length - 1];
-    if (m) m.pointerUp(p);
+    if (m) m.pointerUp(this.ctx.world.unzoom(p));
   }
 
   /**
@@ -274,7 +279,10 @@ export class MissionDirector extends Emitter {
   finish(m) {
     this.active.splice(this.active.indexOf(m), 1);
     m.dispose();
-    if (!this.active.length) this.ctx.hud.clearInstructions();
+    if (!this.active.length) {
+      this.ctx.hud.clearInstructions();
+      this.ctx.world.zoomOn(null);
+    }
     this.ctx.state.awardStars(m.id, m.stars);
     this.ctx.hud.showResult(m.stars, m.resultText);
     successSound(this.ctx.audio);
