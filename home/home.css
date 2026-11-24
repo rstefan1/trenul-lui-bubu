@@ -176,6 +176,8 @@ body {
 
 /* ---------- Footer ---------- */
 .home-foot { margin: 28px 16px 8px; text-align: center; font-size: 15px; opacity: .85; }
+.home-foot p { margin: 0 0 4px; }
+.home-author { font-size: 17px; font-weight: 700; }
 
 /* sideways phones: the landscape fills the screen, with a low sign */
 @media (max-height: 520px) and (orientation: landscape) {
