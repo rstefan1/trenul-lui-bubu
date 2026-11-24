@@ -333,6 +333,16 @@ function drawValley(c, v, f, kind) {
 }
 
 /**
+ * How many arches a viaduct of a given length has (missions ask children to
+ * count them).
+ * @param {number} length
+ * @returns {number}
+ */
+export function archCount(length) {
+  return Math.max(3, Math.round(length / 120));
+}
+
+/**
  * Stone arches from the deck down into the valley (evenodd fill: the
  * openings are holes in one big shape).
  * @param {CanvasRenderingContext2D} c
@@ -344,7 +354,7 @@ function drawValley(c, v, f, kind) {
 function drawArches(c, x0, x1, depth, cover) {
   const deckTop = TRACK_Y + 6;
   const w = x1 - x0;
-  const spans = Math.max(3, Math.round(w / 120));
+  const spans = archCount(w);
   const span = w / spans;
   const pier = Math.min(26, span * 0.24);
   const bottom = NEAR_GROUND_Y + depth + 30;
