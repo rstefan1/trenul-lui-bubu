@@ -65,6 +65,12 @@ do not save anything):
 They can be combined: `?from=ilva-mica&speed=3` shows the viaducts quickly.
 Station ids are listed in `route-01/js/route-data.js`.
 
+The home page shows a landscape with a train in the colours of the season,
+chosen from the calendar (`home/season.js`). To see another season, add
+`?anotimp=iarna`, `?anotimp=primavara`, `?anotimp=vara` or `?anotimp=toamna`
+to the address of the home page (only summer is drawn for now; the other
+seasons show summer).
+
 ## Code overview
 
 ```

@@ -13,13 +13,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="shared/css/tokens.css">
   <link rel="stylesheet" href="home/home.css">
+  <!-- the season (from the calendar, or ?anotimp=vara): marks <html> before the page is drawn -->
+  <script src="home/season.js"></script>
 </head>
 <body>
-  <header class="home-head">
-    <img class="home-bubu" src="shared/assets/bubu.webp" alt="" width="120" height="120">
-    <div>
-      <h1 class="home-title">Trenul lui Bubu</h1>
-      <p class="home-subtitle">Alege o călătorie!</p>
+  <header class="home-hero">
+    <!-- the season's landscape is drawn here by home/home.js (home/landscape.js) -->
+    <div class="home-scene" id="scene"></div>
+    <div class="home-head">
+      <img class="home-bubu" src="shared/assets/bubu.webp" alt="" width="120" height="120">
+      <div class="home-sign">
+        <h1 class="home-title">Trenul lui Bubu</h1>
+        <p class="home-subtitle">Alege o călătorie!</p>
+      </div>
     </div>
   </header>
 

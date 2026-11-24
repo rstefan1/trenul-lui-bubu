@@ -2,9 +2,12 @@
  * @file The home page: the list of journeys, each with how far the player
  * got (read from what the journey saved in this browser). When there are
  * journeys of more than one season, the child can show one season only.
+ * Above them, the big landscape of the season of the year (home/season.js
+ * chose it, home/landscape.js draws it).
  */
 
 import { el } from '../shared/js/ui/dom.js';
+import { landscape } from './landscape.js';
 import { ROUTES } from './routes.js';
 
 /**
@@ -158,3 +161,7 @@ const list = /** @type {HTMLElement} */ (document.getElementById('routes'));
 list.replaceChildren(...[...ROUTES].sort((a, b) => a.number - b.number).map(routeCard));
 const filter = seasonFilter(list);
 if (filter) list.before(filter);
+
+const scenery = /** @type {HTMLElement} */ (document.getElementById('scene'));
+// the SVG is built from fixed values (no text from outside goes into it)
+scenery.innerHTML = landscape(/** @type {Season} */ (document.documentElement.dataset.season || 'summer'));
