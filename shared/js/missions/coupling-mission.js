@@ -25,6 +25,7 @@ import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillCircle, fillRoundRect } from '../gfx/shapes.js';
 import { CAR_PAINTERS, WHEEL_R } from '../train/cars.js';
 import { FREIGHT_TRAIN } from '../train/specs.js';
+import { TRACK_Y } from '../world/track.js';
 import { el } from '../ui/dom.js';
 import { leave } from '../ui/panel.js';
 import { Mission } from './mission.js';
@@ -50,6 +51,8 @@ const MARK_AFTER = 60;
  * this much beyond the point where Bubu's stops.
  */
 const BUFFERS = 24;
+/** Room left free under the heads-up display for the announcements (stage units). */
+const ANNOUNCE_ROOM = 190;
 
 export class CouplingMission extends Mission {
   /**
@@ -170,8 +173,10 @@ export class CouplingMission extends Mission {
     const stage = this.ctx.stage;
     const w = Math.min(CARD_W, stage.viewRight - stage.viewLeft - 40);
     const x = (stage.viewLeft + stage.viewRight) / 2 - w / 2;
-    const y = stage.toStage(0, this.ctx.hud.hudBottom).y + 30;
-    return { x, y, w, rail: y + CARD_H - 50, k: w / CARD_W };
+    const k = w / CARD_W;
+    // below the announcements (they tell how the coupling went), but above the train's rail
+    const y = Math.min(stage.toStage(0, this.ctx.hud.hudBottom).y + ANNOUNCE_ROOM, TRACK_Y - 30 - CARD_H * k);
+    return { x, y, w, rail: y + (CARD_H - 50) * k, k };
   }
 
   /**
