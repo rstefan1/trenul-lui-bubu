@@ -110,8 +110,7 @@ body {
 .season-btn[aria-pressed="true"] { background: var(--gold); color: var(--ink); }
 
 /* ---------- Journeys ---------- */
-/* tall enough to show the scenery behind the cards */
-.home-main { position: relative; max-width: 1100px; min-height: clamp(200px, 34vw, 460px); margin: 0 auto; padding: 12px 16px 0; }
+.home-main { position: relative; max-width: 1100px; margin: 0 auto; padding: 12px 16px 24px; }
 /* the scenery behind the cards, across the whole width of the page */
 .home-ground {
   position: absolute;
@@ -122,6 +121,10 @@ body {
   pointer-events: none;
 }
 .home-ground svg { display: block; width: 100%; height: 100%; }
+/* narrow screens: the card fills the width, the scenery would only peek out at the edges */
+@media (max-width: 640px) {
+  .home-ground { display: none; }
+}
 .home-main > :not(.home-ground) { position: relative; }
 
 .route-list {
@@ -279,10 +282,6 @@ body {
 .season--spring { --season: #c2477a; }
 .season--summer { --season: #c27a00; }
 .season--autumn { --season: #b5451b; }
-
-/* ---------- The meadow under the journeys ---------- */
-.home-meadow { height: clamp(140px, 20vw, 240px); }
-.home-meadow svg { display: block; width: 100%; height: 100%; }
 
 /* ---------- "Vezi toate călătoriile ↓" ----------
    shown by home/home.js only while the page is at the top and a journey is

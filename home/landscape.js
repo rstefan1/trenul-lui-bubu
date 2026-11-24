@@ -13,8 +13,8 @@
  * the middle and in the lower part; the two sides (x < 0, x > 1600) are
  * mostly meadow, forest and mountains, for wide screens.
  *
- * The meadow and the scenery under the landscape (meadow(), ground()) are
- * 2000 wide (x from -200 to 1800).
+ * The scenery under the landscape (ground()) is 2000 wide (x from -200 to
+ * 1800).
  */
 
 /** @typedef {'winter' | 'spring' | 'summer' | 'autumn'} Season */
@@ -23,7 +23,7 @@ const H = 1000;
 /** the landscape, much wider than its middle (0–1600) at both sides */
 const LX0 = -600;
 const LX1 = 2200;
-/** the pictures under the landscape */
+/** the scenery under the landscape */
 const X0 = -200;
 const X1 = 1800;
 /** the top of the rails */
@@ -419,42 +419,19 @@ const THINGS = {
 };
 
 /**
- * The meadow under the journeys, continuing the landscape (2000 × 300, x
- * from -200 to 1800, cut like the landscape: the middle is always seen).
- * @type {Record<string, (p: Palette) => string>}
- */
-const MEADOW = {
-  summer: p => {
-    const rnd = seeded(23);
-    const hill = (/** @type {number} */ x) => 160 + 26 * Math.sin(x / 240 + 1) + 14 * Math.sin(x / 97);
-    let out = `<path d="${ridge(hill, 300)}" fill="${p.hills[0]}"/>`;
-    // a few houses and trees on the hill, at both sides
-    const roofs = ['#b5452b', '#c0612b'];
-    for (const [i, x] of [220, 1380].entries()) {
-      out += tree(x - 50, hill(x - 50) + 26, 76, p) + house(x, hill(x) + 28, 1.05, roofs[i], '#fdf8ee');
-    }
-    out += tree(800, hill(800) + 30, 80, p);
-    // the meadow in front, the colour of the page under it
-    out += `<path d="${ridge(x => 258 + 6 * Math.sin(x / 150), 300)}" fill="${p.meadowDark}"/>`;
-    out += flowers(rnd, 14, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 262, 30);
-    return out;
-  },
-};
-
-/**
  * The scenery behind the journeys' cards (2000 × 700, x from -200 to 1800),
- * so the meadow is not empty: the cards stand in the middle, the village
- * and a few things are at the sides. On wide screens the top and the bottom
- * are cut, so everything stands between y 150 and 580.
+ * so the meadow is not empty: the cards stand in the middle, a few things
+ * at the sides. The picture is as tall as the cards, so it is cut from the
+ * top: everything stands low, on y 600–720.
  * @type {Record<string, (p: Palette) => string>}
  */
 const GROUND = {
   summer: p => {
     const rnd = seeded(41);
-    let out = flowers(rnd, 40, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 60, 560);
+    let out = flowers(rnd, 30, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 480, 210);
     // at the left a house with its tree, at the right a haystack with two sunflowers
-    out += tree(-120, 360, 150, p) + house(10, 370, 1.5, '#b5452b', '#fdf8ee');
-    out += haystack(1450, 440, 1.1) + sunflower(1580, 580, 190, -6) + sunflower(1625, 580, 160, 6);
+    out += tree(-120, 660, 150, p) + house(10, 670, 1.5, '#b5452b', '#fdf8ee');
+    out += haystack(1450, 670, 1.1) + sunflower(1580, 720, 190, -6) + sunflower(1625, 720, 160, 6);
     return out;
   },
 };
@@ -466,17 +443,7 @@ const GROUND = {
 export function ground(season) {
   const p = PALETTES[season] ?? PALETTES.summer;
   const draw = GROUND[season] ?? GROUND.summer;
-  return `<svg viewBox="${X0} 0 ${X1 - X0} 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">${draw(p)}</svg>`;
-}
-
-/**
- * The meadow under the journeys, as SVG markup (fixed values only).
- * @param {Season} season
- */
-export function meadow(season) {
-  const p = PALETTES[season] ?? PALETTES.summer;
-  const draw = MEADOW[season] ?? MEADOW.summer;
-  return `<svg viewBox="${X0} 0 ${X1 - X0} 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">${draw(p)}</svg>`;
+  return `<svg viewBox="${X0} 0 ${X1 - X0} 700" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">${draw(p)}</svg>`;
 }
 
 /* ---------------------------------------------------------------------------
