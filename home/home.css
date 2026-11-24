@@ -151,7 +151,8 @@ body {
    height when the strip is tall for its width. */
 @container hero (min-aspect-ratio: 2/1) {
   .land-train { transform: none; }
-  .home-head { position: absolute; right: max(5cqw, 16px); bottom: max(5.57cqw, 16.4cqh); padding: 0; }
+  /* as far from the edge as the sign of lumea-lui-bubu (9% of the width) */
+  .home-head { position: absolute; right: 9cqw; bottom: max(5.57cqw, 16.4cqh); padding: 0; }
   .home-sign { margin: 0 0 var(--post); }
 }
 
@@ -394,6 +395,7 @@ body {
 @media (max-height: 520px) and (orientation: landscape) {
   .home-hero { height: 64svh; }
   .home-sign { --post: 22px; }
+  .home-head { right: 6vw; }   /* like the sign of lumea-lui-bubu on sideways phones */
   .home-bubu { width: 46px; top: -32px; right: -24px; }
   .home-title { font-size: 26px; }
   .home-subtitle { font-size: 14px; }
