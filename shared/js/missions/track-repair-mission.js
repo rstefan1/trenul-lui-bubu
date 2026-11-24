@@ -11,6 +11,9 @@
  *      touches the empty place and a new sleeper slides in, then touches
  *      the spikes that hold the rail to it, one hammer stroke each.
  *
+ * Bubu gets off her train at each place and does the work herself: she
+ * pushes the stones away and hammers the spikes, then climbs back in.
+ *
  * A note shows what to touch at every step. Places cleared within a few
  * seconds of the stop count for the stars.
  *
@@ -24,7 +27,8 @@ import { drawTouchNote } from '../gfx/hints.js';
 import { Particles } from '../gfx/particles.js';
 import { fillRoundRect } from '../gfx/shapes.js';
 import { TRACK_Y } from '../world/track.js';
-import { LineStopMission, drawHammer } from './line-stop-mission.js';
+import { BubuWorker } from './bubu-worker.js';
+import { LineStopMission } from './line-stop-mission.js';
 
 /**
  * @typedef {import('./mission.js').MissionConfig & {stones: number, spikes: number, fact: string}} TrackConfig
@@ -52,7 +56,7 @@ export class TrackRepairMission extends LineStopMission {
     this.config = config;
     this.particles = new Particles();
     this.quick = 0;
-    this.stroke = -1;
+    this.worker = new BubuWorker(ctx);
   }
 
   /** @param {(i: number) => number} at */
@@ -65,8 +69,11 @@ export class TrackRepairMission extends LineStopMission {
     return [this.place(at(0), STONES_W, { kind: 'stones', stones }), this.place(at(1), SLEEPER_W, { kind: 'sleeper', sleeper })];
   }
 
-  onReached() {
+  /** @param {import('./line-stop-mission.js').LinePlace} p */
+  onReached(p) {
     this.ctx.hud.setCounter('⭐', this.quick, this.places.length);
+    // Bubu gets off and walks to the place
+    this.worker?.getOff(p.worldX - 40);
   }
 
   /**
@@ -103,6 +110,8 @@ export class TrackRepairMission extends LineStopMission {
         }
       }
       if (!best) return;
+      this.worker?.goTo(place.worldX + best.x - best.r - 34);
+      this.worker?.work('push');
       best.gone = true;
       best.t = 0;
       this.sound('thud', x0 + best.x);
@@ -115,6 +124,8 @@ export class TrackRepairMission extends LineStopMission {
     /** @type {Sleeper} */
     const s = place.sleeper;
     const cx = x0 + SLEEPER_W / 2;
+    this.worker?.goTo(place.worldX + SLEEPER_W / 2 - 44);
+    this.worker?.work(s.step === 'spikes' ? 'hammer' : 'push');
     if (s.step === 'broken') {
       s.step = 'empty';
       s.t = 0;
@@ -126,7 +137,6 @@ export class TrackRepairMission extends LineStopMission {
       this.sound('whoosh', cx);
     } else if (s.step === 'spikes') {
       s.spikes += 1;
-      this.stroke = this.time;
       this.sound('thud', cx);
       this.particles.burst(cx + (s.spikes % 2 ? -22 : 22), y + 2, ['#c9ced6', '#ffffff'], 5, 110);
       if (s.spikes >= this.config.spikes) this.cleared(place, 'Linia e reparată!', this.config.fact);
@@ -249,16 +259,12 @@ export class TrackRepairMission extends LineStopMission {
       const stage = this.ctx.stage;
       if (place.kind === 'stones') {
         const s = place.stones.find((/** @type {Stone} */ x) => !x.gone);
-        if (s) drawTouchNote(c, stage, x0 + s.x, y - s.r * 1.8 - 6, 'Dă piatra la o parte!');
+        if (s) drawTouchNote(c, stage, x0 + s.x, y - Math.max(s.r * 1.8 + 6, 96), 'Dă piatra la o parte!');
       } else {
         const cx = x0 + SLEEPER_W / 2;
         const step = place.sleeper.step;
-        if (step === 'spikes') {
-          const swing = this.time - this.stroke < 0.25 ? 0.2 : -0.5 + Math.sin(this.time * 5) * 0.15;
-          drawHammer(c, cx + 30, y - 46, swing);
-        }
         const text = step === 'broken' ? 'Scoate traversa ruptă!' : step === 'empty' ? 'Pune o traversă nouă!' : step === 'spikes' ? 'Bate crampoanele! 🔨' : '';
-        if (text) drawTouchNote(c, stage, cx, y - 30, text);
+        if (text) drawTouchNote(c, stage, cx, y - 96, text);
       }
     }
     this.particles.draw(c);
