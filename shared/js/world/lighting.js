@@ -7,8 +7,10 @@
  * the sky gradient, the colour washes laid over the landscape, the stars,
  * the lit windows and the positions of the sun and the moon.
  *
- * Times are minutes since midnight of the first day (see clock.js), so the
- * same table works for any journey that crosses the same hours.
+ * Times are minutes since midnight of the first day (see clock.js). Every
+ * journey picks one of the skies below, for the hours it crosses: the night
+ * of Christmas (an afternoon, the whole night and the next morning) or a
+ * winter day (from sunrise to the late afternoon).
  */
 
 import { hexToRgb, mixRgb, css } from '../gfx/color.js';
@@ -26,8 +28,8 @@ import { DAY } from './clock.js';
  * @property {number} night    0 = day … 1 = full night (stars, lit windows)
  */
 
-/** @type {LightKey[]} */
-const KEYS = [
+/** @type {LightKey[]} An afternoon, the night and the next morning. */
+const NIGHT_KEYS = [
   { t: 13 * 60, top: '#4f9be6', mid: '#8cc4f2', bottom: '#d8efff', wash: '#ffffff', washAlpha: 0, night: 0 },
   { t: 15 * 60 + 30, top: '#5a98df', mid: '#a5c8ee', bottom: '#ffe6bf', wash: '#ffbe78', washAlpha: 0.07, night: 0 },
   { t: 16 * 60 + 25, top: '#4b62b0', mid: '#ea8c7a', bottom: '#ffc46b', wash: '#ff8a4a', washAlpha: 0.17, night: 0.1 },
@@ -39,7 +41,23 @@ const KEYS = [
   { t: DAY + 9 * 60, top: '#4a98e8', mid: '#9fd0f5', bottom: '#e6f5ff', wash: '#ffffff', washAlpha: 0, night: 0 },
 ];
 
-const PARSED = KEYS.map(k => ({
+/**
+ * @type {LightKey[]} A short winter day: the train leaves at sunrise (pink
+ * light), the morning turns blue, the afternoon golden, and the journey ends
+ * just before sunset, still in daylight.
+ */
+const DAY_KEYS = [
+  { t: 6 * 60 + 40, top: '#1a2456', mid: '#7a4f8f', bottom: '#f2a07a', wash: '#503278', washAlpha: 0.33, night: 0.6 },
+  { t: 7 * 60 + 50, top: '#5d7fc8', mid: '#f3b49a', bottom: '#ffd98a', wash: '#ff9a5a', washAlpha: 0.13, night: 0.04 },
+  { t: 9 * 60 + 15, top: '#4a98e8', mid: '#9fd0f5', bottom: '#e6f5ff', wash: '#ffffff', washAlpha: 0, night: 0 },
+  { t: 14 * 60, top: '#4f9be6', mid: '#8cc4f2', bottom: '#d8efff', wash: '#ffffff', washAlpha: 0, night: 0 },
+  { t: 15 * 60, top: '#5a98df', mid: '#a5c8ee', bottom: '#ffe6bf', wash: '#ffbe78', washAlpha: 0.07, night: 0 },
+  { t: 16 * 60 + 15, top: '#5577c4', mid: '#e8a88a', bottom: '#ffcf7a', wash: '#ff9a55', washAlpha: 0.13, night: 0.03 },
+  { t: 16 * 60 + 55, top: '#25306e', mid: '#7b5a9e', bottom: '#f08a78', wash: '#46328a', washAlpha: 0.35, night: 0.6 },
+];
+
+/** @param {LightKey[]} keys */
+const parse = keys => keys.map(k => ({
   ...k,
   topRgb: hexToRgb(k.top),
   midRgb: hexToRgb(k.mid),
@@ -47,9 +65,62 @@ const PARSED = KEYS.map(k => ({
   washRgb: hexToRgb(k.wash),
 }));
 
-/** Sunset and sunrise (minutes), used to place the sun on the horizon. */
+/** Horizon line of the sun (stage units). */
+const HORIZON = 640;
+
+/** Sunset and sunrise of the Christmas night (minutes), used to place the sun on the horizon. */
 const SUNSET = 16 * 60 + 40;
 const SUNRISE = DAY + 7 * 60 + 55;
+
+/**
+ * Where the sun is on the Christmas night journey. The train travels
+ * towards the right (east), so the sun sets on the left, behind the train,
+ * and rises on the right, ahead of it.
+ * @param {number} minutes
+ * @returns {{x: number, y: number, alpha: number}}
+ */
+function nightSun(minutes) {
+  if (minutes < DAY) {
+    // afternoon: from high in the sky down to the horizon at sunset
+    const k = clamp((SUNSET - minutes) / 240, -0.2, 1);   // 1 = four hours before sunset
+    return { x: lerp(0.18, 0.42, k), y: HORIZON - 360 * Math.sin((k * Math.PI) / 2.2), alpha: k > -0.15 ? 1 : 0 };
+  }
+  // morning: from below the horizon up into the sky
+  const k = clamp((minutes - SUNRISE) / 150, -0.2, 1);
+  return { x: lerp(0.86, 0.66, Math.max(0, k)), y: HORIZON - 330 * Math.sin((Math.max(-0.1, k) * Math.PI) / 2.2), alpha: k > -0.15 ? 1 : 0 };
+}
+
+/** Sunrise and sunset of the winter day (a little earlier and later than on the calendar, so the
+ *  journey starts with the sun just up and ends with it still above the mountains). */
+const DAY_SUNRISE = 7 * 60 + 40;
+const DAY_SUNSET = 16 * 60 + 35;
+
+/**
+ * Where the sun is on the winter day journey. The train travels towards the
+ * right (west), so the sun rises on the left, behind the train, crosses the
+ * sky low (it is winter) and sets on the right, ahead of it.
+ * @param {number} minutes
+ * @returns {{x: number, y: number, alpha: number}}
+ */
+function daySun(minutes) {
+  const k = (minutes - DAY_SUNRISE) / (DAY_SUNSET - DAY_SUNRISE);
+  const u = clamp(k, -0.05, 1.05);
+  return { x: lerp(0.1, 0.9, u), y: HORIZON - 320 * Math.sin(clamp(u, 0, 1) * Math.PI), alpha: k > -0.04 && k < 1.04 ? 1 : 0 };
+}
+
+/**
+ * @typedef {object} SkyPlan
+ * @property {ReturnType<typeof parse>} keys
+ * @property {(minutes: number) => {x: number, y: number, alpha: number}} sun
+ */
+
+/** @typedef {'night' | 'day'} SkyId */
+
+/** @type {Readonly<Record<SkyId, SkyPlan>>} */
+const SKIES = Object.freeze({
+  night: { keys: parse(NIGHT_KEYS), sun: nightSun },
+  day: { keys: parse(DAY_KEYS), sun: daySun },
+});
 
 /**
  * @typedef {object} Light
@@ -66,13 +137,15 @@ const SUNRISE = DAY + 7 * 60 + 55;
 /**
  * The light at a given moment.
  * @param {number} minutes  since midnight of the first day
+ * @param {SkyId} [sky='night']  the sky of the journey
  * @returns {Light}
  */
-export function lightAt(minutes) {
+export function lightAt(minutes, sky = 'night') {
+  const { keys, sun } = SKIES[sky];
   let i = 1;
-  while (i < PARSED.length - 1 && PARSED[i].t < minutes) i++;
-  const a = PARSED[i - 1];
-  const b = PARSED[i];
+  while (i < keys.length - 1 && keys[i].t < minutes) i++;
+  const a = keys[i - 1];
+  const b = keys[i];
   const t = smoothstep(0, 1, progress(a.t, b.t, minutes));
   const washRgb = mixRgb(a.washRgb, b.washRgb, t);
   const night = lerp(a.night, b.night, t);
@@ -83,25 +156,7 @@ export function lightAt(minutes) {
     wash: { color: css(washRgb), alpha: lerp(a.washAlpha, b.washAlpha, t), rgb: washRgb },
     washRgb,
     night,
-    sun: sunAt(minutes),
+    sun: sun(minutes),
     moon: { x: 0.8, y: 150, alpha: smoothstep(0.35, 0.9, night) },
   };
-}
-
-/**
- * Where the sun is. The train travels towards the right (east), so the sun
- * sets on the left, behind the train, and rises on the right, ahead of it.
- * @param {number} minutes
- * @returns {{x: number, y: number, alpha: number}}
- */
-function sunAt(minutes) {
-  const horizon = 640;
-  if (minutes < DAY) {
-    // afternoon: from high in the sky down to the horizon at sunset
-    const k = clamp((SUNSET - minutes) / 240, -0.2, 1);   // 1 = four hours before sunset
-    return { x: lerp(0.18, 0.42, k), y: horizon - 360 * Math.sin((k * Math.PI) / 2.2), alpha: k > -0.15 ? 1 : 0 };
-  }
-  // morning: from below the horizon up into the sky
-  const k = clamp((minutes - SUNRISE) / 150, -0.2, 1);
-  return { x: lerp(0.86, 0.66, Math.max(0, k)), y: horizon - 330 * Math.sin((Math.max(-0.1, k) * Math.PI) / 2.2), alpha: k > -0.15 ? 1 : 0 };
 }

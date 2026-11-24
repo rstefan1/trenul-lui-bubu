@@ -52,7 +52,7 @@ export class WorldView {
     /** @type {ReadonlySet<string>} */
     this.flags = new Set();
     /** The light of the last drawn frame (missions use it to match the world). */
-    this.light = lightAt(journey.clock);
+    this.light = lightAt(journey.clock, route.sky);
     /** Snow cover shown on screen (follows the journey smoothly). */
     this.cover = journey.weather.cover;
   }
@@ -150,7 +150,7 @@ export class WorldView {
   /** @param {CanvasRenderingContext2D} c  in stage units */
   draw(c) {
     const j = this.journey;
-    const light = lightAt(j.clock);
+    const light = lightAt(j.clock, j.route.sky);
     this.light = light;
     const stage = this.stage;
     this.compositor.resize(stage.canvas);

@@ -44,6 +44,7 @@ import { MotionPlan, tripLength } from './motion.js';
  *
  * @typedef {object} RouteData
  * @property {number} firstDay       day of month of the first day
+ * @property {import('../world/lighting.js').SkyId} [sky]  the hours the journey crosses (default: "night")
  * @property {StationData[]} stations
  * @property {SegmentData[]} segments  one fewer than stations
  */
@@ -96,6 +97,8 @@ export class Route {
       throw new Error('A route needs exactly one segment between every two stations');
     }
     this.firstDay = data.firstDay;
+    /** @type {import('../world/lighting.js').SkyId} */
+    this.sky = data.sky ?? 'night';
 
     /** @type {Station[]} */
     this.stations = data.stations.map((s, index) => ({
