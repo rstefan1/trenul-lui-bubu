@@ -30,6 +30,8 @@ import { Mission, starsForMistakes } from './mission.js';
 
 /** Seconds without a choice before a good log pulses. */
 const HINT_AFTER = 5;
+/** Seconds the full wagon's sum stays in the panel before the fact is told. */
+const SUM_SECONDS = 1.6;
 /** Colours of the logs on the ruler, one after the other. */
 const WOOD = ['#9c6a3a', '#b07a45', '#8d5a2b', '#a8743f', '#7d4f25'];
 
@@ -47,6 +49,8 @@ export class LogsMission extends Mission {
     this.time = 0;
     this.idleSince = 0;
     this.doneAt = -1;
+    /** The fact has been told (after the wagon is full). */
+    this.told = false;
     /** @type {HTMLButtonElement[]} */
     this.buttons = [];
     /** @type {Record<string, HTMLElement>} */
@@ -162,7 +166,6 @@ export class LogsMission extends Mission {
   finishWagon() {
     this.doneAt = this.time;
     this.ctx.state.setFlag(this.config.flag);
-    this.ctx.hud.announce('Vagonul e plin!', this.config.fact, 'Misiune', 4);
   }
 
   /** @param {number} dt */
@@ -176,7 +179,14 @@ export class LogsMission extends Mission {
         && (len === room || this.canFill(room - len, [...this.placed, i])));
       this.buttons.forEach((b, i) => b.classList.toggle('is-hint', hint && i === good));
     }
-    if (this.doneAt >= 0 && this.time - this.doneAt > 2.6) {
+    // a moment to see the sum, then the panel closes (the logs are seen on the
+    // wagon) and the fact is told on its own, never over the panel
+    if (this.doneAt >= 0 && !this.told && this.time - this.doneAt > SUM_SECONDS) {
+      this.told = true;
+      showPanel(this.ctx.panel, null);
+      this.ctx.hud.announce('Vagonul e plin!', this.config.fact, 'Misiune', 4);
+    }
+    if (this.doneAt >= 0 && this.time - this.doneAt > SUM_SECONDS + 2.6) {
       this.complete(starsForMistakes(this.mistakes, 2, 0), this.mistakes === 0
         ? 'Perfect! Buștenii umplu vagonul exact, fără niciun loc gol.'
         : 'Bravo! Vagonul cu lemne de foc e plin.');
