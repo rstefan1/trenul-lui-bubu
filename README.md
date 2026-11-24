@@ -70,10 +70,11 @@ folder `trenul-lui-bubu/`: the “← Lumea lui Bubu” button of the home page
 goes back to the village (`../`).
 
 The home page shows a landscape with a train in the colours of the season
-(winter, spring, summer or autumn), chosen from the calendar
-(`home/season.js`). To see another season, add `?anotimp=iarna`,
-`?anotimp=primavara`, `?anotimp=vara` or `?anotimp=toamna` to the address
-of the home page.
+(winter, spring, summer or autumn), chosen from the calendar like the modes
+of lumea-lui-bubu (`home/season.js`, where `MODE` can also keep one season
+on). To see another season, add it to the address of the home page:
+`?mode=iarna`, `?mode=primavara`, `?mode=vara` or `?mode=toamna` (the
+English names work too, e.g. `?mode=winter`).
 
 ## Code overview
 
