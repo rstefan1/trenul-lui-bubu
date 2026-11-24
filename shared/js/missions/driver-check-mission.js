@@ -214,6 +214,24 @@ export class DriverCheckMission extends Mission {
     document.body.append(this.chip);
     this.markRows();
     this.walkToCurrent();
+    this.zoomOnLoco();
+  }
+
+  /**
+   * The camera moves in on the locomotive and the first wagon, so that the
+   * parts to check are seen (and touched) easily; the checklist stays on the
+   * left, over the wagon's far end.
+   * @private
+   */
+  zoomOnLoco() {
+    const w = this.ctx.world;
+    const loco = w.train.cars[0];
+    const wagon = w.train.cars.find(car => car.spec.kind === 'platform') ?? loco;
+    const right = w.trainToStage({ x: loco.left + loco.spec.length, y: 0 }).x;
+    const left = w.trainToStage({ x: wagon.left, y: 0 }).x;
+    const rail = w.trainToStage({ x: 0, y: 0 }).y;
+    // room above for the notes, below for Bubu, and on the left for the checklist
+    w.zoomOn({ left: left - 40, right: right + 220, top: rail - 300, bottom: rail + 110 });
   }
 
   /** @private Bubu walks to the part to find now and waits next to it. */
@@ -443,6 +461,7 @@ export class DriverCheckMission extends Mission {
 
   dispose() {
     this.setPanel(null);
+    this.ctx.world.zoomOn(null);
     leave(this.chip);
     this.ctx.hud.hideAnnouncement();
   }
