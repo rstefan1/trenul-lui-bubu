@@ -8,6 +8,9 @@
  * clumps and the red lamp shows. A moment later the signal turns green, as
  * the station ahead lets the train come, and the train goes on.
  *
+ * Bubu gets off her train, climbs a ladder leaning on the signal's post and
+ * brushes the snow off while the child rubs; then she climbs back in.
+ *
  * A note shows the gesture. A signal cleaned within a few seconds of the
  * stop earns a star.
  *
@@ -21,6 +24,7 @@ import { drawTouchNote } from '../gfx/hints.js';
 import { Particles } from '../gfx/particles.js';
 import { fillCircle, fillRoundRect, glow } from '../gfx/shapes.js';
 import { TRACK_Y } from '../world/track.js';
+import { BubuWorker } from './bubu-worker.js';
 import { LineStopMission } from './line-stop-mission.js';
 
 /**
@@ -38,6 +42,9 @@ const HEAD_H = 104;
 /** Pointer travel that rubs all the snow off, and how much a single tap removes. */
 const RUB = 1400;
 const TAP = 0.18;
+/** The ladder Bubu climbs: how far left of the post it stands, and where her feet are on it. */
+const LADDER_DX = 46;
+const LADDER_FEET = HEAD_Y + 96;
 /** Seconds the red lamp shows before the signal turns green. */
 const RED_FOR = 1.1;
 /** A signal cleaned within this many seconds of the stop earns a star. */
@@ -55,6 +62,7 @@ export class SnowySignalMission extends LineStopMission {
     this.config = config;
     this.particles = new Particles();
     this.quick = 0;
+    this.worker = new BubuWorker(ctx);
     /** @type {number | null} the last pointer position while rubbing */
     this.lastX = null;
     this.lastY = 0;
@@ -71,6 +79,14 @@ export class SnowySignalMission extends LineStopMission {
     super.start(hints);
     window.addEventListener('keydown', this.onKey);
     this.ctx.hud.setCounter('⭐', 0, this.config.signals);
+  }
+
+  /**
+   * The train stopped before a signal: Bubu gets off and climbs the ladder.
+   * @param {import('./line-stop-mission.js').LinePlace} p
+   */
+  onReached(p) {
+    this.worker?.getOff(p.worldX + SIGNAL_W / 2 - LADDER_DX, LADDER_FEET);
   }
 
   /** @param {(i: number) => number} at */
@@ -121,6 +137,8 @@ export class SnowySignalMission extends LineStopMission {
     const before = p.snow;
     p.snow = clamp(p.snow - travel / RUB, 0, 1);
     const h = this.head(p);
+    // Bubu sweeps with her brush
+    if (this.worker && this.worker.workT > 0.35) this.worker.work('brush');
     // clumps of snow fall off now and then
     if (Math.floor(before * 8) !== Math.floor(p.snow * 8)) {
       this.particles.burst(h.x + (Math.random() - 0.5) * HEAD_W, h.y + (Math.random() - 0.5) * HEAD_H * 0.6, SNOW, 8, 140);
@@ -190,6 +208,8 @@ export class SnowySignalMission extends LineStopMission {
     // the post, standing in the snow just in front of the line
     fillRoundRect(c, x - 6, top + 20, 12, TRACK_Y + 40 - top - 20, 4, '#4a5160');
     fillRoundRect(c, x - 18, TRACK_Y + 34, 36, 10, 4, '#3b4250');
+    // the ladder leaning on the post, while Bubu works on it
+    if (this.stoppedAt === p && this.worker && !this.worker.aboard) drawLadder(c, x - LADDER_DX - 18, TRACK_Y + 44, x - 8, HEAD_Y + 30);
     // the head, with its red lamp on top and the green one below
     fillRoundRect(c, x - HEAD_W / 2, top, HEAD_W, HEAD_H, 14, '#1d1d24');
     const cleaned = p.clearAt >= 0;
@@ -236,4 +256,24 @@ export class SnowySignalMission extends LineStopMission {
     super.dispose();
     window.removeEventListener('keydown', this.onKey);
   }
+}
+
+/**
+ * A wooden ladder from the snow (x0, y0) up against the post (x1, y1).
+ * @param {CanvasRenderingContext2D} c
+ * @param {number} x0
+ * @param {number} y0
+ * @param {number} x1
+ * @param {number} y1
+ */
+function drawLadder(c, x0, y0, x1, y1) {
+  const len = Math.hypot(x1 - x0, y1 - y0);
+  c.save();
+  c.translate(x0, y0);
+  c.rotate(Math.atan2(y1 - y0, x1 - x0));
+  c.fillStyle = '#9c6a3a';
+  c.fillRect(0, -16, len, 6);
+  c.fillRect(0, 10, len, 6);
+  for (let k = 18; k < len - 6; k += 26) c.fillRect(k, -12, 6, 24);
+  c.restore();
 }
