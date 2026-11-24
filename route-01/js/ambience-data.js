@@ -67,8 +67,9 @@ export const WINTER_PLACES = {
 
 /**
  * The landscape heard on the way, softly under the train: what it passes by
- * now and then (a village church's bell, crows over the fields, an owl in
- * the night forest, a twig snapping) and, along a river, its water.
+ * now and then (crows over the fields, an owl in the night forest, a twig
+ * snapping) and, along a river, its water. No church bells: the only bell
+ * of the journey is the one the child rings at Putna.
  *
  * Segments along a river (by index in the route): Arad → Deva (the Mureș),
  * Cluj-Napoca → Dej (the Someș), Câmpulung → Gura Humorului (the Moldova).
@@ -76,22 +77,20 @@ export const WINTER_PLACES = {
 const RIVER_SEGMENTS = new Set([1, 4, 9]);
 /** @type {import('../../shared/js/audio/ambience.js').AmbienceLayer} */
 const RIVER = { sound: 'river', level: 0.45 };
-/** @type {import('../../shared/js/audio/ambience.js').AmbienceEvent} */
-const BELL = { sound: 'passingBell', first: [6, 14], every: [30, 50], spread: 0 };
 
 /**
  * What can be heard in each kind of landscape, by day and by night.
  * @type {Record<string, {day: import('../../shared/js/audio/ambience.js').AmbienceEvent[], night: import('../../shared/js/audio/ambience.js').AmbienceEvent[]}>}
  */
 const TRAVEL_EVENTS = {
-  city: { day: [BELL], night: [BELL] },
+  city: { day: [], night: [] },
   plain: {
-    day: [{ sound: 'crow', first: [4, 9], every: [14, 28], spread: 0.8 }, { ...BELL, first: [15, 25], every: [45, 70] }],
-    night: [{ ...BELL, first: [15, 25], every: [45, 70] }],
+    day: [{ sound: 'crow', first: [4, 9], every: [14, 28], spread: 0.8 }],
+    night: [],
   },
   hills: {
-    day: [{ sound: 'crow', first: [6, 12], every: [18, 32], spread: 0.8 }, { ...BELL, first: [18, 30], every: [50, 80] }],
-    night: [{ sound: 'owl', first: [8, 16], every: [25, 45], spread: 0.8 }, { ...BELL, first: [20, 30], every: [50, 80] }],
+    day: [{ sound: 'crow', first: [6, 12], every: [18, 32], spread: 0.8 }],
+    night: [{ sound: 'owl', first: [8, 16], every: [25, 45], spread: 0.8 }],
   },
   forest: {
     day: [{ sound: 'twig', first: [5, 10], every: [9, 18], spread: 0.8 }, { sound: 'crow', first: [10, 18], every: [25, 40], spread: 0.8 }],

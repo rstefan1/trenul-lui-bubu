@@ -70,7 +70,7 @@ const MIX = {
   // the sounds of places (heard now and then, far away, under everything)
   birdsong: -16, sleigh: -11,
   // the sounds of the landscape on the way (far away, under the train)
-  passingBell: -12, owl: -13, crow: -16, twig: -17,
+  owl: -13, crow: -16, twig: -17,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
 const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, star: 0.5 };
@@ -366,31 +366,6 @@ const SOUNDS = {
         noisePuff(ctx, pass, { t: s, length: 0.09, level: 0.06, type: 'lowpass', from: 500, to: 250, attack: 0.004 });
       }
     }
-  },
-  /**
-   * The bell of a village church the train goes past: it rings three times,
-   * coming from the right (ahead), passing, and going away to the left.
-   */
-  passingBell(ctx, out, t) {
-    const length = 7;
-    const far = ctx.createBiquadFilter();
-    far.type = 'lowpass';
-    far.frequency.value = 1800;
-    const pass = ctx.createGain();
-    pass.gain.setValueAtTime(0.5, t);
-    pass.gain.linearRampToValueAtTime(1, t + 2.5);
-    pass.gain.linearRampToValueAtTime(0.35, t + length);
-    far.connect(pass);
-    let last = pass;
-    if (ctx.createStereoPanner) {
-      const pan = ctx.createStereoPanner();
-      pan.pan.setValueAtTime(0.75, t);
-      pan.pan.linearRampToValueAtTime(-0.75, t + length);
-      pass.connect(pan);
-      last = pan;
-    }
-    last.connect(out);
-    for (let i = 0; i < 3; i++) churchBell(ctx, far, fq('B3'), t + i * 2.2, 0.25);
   },
   /** A tawny owl in the night forest: "hoo… hoo-hoo-hoooo", soft and round. */
   owl(ctx, out, t) {
