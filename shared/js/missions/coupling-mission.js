@@ -1,22 +1,22 @@
 /**
- * @file Station mission "the pushing locomotive": before a steep mountain
- * line, a second locomotive is coupled at the back of the freight train, to
- * push it up. The child brings it in gently.
+ * @file Station mission "the second locomotive": before a steep mountain
+ * line, a second locomotive waits on the track to pull the heavy freight
+ * train together with Bubu's. The child brings the train up to it gently.
  *
- * A close-up of the back of the train appears in a card: the last wagon on
- * the right, the helper locomotive rolling towards it from the left. The
- * child presses "Frânează" when the locomotive is at the green mark on the
- * rail (a generous stretch, about a second long); it then slows down and
- * touches the wagon softly, and the couplers lock. Too early, and it stops
- * short and creeps on slowly (just try again); too late, and it bumps the
- * wagon (a mistake, but it is coupled all the same). The green mark glows,
- * with a note, as the locomotive nears it.
+ * A close-up appears in a card: the second locomotive waiting on the right,
+ * Bubu's locomotive (with the first wagon) rolling towards it from the left.
+ * The child presses "Frânează" when the locomotive is at the green mark on
+ * the rail (a generous stretch, about a second long); it then slows down and
+ * touches the other locomotive softly, and the couplers lock. Too early, and
+ * it stops short and creeps on slowly (just try again); too late, and it
+ * bumps into it (a mistake, but they are coupled all the same). The green
+ * mark glows, with a note, as the locomotive nears it.
  *
- * When the locomotive is coupled, the mission sets a flag; the game then
- * draws it at the back of the train.
+ * When the locomotives are coupled, the mission sets a flag; the game then
+ * draws the train with two locomotives.
  *
  * Configuration (besides id/title/text):
- *   flag   set when the locomotive is coupled
+ *   flag   set when the locomotives are coupled
  *   fact   shown at the end
  */
 
@@ -62,7 +62,7 @@ export class CouplingMission extends Mission {
   constructor(ctx, config) {
     super(ctx, config);
     this.config = config;
-    /** Front of the helper locomotive and the back of the wagon, in card units from the card's left. */
+    /** Front of Bubu's locomotive and the back of the second one, in card units from the card's left. */
     this.locoFront = 120;
     this.wagonBack = 700;
     this.speed = ROLL_SPEED;
@@ -132,7 +132,7 @@ export class CouplingMission extends Mission {
         if (this.braking !== 'soft') {
           this.mistakes += 1;
           this.oops();
-          this.ctx.hud.announce('Bum!', 'Prea tare! Locomotiva a lovit vagonul. Data viitoare frânează la semnul verde.', 'Misiune', 3);
+          this.ctx.hud.announce('Bum!', 'Prea tare! Locomotivele s-au lovit. Data viitoare frânează la semnul verde.', 'Misiune', 3);
         }
         this.couple();
       } else if (this.speed === 0) {
@@ -148,8 +148,8 @@ export class CouplingMission extends Mission {
     } else if (this.state === 'coupled' && this.stateT > 2.4) {
       this.state = 'done';
       this.complete(this.mistakes === 0 ? 3 : this.mistakes === 1 ? 2 : 1, this.mistakes === 0
-        ? 'Perfect! Locomotiva de împingere s-a cuplat ușor, fără nicio zdruncinătură.'
-        : 'Locomotiva de împingere e cuplată. Putem urca!');
+        ? 'Perfect! A doua locomotivă s-a cuplat ușor, fără nicio zdruncinătură.'
+        : 'A doua locomotivă e cuplată. Putem urca!');
     }
     this.button?.classList.toggle('is-urgent', this.state === 'rolling' && this.braking === 'none' && this.locoFront > this.markX - MARK_BEFORE);
   }
@@ -215,12 +215,15 @@ export class CouplingMission extends Mission {
       c.fillStyle = `rgba(46,157,87,${0.55 + 0.45 * pulse})`;
       c.fillRect(from, card.rail - 4, to - from, 14);
     }
-    // the last wagon (its back towards the locomotive) and the helper locomotive
     const k = SCALE * card.k;
-    const wagon = FREIGHT_TRAIN.cars[4];
+    // the second locomotive waits on the right; Bubu's comes with the first wagon behind it
     const loco = { ...FREIGHT_TRAIN.cars[0], colors: { ...FREIGHT_TRAIN.cars[0].colors, body: this.ctx.state.locoColor ?? FREIGHT_TRAIN.cars[0].colors.body } };
-    this.drawCar(c, wagon, this.toStage(this.wagonBack + BUFFERS * SCALE, 0), k, false);
-    this.drawCar(c, loco, this.toStage(this.locoFront - loco.length * SCALE, 0), k, true);
+    const wagon = FREIGHT_TRAIN.cars[1];
+    const gap = FREIGHT_TRAIN.gap * SCALE;
+    this.drawCar(c, loco, this.toStage(this.wagonBack + BUFFERS * SCALE, 0), k, false);
+    const rear = this.locoFront - loco.length * SCALE;
+    this.drawCar(c, loco, this.toStage(rear, 0), k, true);
+    this.drawCar(c, wagon, this.toStage(rear - gap - wagon.length * SCALE, 0), k, true);
     c.restore();
     if (this.state === 'rolling' && this.braking === 'none' && this.locoFront > this.markX - MARK_BEFORE - 200) {
       drawTouchNote(c, this.ctx.stage, mark.x, card.rail - 150 * k - pulse * 6, 'Frânează aici!');

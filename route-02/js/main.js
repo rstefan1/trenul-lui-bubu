@@ -185,8 +185,8 @@ state.on('change', (/** @type {string} */ what) => {
   if (what === 'flags') {
     world.flags = state.flags;
     world.train.setCargo(WAGON_LOADS.map(w => (state.flags.has(w.flag) ? w.load : null)));
-    // from Salva, a second locomotive pushes at the back
-    world.train.setPusher(state.flags.has('pusher'));
+    // from Salva, a second locomotive pulls too
+    world.train.setHelper(state.flags.has('second-loco'));
   }
 });
 journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Station} */ station) => {

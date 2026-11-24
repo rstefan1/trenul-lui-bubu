@@ -144,10 +144,10 @@ export const FREIGHT_MISSIONS = {
       type: 'coupling',
       config: {
         id: 'coupling-salva',
-        title: 'Locomotiva de împingere',
-        text: 'Urcușul spre Dealu Ștefăniței e greu pentru un tren încărcat, așa că în spate se cuplează o locomotivă de ajutor. Apasă „Frânează” când ajunge la semnul verde.',
-        flag: 'pusher',
-        fact: 'Pe rampele mari, trenurile grele primesc o locomotivă de ajutor, care le împinge din spate.',
+        title: 'A doua locomotivă',
+        text: 'Urcușul spre Dealu Ștefăniței e greu pentru un tren încărcat, așa că o a doua locomotivă ne așteaptă pe linie. Apropie trenul și apasă „Frânează” când ajungi la semnul verde.',
+        flag: 'second-loco',
+        fact: 'Pe rampele mari, trenurile grele sunt trase de două locomotive.',
       },
     },
     sacel: {
