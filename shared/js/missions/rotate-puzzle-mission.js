@@ -29,8 +29,8 @@ import { showPanel } from '../ui/panel.js';
  * }} RotatePuzzleConfig
  */
 
-/** Tiles that start upright (a good share, so the puzzle never drags on). */
-const UPRIGHT_SHARE = 0.4;
+/** Tiles that start upright (a little help, so the start is not too daunting). */
+const UPRIGHT_SHARE = 0.2;
 
 export class RotatePuzzleMission extends Mission {
   /**
