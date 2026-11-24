@@ -39,6 +39,9 @@ body {
 }
 .home-scene { position: absolute; inset: 0; }
 .home-scene svg { display: block; width: 100%; height: 100%; }
+/* the train stands at the left of the landscape; where only its middle
+   shows (a tall strip), the train comes to the right, so it is seen */
+.land-train { transform: translateX(440px); }
 
 .home-head {
   position: relative;
@@ -147,6 +150,7 @@ body {
    is cut to fill the strip: so 5.57% of its width above it, or 16.4% of its
    height when the strip is tall for its width. */
 @container hero (min-aspect-ratio: 2/1) {
+  .land-train { transform: none; }
   .home-head { position: absolute; right: max(5cqw, 16px); bottom: max(5.57cqw, 16.4cqh); padding: 0; }
   .home-sign { margin: 0 0 var(--post); }
 }
