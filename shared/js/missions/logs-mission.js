@@ -6,9 +6,9 @@
  * The logs are buttons with their length; a log put on the wagon fills its
  * part of a ruler drawn in metres, and a tap on it takes it off again (so a
  * wrong start can always be mended, without a mistake). A log too long for
- * the room left is a gentle mistake that says how much room there is. After
- * a mistake, or a few seconds of waiting, a log that leads to a full wagon
- * pulses.
+ * the room left is a gentle mistake. There are no hints (no metres left
+ * counted, no warning that the wagon can no longer be filled): the ruler
+ * makes the sum plain enough.
  *
  * When the wagon is full, the mission sets a flag; the game then draws the
  * logs on the wagon for the rest of the journey (gfx/cargo.js).
@@ -28,8 +28,6 @@ import { Mission, starsForMistakes } from './mission.js';
  * @typedef {import('./mission.js').MissionConfig & {length: number, logs: number[], flag: string, fact: string}} LogsConfig
  */
 
-/** Seconds without a choice before a good log pulses. */
-const HINT_AFTER = 5;
 /** Seconds the full wagon's sum stays in the panel before the fact is told. */
 const SUM_SECONDS = 1.6;
 /** Colours of the logs on the ruler, one after the other. */
@@ -47,7 +45,6 @@ export class LogsMission extends Mission {
     /** @type {number[]} indexes of the logs on the wagon, in order */
     this.placed = [];
     this.time = 0;
-    this.idleSince = 0;
     this.doneAt = -1;
     /** The fact has been told (after the wagon is full). */
     this.told = false;
@@ -93,7 +90,6 @@ export class LogsMission extends Mission {
    */
   add(i) {
     if (this.doneAt >= 0 || this.placed.includes(i)) return;
-    this.idleSince = this.time;
     const room = this.config.length - this.filled;
     const len = this.config.logs[i];
     if (len > room) {
@@ -102,7 +98,7 @@ export class LogsMission extends Mission {
       this.buttons[i].classList.remove('is-wrong');
       void this.buttons[i].offsetWidth;   // restart the shake animation
       this.buttons[i].classList.add('is-wrong');
-      this.ui.says.textContent = `Bușteanul de ${len} m e prea lung: pe vagon mai sunt doar ${room} m liberi.`;
+      this.ui.says.textContent = `Bușteanul de ${len} m nu mai încape pe vagon.`;
       return;
     }
     this.placed.push(i);
@@ -111,10 +107,8 @@ export class LogsMission extends Mission {
     if (left === 0) {
       this.ui.says.textContent = `${this.placed.map(k => this.config.logs[k]).join(' + ')} = ${this.config.length} m. Vagonul e plin!`;
       this.finishWagon();
-    } else if (!this.canFill(left)) {
-      this.ui.says.textContent = `Mai sunt ${left} m, dar niciun buștean nu se potrivește. Atinge un buștean de pe vagon ca să-l dai jos.`;
     } else {
-      this.ui.says.textContent = `Mai sunt ${left} m liberi.`;
+      this.ui.says.textContent = `Am pus bușteanul de ${len} m.`;
     }
     this.refresh();
   }
@@ -126,22 +120,8 @@ export class LogsMission extends Mission {
   remove(k) {
     if (this.doneAt >= 0) return;
     this.placed.splice(k, 1);
-    this.idleSince = this.time;
-    this.ui.says.textContent = `Mai sunt ${this.config.length - this.filled} m liberi.`;
+    this.ui.says.textContent = 'Am dat jos bușteanul.';
     this.refresh();
-  }
-
-  /**
-   * Can the logs still waiting fill exactly `room` metres?
-   * @private
-   * @param {number} room
-   * @param {number[]} [except]  logs not to use
-   */
-  canFill(room, except = this.placed) {
-    const free = this.config.logs.map((len, i) => (except.includes(i) ? 0 : len)).filter(Boolean);
-    const sums = new Set([0]);
-    for (const len of free) for (const s of [...sums]) sums.add(s + len);
-    return sums.has(room);
   }
 
   /** @private Draws the logs on the ruler and greys out those used. */
@@ -171,14 +151,6 @@ export class LogsMission extends Mission {
   /** @param {number} dt */
   update(dt) {
     this.time += dt;
-    if (this.doneAt < 0) {
-      // help: a log that still leads to a full wagon pulses
-      const hint = this.mistakes > 0 || this.time - this.idleSince > HINT_AFTER;
-      const room = this.config.length - this.filled;
-      const good = this.config.logs.findIndex((len, i) => !this.placed.includes(i) && len <= room
-        && (len === room || this.canFill(room - len, [...this.placed, i])));
-      this.buttons.forEach((b, i) => b.classList.toggle('is-hint', hint && i === good));
-    }
     // a moment to see the sum, then the panel closes (the logs are seen on the
     // wagon) and the fact is told on its own, never over the panel
     if (this.doneAt >= 0 && !this.told && this.time - this.doneAt > SUM_SECONDS) {
