@@ -106,7 +106,7 @@ export const FREIGHT_MISSIONS = {
         title: 'Fluierul trenului',
         text: 'Am ajuns în Maramureș! Copiii din sate au ieșit lângă linie să vadă trenul. Când treci pe lângă ei, apasă „Fluieră!”.',
         groups: 5,
-        greeting: 'Bună, Bubu!',
+        greeting: 'Bună ziua, Bubu!',
         pace: { far: 540, slow: 150, brake: 450, near: { ahead: 60, behind: 420 } },
       },
     },
