@@ -323,7 +323,8 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   .clock-date { font-size: 10px; white-space: normal; text-align: center; max-width: 10em; line-height: 1.15; }
   .stars-card { order: 1; }
   .help-btn { order: 2; }
-  #btnSound { order: 5; margin-left: auto; }
+  #btnExit { order: 4; margin-left: auto; }
+  #btnSound { order: 5; }
   #btnFullscreen { order: 6; }
   .route-card { order: 7; flex-basis: 100%; padding: 8px 16px 2px; }
   .mission-counter { order: 8; margin-right: auto; }
@@ -1113,6 +1114,9 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   line-height: 1.45;
 }
 .briefing__note { margin: 10px 0 0; font-size: 14px; color: #7a6a55; }
+/* leaving the journey: the same window as a briefing, with two choices */
+.exit-dialog__buttons { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.exit-dialog__leave { display: inline-block; font-size: clamp(20px, 3.4vmin, 28px); text-decoration: none; animation: none; }
 /* sideways phones: Bubu beside the title, so the whole card fits without scrolling */
 @media (max-height: 520px) and (orientation: landscape) {
   .briefing { padding: 8px; }

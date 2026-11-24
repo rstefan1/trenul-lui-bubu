@@ -66,7 +66,7 @@ import { Music } from '../../shared/js/audio/music.js';
 import { RAIL_VOLUME, RailSound } from '../../shared/js/audio/rail-sound.js';
 import { WindSound } from '../../shared/js/audio/wind-sound.js';
 import { CLOPOTEI, CRACIUN_FERICIT, FA_LA_LA, NOAPTE_DE_VIS, O_BRAD_FRUMOS } from '../../shared/js/audio/songs.js';
-import { setupFullscreen, showOverlay } from '../../shared/js/ui/screens.js';
+import { setupExitButton, setupFullscreen, showOverlay } from '../../shared/js/ui/screens.js';
 import { keepScreenAwake } from '../../shared/js/ui/wake-lock.js';
 import { WorldView } from '../../shared/js/world/world-view.js';
 import { WINTER_CHAPTERS } from './chapters-data.js';
@@ -236,6 +236,7 @@ input.on('move', (/** @type {import('../../shared/js/core/input.js').PointerInfo
 input.on('up', (/** @type {import('../../shared/js/core/input.js').PointerInfo} */ p) => director.pointerUp(p));
 
 setupFullscreen(/** @type {HTMLButtonElement} */ (byId('btnFullscreen')));
+setupExitButton(/** @type {HTMLButtonElement} */ (byId('btnExit')), byId('exitDialog'), /** @type {HTMLButtonElement} */ (byId('btnExitStay')), missionHud);
 keepScreenAwake();
 
 loadBubu('../shared/assets/bubu.webp');

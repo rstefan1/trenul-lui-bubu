@@ -39,3 +39,33 @@ export function setupFullscreen(button) {
     else root.requestFullscreen().catch(() => {});
   });
 }
+
+/**
+ * Wires the HUD's "leave" button: it opens a small window that asks whether
+ * to leave the journey and go back to the list of journeys (what was done
+ * up to the last station stays saved). While the window is open the game
+ * waits, like during a mission's briefing.
+ * @param {HTMLButtonElement} button   the HUD button
+ * @param {HTMLElement} dialog         the window (its link leaves the journey)
+ * @param {HTMLButtonElement} stay     the button that closes the window
+ * @param {{paused: boolean}} game     what pauses the game (the mission HUD)
+ */
+export function setupExitButton(button, dialog, stay, game) {
+  let wasPaused = false;
+  const close = () => {
+    if (dialog.hidden) return;
+    game.paused = wasPaused;
+    dialog.classList.remove('is-visible');
+    setTimeout(() => { if (!dialog.classList.contains('is-visible')) dialog.hidden = true; }, 350);
+    button.focus({ preventScroll: true });
+  };
+  button.addEventListener('click', () => {
+    wasPaused = game.paused;
+    game.paused = true;
+    dialog.hidden = false;
+    requestAnimationFrame(() => dialog.classList.add('is-visible'));
+    stay.focus({ preventScroll: true });
+  });
+  stay.addEventListener('click', close);
+  dialog.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+}
