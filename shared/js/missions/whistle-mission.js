@@ -12,6 +12,7 @@
  * Configuration (besides id/title/text):
  *   groups   how many groups of children wait along the line
  *   pace     {far, slow} speeds (see TrainPace)
+ *   greeting what the children shout back (default "Crăciun fericit!")
  */
 
 import { Particles } from '../gfx/particles.js';
@@ -33,7 +34,7 @@ const COATS = ['#e53935', '#1e88e5', '#43a047', '#8e44ad', '#fb8c00', '#ec407a']
 
 /**
  * @typedef {{worldX: number, kids: number, state: 'waiting' | 'cheered' | 'missed', t: number, seed: number}} Group
- * @typedef {import('./mission.js').MissionConfig & {groups: number, pace: import('./pace.js').PaceOptions}} WhistleConfig
+ * @typedef {import('./mission.js').MissionConfig & {groups: number, pace: import('./pace.js').PaceOptions, greeting?: string}} WhistleConfig
  */
 
 export class WhistleMission extends Mission {
@@ -167,7 +168,7 @@ export class WhistleMission extends Mission {
         c.font = '800 26px "Baloo 2", system-ui, sans-serif';
         c.textAlign = 'center';
         // a white outline: the words stay readable over the train behind them
-        const words = '❤ Crăciun fericit! ❤';
+        const words = `❤ ${this.config.greeting ?? 'Crăciun fericit!'} ❤`;
         const y = GROUND - 150 - cam - g.t * 20;
         c.lineWidth = 6;
         c.lineJoin = 'round';
