@@ -384,6 +384,17 @@ function drawWheel(c, x, spin) {
  */
 function drawTrolley(c, spin, time) {
   const L = TROLLEY;
+  // the roof on its posts, open at the sides
+  c.fillStyle = '#2b2f38';
+  for (const x of [66, L - 12]) c.fillRect(x, -164, 6, 82);
+  fillRoundRect(c, 56, -174, L - 50, 14, 7, '#c62828');
+  // the forest workers on their bench, sitting inside: drawn before the side of
+  // the trolley, which hides them from the waist down
+  c.font = '48px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText('👷', 100, -98 + Math.sin(time * 3));
+  c.fillText('👷', 154, -98 + Math.sin(time * 3 + 1));
   // the frame, the body and the bonnet with the engine at the front (left)
   c.fillStyle = '#2f3540';
   c.fillRect(0, -40, L, 10);
@@ -391,16 +402,6 @@ function drawTrolley(c, spin, time) {
   fillRoundRect(c, 60, -84, L - 66, 46, 8, '#f2c14e');
   c.fillStyle = 'rgba(0,0,0,0.16)';
   for (let x = 14; x < 60; x += 9) c.fillRect(x, -88, 4, 30);
-  // the roof on four posts, open at the sides
-  c.fillStyle = '#2b2f38';
-  for (const x of [66, L - 12]) c.fillRect(x, -164, 6, 82);
-  fillRoundRect(c, 56, -174, L - 50, 14, 7, '#c62828');
-  // the forest workers on their bench
-  c.font = '48px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  c.fillText('👷', 100, -112 + Math.sin(time * 3) * 2);
-  c.fillText('👷', 154, -112 + Math.sin(time * 3 + 1) * 2);
   // the lamp at the front
   c.fillStyle = '#fff8dc';
   fillCircle(c, 6, -70, 6);
