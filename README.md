@@ -73,8 +73,7 @@ The home page shows a landscape with a train in the colours of the season
 (winter, spring, summer or autumn), chosen from the calendar like the modes
 of lumea-lui-bubu (`home/season.js`, where `MODE` can also keep one season
 on). To see another season, add it to the address of the home page:
-`?mode=iarna`, `?mode=primavara`, `?mode=vara` or `?mode=toamna` (the
-English names work too, e.g. `?mode=winter`).
+`?mode=winter`, `?mode=spring`, `?mode=summer` or `?mode=autumn`.
 
 ## Code overview
 

@@ -10,9 +10,8 @@
  *     autumn: September–November); or one season, to keep it on whatever
  *     the date: "winter", "spring", "summer" or "autumn";
  *   - to see a season without changing this file, add it to the address:
- *     ?mode=iarna, ?mode=primavara, ?mode=vara, ?mode=toamna (or in
- *     English: ?mode=winter, ?mode=spring, ?mode=summer, ?mode=autumn;
- *     ?anotimp=… works too), e.g. http://localhost:8000/?mode=iarna
+ *     ?mode=winter, ?mode=spring, ?mode=summer or ?mode=autumn,
+ *     e.g. http://localhost:8000/?mode=winter
  *
  * The page is marked with data-season="winter|spring|summer|autumn" on
  * <html>; home/home.css colours the page with it and home/landscape.js
@@ -28,17 +27,15 @@
   var BY_MONTH = ['winter', 'winter', 'spring', 'spring', 'spring', 'summer',
     'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'];
 
-  /** the names a season can be asked by */
-  var NAMES = {
-    iarna: 'winter', primavara: 'spring', vara: 'summer', toamna: 'autumn',
-    winter: 'winter', spring: 'spring', summer: 'summer', autumn: 'autumn',
-  };
+  var SEASONS = ['winter', 'spring', 'summer', 'autumn'];
 
   /** the colour of the browser's bar in every season */
   var BAR = { winter: '#7fa8d8', spring: '#6fb8ee', summer: '#3d9be9', autumn: '#8fb3d8' };
 
-  var asked = (window.location.search.match(/[?&](?:mode|anotimp)=([a-z]+)/i) || [])[1];
-  var season = NAMES[String(asked || '').toLowerCase()] || NAMES[MODE] || BY_MONTH[new Date().getMonth()];
+  var asked = (window.location.search.match(/[?&]mode=([a-z]+)/) || [])[1];
+  var season = SEASONS.indexOf(asked) >= 0 ? asked
+    : SEASONS.indexOf(MODE) >= 0 ? MODE
+      : BY_MONTH[new Date().getMonth()];
 
   document.documentElement.setAttribute('data-season', season);
   var bar = document.querySelector('meta[name="theme-color"]');
