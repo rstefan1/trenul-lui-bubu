@@ -368,7 +368,7 @@ function train() {
 /**
  * What a season adds to the landscape, layer by layer.
  * @typedef {object} SeasonThings
- * @property {(p: Palette) => string} sky         in the sky, behind the mountains (clouds, birds ...)
+ * @property {(p: Palette) => string} sky         in the sky, behind the mountains (clouds ...)
  * @property {(p: Palette) => string} fields      between the village and the railway
  * @property {(p: Palette) => string} foreground  in front of everything (children, flowers, a kite ...)
  */
@@ -379,10 +379,7 @@ const THINGS = {
     sky: () => {
       const cloud = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s) =>
         `<g fill="#fff"><ellipse cx="${x}" cy="${y}" rx="${70 * s}" ry="${24 * s}"/><circle cx="${x - 28 * s}" cy="${y - 14 * s}" r="${26 * s}"/><circle cx="${x + 18 * s}" cy="${y - 22 * s}" r="${34 * s}"/></g>`;
-      const bird = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s) =>
-        `<path d="M${x - 14 * s} ${y - 6 * s} Q${x - 6 * s} ${y - 10 * s} ${x} ${y} Q${x + 6 * s} ${y - 10 * s} ${x + 14 * s} ${y - 6 * s}" stroke="#2b3a55" stroke-width="${3 * s}" fill="none" stroke-linecap="round"/>`;
-      return cloud(240, 440, 1) + cloud(700, 200, 0.8) + cloud(1380, 360, 1.1)
-        + bird(560, 330, 1.2) + bird(610, 350, 0.9);
+      return cloud(240, 440, 1) + cloud(700, 200, 0.8) + cloud(1380, 360, 1.1);
     },
     fields: () => {
       // meadows and a mown field, with haystacks on it
