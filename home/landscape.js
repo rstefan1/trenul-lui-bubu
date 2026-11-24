@@ -30,7 +30,6 @@ const RAIL = 798;
  * @property {string} meadowDark
  * @property {string} conifer
  * @property {[string, string]} leaves            crown, its light side
- * @property {string} river
  */
 
 /** @type {Record<Season, Palette>} */
@@ -44,7 +43,6 @@ const PALETTES = {
     meadowDark: '#6cb851',
     conifer: '#2d6a3a',
     leaves: ['#3f923c', '#68b84e'],
-    river: '#4fb6ea',
   },
 };
 
@@ -173,18 +171,6 @@ function passenger(/** @type {number} */ x, /** @type {number} */ y, /** @type {
     + `<circle cx="${x}" cy="${y - 2}" r="9" fill="#f6c9a0"/>`
     + `<path d="M${x - 9} ${y - 2} A9 9 0 0 1 ${x + 9} ${y - 2} Q${x} ${y - 6} ${x - 9} ${y - 2}Z" fill="${hair}"/>`
     + (wave ? `<path d="M${x + 9} ${y + 8} L${x + 20} ${y - 14}" stroke="#f6c9a0" stroke-width="6" stroke-linecap="round"/>` : '')
-    + `</g>`;
-}
-
-/** A haystack (căpiță) with its base at (x, y). */
-function haystack(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s) {
-  const w = 52 * s;
-  const h = 100 * s;
-  return `<g>`
-    + `<path d="M${r1(x)} ${r1(y - h - 16 * s)} V${r1(y - h + 10 * s)}" stroke="#7a5235" stroke-width="${r1(4 * s)}" stroke-linecap="round"/>`
-    + `<path d="M${r1(x - w)} ${r1(y)} Q${r1(x - w * 1.1)} ${r1(y - h * 0.7)} ${r1(x)} ${r1(y - h)} Q${r1(x + w * 1.1)} ${r1(y - h * 0.7)} ${r1(x + w)} ${r1(y)}Z" fill="#e9c35b"/>`
-    + `<path d="M${r1(x - w * 0.6)} ${r1(y - h * 0.15)} Q${r1(x - w * 0.5)} ${r1(y - h * 0.6)} ${r1(x - w * 0.1)} ${r1(y - h * 0.85)} M${r1(x)} ${r1(y - h * 0.1)} Q${r1(x + w * 0.1)} ${r1(y - h * 0.55)} ${r1(x + w * 0.3)} ${r1(y - h * 0.8)} M${r1(x + w * 0.6)} ${r1(y - h * 0.15)} Q${r1(x + w * 0.65)} ${r1(y - h * 0.45)} ${r1(x + w * 0.55)} ${r1(y - h * 0.55)}" stroke="#c99a35" stroke-width="${r1(3 * s)}" fill="none" stroke-linecap="round"/>`
-    + `<path d="M${r1(x - w * 0.95)} ${r1(y - h * 0.3)} Q${r1(x)} ${r1(y - h * 0.4)} ${r1(x + w * 0.95)} ${r1(y - h * 0.3)}" stroke="#c99a35" stroke-width="${r1(3 * s)}" fill="none"/>`
     + `</g>`;
 }
 
@@ -386,7 +372,7 @@ const THINGS = {
       return cloud(240, 440, 1) + cloud(700, 200, 0.8) + cloud(1380, 360, 1.1)
         + bird(560, 330, 1.2) + bird(610, 350, 0.9);
     },
-    fields: p => {
+    fields: () => {
       // wheat (gold, with its rows) and a mown field
       const strips = [
         { x0: 0, x1: 330, fill: '#9bd36f' },
@@ -406,17 +392,11 @@ const THINGS = {
           }
         }
       }
-      // a river coming down between the hills
-      out += `<path d="M262 ${r1(top(262))} C250 720 236 760 214 ${RAIL} L300 ${RAIL} C290 760 282 720 276 ${r1(top(276))}Z" fill="${p.river}"/>`;
-      // haystacks on the wheat field
-      out += haystack(390, 752, 0.5) + haystack(480, 760, 0.45);
       return out;
     },
-    foreground: p => {
+    foreground: () => {
       const rnd = seeded(11);
-      let out = `<path d="M150 ${RAIL + 44} C120 900 70 950 30 ${H} L330 ${H} C330 950 330 900 340 ${RAIL + 44}Z" fill="${p.river}"/>`
-        + `<path d="M120 930 q30 -8 60 0 M220 975 q30 -8 60 0" stroke="#bfe9ff" stroke-width="4" fill="none" stroke-linecap="round"/>`;
-      out += flowers(rnd, 30, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0']);
+      let out = flowers(rnd, 30, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0']);
       // a boy with a kite (its string goes up to the kite in the sky, left of the train)
       out += kite(330, 450) + `<path d="M457 858 Q380 700 330 502" stroke="#fff" stroke-width="2" fill="none"/>`;
       out += child(435, 975, { shirt: '#26a69a', hair: '#c0612b', pose: 'up', s: 1.1 });
@@ -425,8 +405,7 @@ const THINGS = {
       // a boy kicking a ball
       out += child(900, 965, { shirt: '#ff7043', hair: '#2b2f38', pose: 'kick', s: 1.05 });
       out += `<circle cx="985" cy="925" r="17" fill="#fff" stroke="#2b2f38" stroke-width="3"/><path d="M973 917 q12 6 24 0 M978 937 q8 -10 16 -2" stroke="#e53935" stroke-width="4" fill="none" stroke-linecap="round"/>`;
-      // a big haystack and two tall sunflowers at the right
-      out += haystack(1250, 935, 1.05);
+      // two tall sunflowers at the right
       out += sunflower(1110, H + 10, 180, -6) + sunflower(1150, H + 10, 150, 6);
       return out;
     },
