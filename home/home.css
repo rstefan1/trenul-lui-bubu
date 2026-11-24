@@ -70,35 +70,62 @@ body {
 /* the name of the game on a railway station's name board: blue, a white
    edge, white letters, standing on two posts; Bubu stands beside it */
 .home-sign {
+  --bolt: radial-gradient(circle, #f4f7fb 0 2.2px, #8fa3c4 2.8px, transparent 3.4px);
   position: relative;
   isolation: isolate;
-  padding: clamp(6px, 1vw, 10px) clamp(22px, 3vw, 34px) clamp(8px, 1.2vw, 12px);
+  padding: clamp(7px, 1vw, 11px) clamp(26px, 3.4vw, 40px) clamp(8px, 1.2vw, 12px);
   border: 4px solid #fff;
-  border-radius: 10px;
-  background: linear-gradient(#2a5fb4, var(--station-blue));
-  box-shadow: 0 6px 14px rgba(0, 0, 0, .3);
+  border-radius: 12px;
+  /* enamel: a little shine at the top, a bolt in every corner */
+  background:
+    var(--bolt) left 7px top 7px / 9px 9px no-repeat,
+    var(--bolt) right 7px top 7px / 9px 9px no-repeat,
+    var(--bolt) left 7px bottom 7px / 9px 9px no-repeat,
+    var(--bolt) right 7px bottom 7px / 9px 9px no-repeat,
+    linear-gradient(rgba(255, 255, 255, .16), transparent 45%),
+    linear-gradient(#2d63b8, var(--station-blue) 55%, #193f80);
+  /* a thin white line inside the edge, like on the real boards */
+  box-shadow:
+    inset 0 0 0 3px #2459ad,
+    inset 0 0 0 4.5px rgba(255, 255, 255, .7),
+    0 4px 0 rgba(0, 0, 0, .18),
+    0 10px 20px rgba(0, 0, 0, .28);
   text-align: center;
 }
+/* the two metal posts, with a clamp where they hold the board */
 .home-sign::before, .home-sign::after {
   content: "";
   position: absolute;
   z-index: -1;
-  top: 100%;
-  width: 8px;
-  height: clamp(22px, 4vw, 40px);
-  background: linear-gradient(90deg, #5b616c, #8a919c 50%, #5b616c);
+  top: calc(100% - 10px);
+  width: 9px;
+  height: clamp(30px, 4.6vw, 50px);
+  border-radius: 2px 2px 0 0;
+  background:
+    linear-gradient(#3b414b, #3b414b) 0 8px / 100% 5px no-repeat,
+    linear-gradient(90deg, #5b616c, #a7aeb8 45%, #6b717c);
 }
-.home-sign::before { left: 22%; }
-.home-sign::after { right: 22%; }
+.home-sign::before { left: 20%; }
+.home-sign::after { right: 20%; }
 .home-title {
   margin: 0;
   font-size: clamp(28px, 6vw, 46px);
   font-weight: 800;
   line-height: 1.05;
   color: #fff;
-  letter-spacing: .02em;
+  letter-spacing: .03em;
+  text-shadow: 0 2px 0 rgba(10, 30, 70, .35);
 }
-.home-subtitle { margin: 0; font-size: clamp(15px, 2.6vw, 20px); font-weight: 700; line-height: 1.15; color: var(--gold); }
+.home-subtitle {
+  margin: 3px auto 0;
+  padding-top: 3px;
+  border-top: 1.5px solid rgba(255, 255, 255, .35);
+  width: fit-content;
+  font-size: clamp(15px, 2.6vw, 20px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--gold);
+}
 .home-bubu {
   position: absolute;
   left: calc(100% + 6px);
