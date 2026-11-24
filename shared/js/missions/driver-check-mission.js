@@ -220,7 +220,7 @@ export class DriverCheckMission extends Mission {
   /**
    * The camera moves in on the locomotive and the first wagon, so that the
    * parts to check are seen (and touched) easily; the checklist stays on the
-   * left, over the wagon's far end.
+   * left, over the wagon's far end. Called every frame of the check.
    * @private
    */
   zoomOnLoco() {
@@ -356,7 +356,12 @@ export class DriverCheckMission extends Mission {
     this.time += dt;
     this.particles.update(dt);
     if (Number.isNaN(this.bubuX)) this.bubuX = this.bubuTargetX = this.standBefore(this.locoRear() - 60);
-    if (this.step === 'check' && Number.isNaN(this.bubuTargetX)) this.walkToCurrent();
+    if (this.step === 'check') {
+      // the camera and Bubu follow the locomotive (it moves on screen if the
+      // window changes size, e.g. in full screen)
+      this.zoomOnLoco();
+      this.walkToCurrent();
+    }
     this.bubuX = approach(this.bubuX, this.bubuTargetX, 3, dt);
     if (this.step === 'hop') {
       this.hopT += dt;

@@ -93,7 +93,15 @@ export class CraneMission extends Mission {
     super.start();
     this.layout();
     this.trolleyX = this.goods[0].groundX;
-    // the camera moves in on the crane, the goods and the wagon
+    this.zoomOnCrane();
+  }
+
+  /**
+   * The camera moves in on the crane, the goods and the wagon (every frame:
+   * the wagon moves on screen if the window changes size).
+   * @private
+   */
+  zoomOnCrane() {
     const { left, right } = this.craneSpan();
     const cam = this.ctx.world.cameraY;
     this.ctx.world.zoomOn({ left: left - 60, right: right + 60, top: BEAM_Y - 110 - cam, bottom: GROUND_Y + 60 - cam });
@@ -212,6 +220,7 @@ export class CraneMission extends Mission {
   update(dt) {
     this.time += dt;
     this.particles.update(dt);
+    this.zoomOnCrane();
     if (this.time < dt * 2) this.ctx.hud.setCounter('📦', 0, this.goods.length);
     // the crane makes its moves one after the other
     const m = this.moves[0];
