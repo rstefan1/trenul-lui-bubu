@@ -41,6 +41,10 @@ const MAX_SPEED = 560;
 const TAP_BRAKE = 0.45;
 /** Speed shown on the speedometer for the timetable's cruising speed (km/h). */
 const KMH_AT_CRUISE = 80;
+/** How much bigger the speedometer is drawn than the other cards. */
+const GAUGE_ZOOM = 1.3;
+/** Room left free under the heads-up display for the announcements (stage units). */
+const ANNOUNCE_ROOM = 170;
 
 export class DescentMission extends Mission {
   /**
@@ -158,13 +162,17 @@ export class DescentMission extends Mission {
   /** @param {CanvasRenderingContext2D} c */
   draw(c) {
     if (this.step !== 'descent') return;
-    // the speedometer, high up on the right, with its green zone
+    // the speedometer, big, in the middle of the screen (it is what the child
+    // watches), below the announcements and clear of the train, with its green zone
     const stage = this.ctx.stage;
-    const right = stage.viewRight - 20;
-    const top = stage.toStage(0, this.ctx.hud.hudBottom).y + 24;
-    zoomed(c, stage.ui, right, top, () => {
-      const w = 250;
-      const h = 150;
+    const w = 250;
+    const h = 150;
+    const middle = (stage.viewLeft + stage.viewRight) / 2;
+    const right = middle + w / 2;
+    // over a viaduct the view drops into the valley and the train rises on
+    // screen: the speedometer goes down with the view, into the empty valley
+    const top = stage.toStage(0, this.ctx.hud.hudBottom).y + ANNOUNCE_ROOM + this.ctx.world.cameraY * 1.1;
+    zoomed(c, stage.ui * GAUGE_ZOOM, middle, top, () => {
       const cx = right - w / 2;
       const cy = top + 104;
       const r = 78;
