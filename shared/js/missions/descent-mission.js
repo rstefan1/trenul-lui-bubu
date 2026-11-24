@@ -163,15 +163,14 @@ export class DescentMission extends Mission {
   draw(c) {
     if (this.step !== 'descent') return;
     // the speedometer, big, in the middle of the screen (it is what the child
-    // watches), below the announcements and clear of the train, with its green zone
+    // watches), below the announcements, with its green zone
     const stage = this.ctx.stage;
     const w = 250;
     const h = 150;
     const middle = (stage.viewLeft + stage.viewRight) / 2;
     const right = middle + w / 2;
-    // over a viaduct the view drops into the valley and the train rises on
-    // screen: the speedometer goes down with the view, into the empty valley
-    const top = stage.toStage(0, this.ctx.hud.hudBottom).y + ANNOUNCE_ROOM + this.ctx.world.cameraY * 1.1;
+    // always in the same place (moving with the view, it would cover the viaducts)
+    const top = stage.toStage(0, this.ctx.hud.hudBottom).y + ANNOUNCE_ROOM;
     zoomed(c, stage.ui * GAUGE_ZOOM, middle, top, () => {
       const cx = right - w / 2;
       const cy = top + 104;
