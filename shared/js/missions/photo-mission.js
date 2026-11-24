@@ -112,11 +112,12 @@ export class PhotoMission extends Mission {
     }
     const left = this.ctx.stage.viewLeft - 200;
     for (const s of this.sightings) if (s.state === 'waiting' && this.at(s).x < left) s.state = 'missed';
-    const over = this.sightings.every(s => s.state !== 'waiting');
-    if (over || this.phase === 'wrapping') {
+    // (a photo just touched is put in the album while drawing: wait for it)
+    const over = this.sightings.every(s => s.state !== 'waiting') && !this.pending;
+    if (over || (this.phase === 'wrapping' && !this.pending)) {
       this.ctx.hud.hideCounter();
       this.pace?.release();
-      const n = this.album.length;
+      const n = this.sightings.filter(s => s.state === 'taken').length;
       const total = this.sightings.length;
       this.complete(n >= total ? 3 : n >= Math.ceil(total / 2) ? 2 : 1,
         n >= total ? 'Ai fotografiat toate animalele de pe viaducte!' : `Ai ${n} fotografii din ${total}. Frumoasă noapte la munte!`);
