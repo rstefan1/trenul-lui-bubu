@@ -148,6 +148,8 @@ function placeNow() {
   if (journey.state === 'running') return travelPlace(route.biomeAt(journey.distance));
   const station = route.stations[journey.stationIndex];
   const key = station && FOREST_MISSIONS.stations[station.id]?.ambience;
+  // at night (Paltin, waiting for midnight) the birds are asleep
+  if (key === 'forest' && world.light.night > 0.5) return FOREST_PLACES.night;
   return key ? FOREST_PLACES[key] ?? null : null;
 }
 
