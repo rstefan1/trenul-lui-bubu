@@ -148,7 +148,7 @@ export class BirdsMission extends Mission {
 
   /**
    * A clear hint over a hungry feeder: a pulsing golden ring, a bouncing
-   * arrow and the words "Atinge aici!".
+   * arrow and what to do there ("Pune semințe!").
    * @private
    * @param {CanvasRenderingContext2D} c
    * @param {number} x
@@ -182,9 +182,9 @@ export class BirdsMission extends Mission {
     c.textBaseline = 'middle';
     c.lineWidth = 6;
     c.strokeStyle = 'rgba(27,36,64,0.85)';
-    c.strokeText('Atinge aici!', x, top - 180 + bob);
+    c.strokeText('Pune semințe!', x, top - 180 + bob);
     c.fillStyle = '#ffffff';
-    c.fillText('Atinge aici!', x, top - 180 + bob);
+    c.fillText('Pune semințe!', x, top - 180 + bob);
     c.restore();
   }
 
