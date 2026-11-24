@@ -23,15 +23,11 @@
   /** the names in the address */
   var ASKED = { iarna: 'winter', primavara: 'spring', vara: 'summer', toamna: 'autumn' };
 
-  /** the seasons whose landscape is drawn already; the others show summer for now */
-  var READY = ['summer'];
-
   /** the colour of the browser's bar in every season */
-  var BAR = { winter: '#2b4f8f', spring: '#7cc4f2', summer: '#3d9be9', autumn: '#e0904a' };
+  var BAR = { winter: '#7fa8d8', spring: '#6fb8ee', summer: '#3d9be9', autumn: '#8fb3d8' };
 
   var asked = (window.location.search.match(/[?&]anotimp=([a-z]+)/) || [])[1];
   var season = ASKED[asked] || BY_MONTH[new Date().getMonth()];
-  if (READY.indexOf(season) < 0) { season = 'summer'; }
 
   document.documentElement.setAttribute('data-season', season);
   var bar = document.querySelector('meta[name="theme-color"]');

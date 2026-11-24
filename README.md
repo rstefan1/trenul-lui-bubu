@@ -69,11 +69,11 @@ The game is published inside [lumea-lui-bubu](../lumea-lui-bubu), in its
 folder `trenul-lui-bubu/`: the “← Lumea lui Bubu” button of the home page
 goes back to the village (`../`).
 
-The home page shows a landscape with a train in the colours of the season,
-chosen from the calendar (`home/season.js`). To see another season, add
-`?anotimp=iarna`, `?anotimp=primavara`, `?anotimp=vara` or `?anotimp=toamna`
-to the address of the home page (only summer is drawn for now; the other
-seasons show summer).
+The home page shows a landscape with a train in the colours of the season
+(winter, spring, summer or autumn), chosen from the calendar
+(`home/season.js`). To see another season, add `?anotimp=iarna`,
+`?anotimp=primavara`, `?anotimp=vara` or `?anotimp=toamna` to the address
+of the home page.
 
 ## Code overview
 

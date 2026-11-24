@@ -8,12 +8,13 @@
 
 html { min-height: 100%; }
 
-/* the colours of every season (home/season.js marks <html> with it):
-   the ground under the landscape, continuing its meadow */
-:root[data-season="summer"] {
-  --ground: #6cb851;
-  --ground-ink: #fff;
-}
+/* the colours of every season (home/season.js marks <html> with it): the
+   ground under the landscape, continuing its meadow (the same colour as the
+   meadowDark of the season in home/landscape.js), and the words on it */
+:root[data-season="winter"] { --ground: #eaf1fa; --ground-ink: #2b3a55; }
+:root[data-season="spring"] { --ground: #86cc63; --ground-ink: #fff; }
+:root[data-season="summer"] { --ground: #6cb851; --ground-ink: #fff; }
+:root[data-season="autumn"] { --ground: #bba95c; --ground-ink: #3b2a14; }
 
 body {
   margin: 0;

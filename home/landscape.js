@@ -30,29 +30,89 @@ const X1 = 1800;
 const RAIL = 798;
 
 /**
- * The colours of a season.
+ * The colours (and a few things) of a season.
  * @typedef {object} Palette
  * @property {[string, string]} sky
  * @property {string} sun
+ * @property {string} cloud
  * @property {[string, string, string]} mountains  far, light face, forested ridge
- * @property {[string, string]} hills             village hill, its shade
+ * @property {number} caps                        how far down the peaks the snow comes (0: none)
+ * @property {[string, string]} hills             the hill, its shade
  * @property {string} meadow
- * @property {string} meadowDark
+ * @property {string} meadowDark                  also the colour of the page under the landscape (home/home.css)
  * @property {string} conifer
- * @property {[string, string]} leaves            crown, its light side
+ * @property {boolean} firSnow                    snow on the fir trees
+ * @property {string[]} trees                     leafy trees among the firs (their crowns), if any
+ * @property {string[] | null} flowers            the flowers of the meadow, if any
+ * @property {string[] | null} leaves             fallen leaves on the meadow, if any
+ * @property {boolean} cold                       the children wear coats and caps
  */
 
 /** @type {Record<Season, Palette>} */
 const PALETTES = {
+  winter: {
+    sky: ['#7fa8d8', '#e6f0fa'],
+    sun: '#fff4d6',
+    cloud: '#f4f7fb',
+    mountains: ['#9fb4d0', '#d6e2f0', '#5f7f78'],
+    caps: 0.62,
+    hills: ['#f2f6fc', '#dfe8f4'],
+    meadow: '#f8fbff',
+    meadowDark: '#eaf1fa',
+    conifer: '#2f5d4a',
+    firSnow: true,
+    trees: [],
+    flowers: null,
+    leaves: null,
+    cold: true,
+  },
+  spring: {
+    sky: ['#6fb8ee', '#d9f1ff'],
+    sun: '#fff1a0',
+    cloud: '#ffffff',
+    mountains: ['#8aa7c9', '#b6cae2', '#4f8f57'],
+    caps: 0.28,
+    hills: ['#9ad672', '#7fc35e'],
+    meadow: '#a6e07a',
+    meadowDark: '#86cc63',
+    conifer: '#2f7040',
+    firSnow: false,
+    trees: ['#f6b3cc', '#fde4ee', '#a8dc7a'],
+    flowers: ['#ff6fa8', '#ffffff', '#ffd84a', '#b07cff', '#ff8a3d'],
+    leaves: null,
+    cold: false,
+  },
   summer: {
     sky: ['#3d9be9', '#c4ecff'],
     sun: '#ffe04a',
+    cloud: '#ffffff',
     mountains: ['#7f9fc4', '#a9c2de', '#3f7d4f'],
+    caps: 0,
     hills: ['#7cc35a', '#5fa94a'],
     meadow: '#8fd16a',
     meadowDark: '#6cb851',
     conifer: '#2d6a3a',
-    leaves: ['#3f923c', '#68b84e'],
+    firSnow: false,
+    trees: [],
+    flowers: ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'],
+    leaves: null,
+    cold: false,
+  },
+  autumn: {
+    sky: ['#8fb3d8', '#f7e3c0'],
+    sun: '#ffd27a',
+    cloud: '#fff7ec',
+    mountains: ['#979db7', '#c3c5d8', '#6a7a3c'],
+    caps: 0,
+    hills: ['#c9b35a', '#b39a45'],
+    meadow: '#cdbb6c',
+    meadowDark: '#bba95c',
+    conifer: '#2f5a3a',
+    firSnow: false,
+    trees: ['#e0892c', '#c95a22', '#e8b23a', '#b8432a'],
+    flowers: null,
+    leaves: ['#e0892c', '#c95a22', '#e8b23a', '#b8432a', '#9a5b2b'],
+    cold: false,
   },
 };
 
@@ -91,14 +151,112 @@ const villageTop = (/** @type {number} */ x) =>
  * Things of the landscape
  * ------------------------------------------------------------------------ */
 
-/** A fir tree standing at (x, y). */
-function fir(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ h, /** @type {string} */ color) {
+/** A fir tree standing at (x, y), with snow on it if `snow`. */
+function fir(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ h, /** @type {string} */ color, snow = false) {
   const w = h * 0.42;
-  return `<path d="M${r1(x)} ${r1(y - h)} L${r1(x + w)} ${r1(y - h * 0.3)} L${r1(x + w * 0.55)} ${r1(y - h * 0.3)} L${r1(x + w * 1.15)} ${r1(y)} L${r1(x - w * 1.15)} ${r1(y)} L${r1(x - w * 0.55)} ${r1(y - h * 0.3)} L${r1(x - w)} ${r1(y - h * 0.3)}Z" fill="${color}"/>`;
+  const tree = `<path d="M${r1(x)} ${r1(y - h)} L${r1(x + w)} ${r1(y - h * 0.3)} L${r1(x + w * 0.55)} ${r1(y - h * 0.3)} L${r1(x + w * 1.15)} ${r1(y)} L${r1(x - w * 1.15)} ${r1(y)} L${r1(x - w * 0.55)} ${r1(y - h * 0.3)} L${r1(x - w)} ${r1(y - h * 0.3)}Z" fill="${color}"/>`;
+  if (!snow) return tree;
+  return tree
+    + `<path d="M${r1(x)} ${r1(y - h)} L${r1(x + w * 0.62)} ${r1(y - h * 0.56)} Q${r1(x)} ${r1(y - h * 0.66)} ${r1(x - w * 0.62)} ${r1(y - h * 0.56)}Z" fill="#fff"/>`
+    + `<path d="M${r1(x - w * 1.1)} ${r1(y - h * 0.04)} Q${r1(x)} ${r1(y - h * 0.16)} ${r1(x + w * 1.1)} ${r1(y - h * 0.04)} L${r1(x + w * 0.7)} ${r1(y - h * 0.22)} Q${r1(x)} ${r1(y - h * 0.3)} ${r1(x - w * 0.7)} ${r1(y - h * 0.22)}Z" fill="#fff" opacity=".9"/>`;
+}
+
+/** A leafy tree standing at (x, y): a trunk and a round crown of `colors` (blossoms, autumn leaves ...). */
+function tree(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ h, /** @type {string[]} */ colors, /** @type {() => number} */ rnd, dots = '') {
+  const r = h * 0.3;
+  const c0 = colors[0];
+  const c1 = colors[1] ?? colors[0];
+  let crown = `<circle cx="${r1(x - r * 0.55)}" cy="${r1(y - h * 0.6)}" r="${r1(r * 0.8)}" fill="${c0}"/>`
+    + `<circle cx="${r1(x + r * 0.55)}" cy="${r1(y - h * 0.6)}" r="${r1(r * 0.8)}" fill="${c0}"/>`
+    + `<circle cx="${r1(x)}" cy="${r1(y - h * 0.78)}" r="${r1(r)}" fill="${c0}"/>`
+    + `<circle cx="${r1(x + r * 0.3)}" cy="${r1(y - h * 0.86)}" r="${r1(r * 0.5)}" fill="${c1}"/>`;
+  if (dots) {
+    for (let i = 0; i < 14; i++) {
+      const a = rnd() * Math.PI * 2;
+      const d = rnd() * r * 1.05;
+      crown += `<circle cx="${r1(x + Math.cos(a) * d)}" cy="${r1(y - h * 0.7 + Math.sin(a) * d * 0.8)}" r="${r1(r * 0.12)}" fill="${dots}"/>`;
+    }
+  }
+  return `<g><path d="M${r1(x)} ${r1(y)} V${r1(y - h * 0.55)}" stroke="#7a5235" stroke-width="${r1(h * 0.09)}" stroke-linecap="round"/>${crown}</g>`;
+}
+
+/** A snowman standing at (x, y): three balls, coal eyes, a carrot nose, a scarf and a hat. */
+function snowman(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s) {
+  const R = (/** @type {number} */ n) => r1(n * s);
+  return `<g>`
+    + `<ellipse cx="${x}" cy="${r1(y - 2 * s)}" rx="${R(40)}" ry="${R(8)}" fill="#c9d6e6"/>`
+    + `<path d="M${R(-24) + x} ${r1(y - 68 * s)} l${R(-30)} ${R(-22)} m${R(10)} ${R(7)} l${R(-8)} ${R(-12)} M${R(24) + x} ${r1(y - 68 * s)} l${R(30)} ${R(-24)}" stroke="#6b4a32" stroke-width="${R(4)}" stroke-linecap="round" fill="none"/>`
+    + `<circle cx="${x}" cy="${r1(y - 30 * s)}" r="${R(32)}" fill="#fff" stroke="#d3deec" stroke-width="${R(2)}"/>`
+    + `<circle cx="${x}" cy="${r1(y - 76 * s)}" r="${R(23)}" fill="#fff" stroke="#d3deec" stroke-width="${R(2)}"/>`
+    + `<circle cx="${x}" cy="${r1(y - 112 * s)}" r="${R(17)}" fill="#fff" stroke="#d3deec" stroke-width="${R(2)}"/>`
+    + `<path d="M${R(-19) + x} ${r1(y - 97 * s)} q${R(19)} ${R(8)} ${R(38)} 0 v${R(6)} q${R(-19)} ${R(8)} ${R(-38)} 0Z M${R(8) + x} ${r1(y - 94 * s)} l${R(6)} ${R(20)} l${R(8)} ${R(-3)} l${R(-6)} ${R(-18)}Z" fill="#e53935"/>`
+    + `<circle cx="${R(-6) + x}" cy="${r1(y - 116 * s)}" r="${R(2.4)}" fill="#2b2f38"/><circle cx="${R(6) + x}" cy="${r1(y - 116 * s)}" r="${R(2.4)}" fill="#2b2f38"/>`
+    + `<path d="M${x} ${r1(y - 111 * s)} l${R(16)} ${R(3)} l${R(-16)} ${R(3)}Z" fill="#ff8a3d"/>`
+    + `<circle cx="${x}" cy="${r1(y - 70 * s)}" r="${R(2.6)}" fill="#2b2f38"/><circle cx="${x}" cy="${r1(y - 60 * s)}" r="${R(2.6)}" fill="#2b2f38"/>`
+    + `<rect x="${R(-17) + x}" y="${r1(y - 131 * s)}" width="${R(34)}" height="${R(5)}" rx="${R(2)}" fill="#2b2f38"/><rect x="${R(-11) + x}" y="${r1(y - 152 * s)}" width="${R(22)}" height="${R(22)}" rx="${R(3)}" fill="#2b2f38"/>`
+    + `</g>`;
+}
+
+/** A wooden sled lying at (x, y) (its front to the right), with its rope going to (rx, ry) if given. */
+function sled(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s, /** @type {number[] | null} */ rope = null) {
+  const R = (/** @type {number} */ n) => r1(n * s);
+  return `<g>`
+    + (rope ? `<path d="M${R(30) + x} ${r1(y - 14 * s)} Q${r1((x + rope[0]) / 2)} ${r1(Math.max(y, rope[1]) + 4)} ${rope[0]} ${rope[1]}" stroke="#7a5235" stroke-width="${R(2)}" fill="none"/>` : '')
+    + `<rect x="${R(-30) + x}" y="${r1(y - 20 * s)}" width="${R(56)}" height="${R(8)}" rx="${R(2)}" fill="#c0612b"/>`
+    + `<path d="M${R(-24) + x} ${r1(y - 12 * s)} v${R(8)} M${R(18) + x} ${r1(y - 12 * s)} v${R(8)}" stroke="#8a4a22" stroke-width="${R(3)}"/>`
+    + `<path d="M${R(-34) + x} ${r1(y - 3 * s)} H${R(26) + x} q${R(10)} 0 ${R(10)} ${R(-10)}" stroke="#4a4f5a" stroke-width="${R(3.2)}" fill="none" stroke-linecap="round"/>`
+    + `</g>`;
+}
+
+/** A fallen leaf lying at (x, y). */
+function leaf(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s, /** @type {number} */ angle, /** @type {string} */ color) {
+  return `<g transform="rotate(${r1(angle)} ${r1(x)} ${r1(y)})"><path d="M${r1(x - 9 * s)} ${r1(y)} Q${r1(x)} ${r1(y - 7 * s)} ${r1(x + 9 * s)} ${r1(y)} Q${r1(x)} ${r1(y + 7 * s)} ${r1(x - 9 * s)} ${r1(y)}Z" fill="${color}"/><path d="M${r1(x - 9 * s)} ${r1(y)} H${r1(x + 11 * s)}" stroke="rgba(80,40,10,.45)" stroke-width="${r1(1.2 * s)}"/></g>`;
+}
+
+/** Fallen leaves spread over a band of ground. */
+function leaves(/** @type {() => number} */ rnd, /** @type {number} */ count, /** @type {string[]} */ colors, top = 850, depth = 145, x0 = X0, x1 = X1) {
+  let out = '';
+  for (let i = 0; i < count; i++) {
+    const y = top + rnd() * depth;
+    out += leaf(x0 + rnd() * (x1 - x0), y, 0.7 + (y - top) / depth * 0.6, rnd() * 180, colors[Math.floor(rnd() * colors.length)]);
+  }
+  return out;
+}
+
+/** A heap of fallen leaves with its middle at (x, y). */
+function leafPile(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s, /** @type {string[]} */ colors, /** @type {() => number} */ rnd) {
+  let out = `<path d="M${r1(x - 60 * s)} ${y} Q${r1(x - 40 * s)} ${r1(y - 44 * s)} ${x} ${r1(y - 48 * s)} Q${r1(x + 44 * s)} ${r1(y - 44 * s)} ${r1(x + 62 * s)} ${y}Z" fill="${colors[1]}"/>`;
+  for (let i = 0; i < 22; i++) {
+    const a = rnd();
+    const lx = x + (rnd() - 0.5) * 100 * s;
+    const top = y - 44 * s * (1 - ((lx - x) / (60 * s)) ** 2);
+    out += leaf(lx, top + rnd() * (y - top), s, rnd() * 180, colors[Math.floor(a * colors.length)]);
+  }
+  return `<g>${out}</g>`;
+}
+
+/** A pumpkin lying at (x, y). */
+function pumpkin(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s) {
+  const R = (/** @type {number} */ n) => r1(n * s);
+  return `<g>`
+    + `<ellipse cx="${R(-14) + x}" cy="${r1(y - 22 * s)}" rx="${R(18)}" ry="${R(22)}" fill="#e2731f"/>`
+    + `<ellipse cx="${R(14) + x}" cy="${r1(y - 22 * s)}" rx="${R(18)}" ry="${R(22)}" fill="#e2731f"/>`
+    + `<ellipse cx="${x}" cy="${r1(y - 22 * s)}" rx="${R(16)}" ry="${R(23)}" fill="#f08a2c"/>`
+    + `<path d="M${x} ${r1(y - 44 * s)} q${R(2)} ${R(-10)} ${R(8)} ${R(-12)}" stroke="#5c7a2e" stroke-width="${R(5)}" fill="none" stroke-linecap="round"/>`
+    + `</g>`;
+}
+
+/** A tulip whose stem starts at (x, y). */
+function tulip(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ h, /** @type {string} */ color) {
+  return `<g>`
+    + `<path d="M${x} ${y} V${r1(y - h)}" stroke="#4e8f2f" stroke-width="${r1(h * 0.07)}"/>`
+    + `<ellipse cx="${r1(x - h * 0.12)}" cy="${r1(y - h * 0.35)}" rx="${r1(h * 0.12)}" ry="${r1(h * 0.05)}" transform="rotate(-50 ${r1(x - h * 0.12)} ${r1(y - h * 0.35)})" fill="#5ea83a"/>`
+    + `<path d="M${r1(x - h * 0.16)} ${r1(y - h * 1.22)} L${r1(x - h * 0.08)} ${r1(y - h * 1.08)} L${x} ${r1(y - h * 1.24)} L${r1(x + h * 0.08)} ${r1(y - h * 1.08)} L${r1(x + h * 0.16)} ${r1(y - h * 1.22)} Q${r1(x + h * 0.18)} ${r1(y - h * 0.96)} ${x} ${r1(y - h * 0.96)} Q${r1(x - h * 0.18)} ${r1(y - h * 0.96)} ${r1(x - h * 0.16)} ${r1(y - h * 1.22)}Z" fill="${color}"/>`
+    + `</g>`;
 }
 
 /** A child standing with feet at (x, y), about 100 tall at scale 1. */
-function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shirt: string, hair: string, skin?: string, legs?: string, pose?: 'wave' | 'up' | 'catch' | 'kick' | 'sit', girl?: boolean, s?: number, flip?: boolean}} */ o) {
+function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shirt: string, hair: string, skin?: string, legs?: string, pose?: 'wave' | 'up' | 'catch' | 'kick' | 'sit', girl?: boolean, s?: number, flip?: boolean, cap?: string}} */ o) {
   const s = o.s ?? 1;
   const skin = o.skin ?? '#f6c9a0';
   const legs = o.legs ?? '#3a5ba8';
@@ -123,8 +281,8 @@ function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shi
     ? `<circle cx="${X(-17)}" cy="${Y(90)}" r="${r1(7 * s)}" fill="${o.hair}"/><circle cx="${X(17)}" cy="${Y(90)}" r="${r1(7 * s)}" fill="${o.hair}"/>`
     : '';
   return `<g>`
-    + line([-7, 38], feet[0], o.girl ? skin : legs, 9)
-    + line([7, 38], feet[1], o.girl ? skin : legs, 9)
+    + line([-7, 38], feet[0], o.girl && !o.cap ? skin : legs, 9)
+    + line([7, 38], feet[1], o.girl && !o.cap ? skin : legs, 9)
     + `<ellipse cx="${X(feet[0][0] - 2)}" cy="${Y(feet[0][1] - 1)}" rx="${r1(8 * s)}" ry="${r1(4 * s)}" fill="#c0392b"/>`
     + `<ellipse cx="${X(feet[1][0] + 2)}" cy="${Y(feet[1][1] - 1)}" rx="${r1(8 * s)}" ry="${r1(4 * s)}" fill="#c0392b"/>`
     + line([-11, 72], hands[0], skin, 8)
@@ -135,6 +293,13 @@ function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shi
     + `<path d="M${X(-15)} ${Y(92)} A${r1(15 * s)} ${r1(15 * s)} 0 0 ${f > 0 ? 1 : 0} ${X(15)} ${Y(92)} Q${X(4)} ${Y(98)} ${X(-15)} ${Y(92)}Z" fill="${o.hair}"/>`
     + `<circle cx="${X(-5)}" cy="${Y(90)}" r="${r1(1.8 * s)}" fill="#2b2f38"/><circle cx="${X(5)}" cy="${Y(90)}" r="${r1(1.8 * s)}" fill="#2b2f38"/>`
     + `<path d="M${X(-5)} ${Y(84)} Q${X(0)} ${Y(80)} ${X(5)} ${Y(84)}" stroke="#2b2f38" stroke-width="${r1(1.8 * s)}" fill="none" stroke-linecap="round"/>`
+    // a woollen cap with a pompom, and a scarf (winter)
+    + (o.cap
+      ? `<path d="M${X(-16)} ${Y(94)} A${r1(16 * s)} ${r1(17 * s)} 0 0 ${f > 0 ? 1 : 0} ${X(16)} ${Y(94)}Z" fill="${o.cap}"/>`
+        + `<rect x="${r1(Math.min(X(-17), X(17)))}" y="${Y(97)}" width="${r1(34 * s)}" height="${r1(6 * s)}" rx="${r1(3 * s)}" fill="#fff" opacity=".85"/>`
+        + `<circle cx="${X(0)}" cy="${Y(112)}" r="${r1(5 * s)}" fill="#fff"/>`
+        + `<rect x="${r1(Math.min(X(-12), X(12)))}" y="${Y(79)}" width="${r1(24 * s)}" height="${r1(6 * s)}" rx="${r1(3 * s)}" fill="${o.cap}"/>`
+      : '')
     + `</g>`;
 }
 
@@ -422,42 +587,93 @@ function train() {
  * @property {(p: Palette) => string} foreground  in front of everything (children, flowers ...)
  */
 
+/** A cloud at (x, y). */
+function cloud(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s, /** @type {string} */ color) {
+  return `<g fill="${color}"><ellipse cx="${x}" cy="${y}" rx="${70 * s}" ry="${24 * s}"/><circle cx="${x - 28 * s}" cy="${y - 14 * s}" r="${26 * s}"/><circle cx="${x + 18 * s}" cy="${y - 22 * s}" r="${34 * s}"/></g>`;
+}
+
+/**
+ * The children all along the line, right under the track, waving at the
+ * train: in little groups, at uneven distances, some a little nearer (lower
+ * and bigger). In winter they wear coats and caps, and some have a sled.
+ * @param {() => number} rnd
+ * @param {Palette} p
+ */
+function children(rnd, p) {
+  const shirts = p.cold
+    ? ['#e53935', '#1e88e5', '#43a047', '#ffb300', '#8e24aa', '#f4511e']
+    : ['#26a69a', '#ec407a', '#ffcf3f', '#7e57c2', '#ff7043', '#42a5f5', '#43a047', '#e53935'];
+  const hairs = ['#c0612b', '#5b3a26', '#2b2f38', '#f2c14e', '#3b2617'];
+  const caps = ['#1e88e5', '#e53935', '#fdd835', '#43a047', '#8e24aa'];
+  const poses = /** @type {const} */ (['wave', 'up', 'wave', 'wave', 'up']);
+  const kids = [];
+  for (let x = LX0 + 60 + rnd() * 80; x < LX1 - 40;) {
+    const group = 1 + Math.floor(rnd() * 3);                 // one, two or three together
+    for (let k = 0; k < group && x < LX1 - 40; k++) {
+      kids.push({ x, y: 922 + rnd() * 22 });
+      x += 46 + rnd() * 40;                                  // close to each other in a group
+    }
+    x += 120 + rnd() * 260;                                  // then a gap
+  }
+  kids.sort((a, b) => a.y - b.y);                            // the nearer ones in front
+  let out = '';
+  kids.forEach(({ x, y }) => {
+    const k = Math.round(x * 7 + y) % 997;                   // the same child every time
+    const pose = poses[k % poses.length];
+    const sc = 0.8 + ((y - 922) / 22) * 0.14;
+    const flip = (k >> 2) % 2 === 1;
+    if (p.cold && k % 4 === 0) {                             // a sled behind the child, its rope in the hand
+      const hx = x + (flip ? 20 : -20) * sc;
+      out += sled(x + (flip ? 52 : -52) * sc, y + 2, sc * 0.9, [r1(hx), r1(y - 40 * sc)]);
+    }
+    out += child(r1(x), r1(y), {
+      shirt: shirts[k % shirts.length], hair: hairs[(k >> 3) % hairs.length], pose, girl: k % 2 === 1,
+      s: r1(sc * 100) / 100, flip, cap: p.cold ? caps[(k >> 1) % caps.length] : undefined, legs: p.cold ? '#2f3a5a' : undefined,
+    });
+  });
+  return out;
+}
+
+/** What lies on the meadow under the track: flowers, fallen leaves or nothing (snow). */
+function meadowThings(/** @type {() => number} */ rnd, /** @type {Palette} */ p, /** @type {number} */ count, top = 852, depth = 90, x0 = LX0, x1 = LX1) {
+  if (p.flowers) return flowers(rnd, count, p.flowers, top, depth, x0, x1);
+  if (p.leaves) return leaves(rnd, count, p.leaves, top, depth, x0, x1);
+  return '';
+}
+
 /** @type {Record<string, SeasonThings>} */
 const THINGS = {
-  summer: {
-    sky: () => {
-      const cloud = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s) =>
-        `<g fill="#fff"><ellipse cx="${x}" cy="${y}" rx="${70 * s}" ry="${24 * s}"/><circle cx="${x - 28 * s}" cy="${y - 14 * s}" r="${26 * s}"/><circle cx="${x + 18 * s}" cy="${y - 22 * s}" r="${34 * s}"/></g>`;
-      return cloud(700, 200, 0.8) + cloud(1380, 360, 1.1);
-    },
-    fields: () => {
-      return '';
-    },
-    foreground: () => {
+  winter: {
+    sky: p => cloud(700, 220, 0.9, p.cloud) + cloud(1380, 340, 1.1, p.cloud) + cloud(240, 300, 0.8, p.cloud),
+    fields: () => '',
+    foreground: p => {
       const rnd = seeded(11);
-      let out = flowers(rnd, 50, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 852, 90, LX0, LX1);
-      // children all along the line, right under the track, waving at the train:
-      // in little groups, at uneven distances, some a little nearer (lower and bigger)
-      const shirts = ['#26a69a', '#ec407a', '#ffcf3f', '#7e57c2', '#ff7043', '#42a5f5', '#43a047', '#e53935'];
-      const hairs = ['#c0612b', '#5b3a26', '#2b2f38', '#f2c14e', '#3b2617'];
-      const poses = /** @type {const} */ (['wave', 'up', 'wave', 'wave', 'up']);
-      const kids = [];
-      for (let x = LX0 + 60 + rnd() * 80; x < LX1 - 40;) {
-        const group = 1 + Math.floor(rnd() * 3);                 // one, two or three together
-        for (let k = 0; k < group && x < LX1 - 40; k++) {
-          kids.push({ x, y: 922 + rnd() * 22 });
-          x += 46 + rnd() * 40;                                  // close to each other in a group
-        }
-        x += 120 + rnd() * 260;                                  // then a gap
-      }
-      kids.sort((a, b) => a.y - b.y);                            // the nearer ones in front
-      kids.forEach(({ x, y }, i) => {
-        const k = Math.round(x * 7 + y) % 997;                   // the same child every time
-        const pose = poses[k % poses.length];
-        const sc = 0.8 + ((y - 922) / 22) * 0.14;
-        out += child(r1(x), r1(y), { shirt: shirts[k % shirts.length], hair: hairs[(k >> 3) % hairs.length], pose, girl: k % 2 === 1, s: r1(sc * 100) / 100, flip: (k >> 2) % 2 === 1 });
-      });
-      return out;
+      // a few snowmen between the children, then the children
+      return snowman(-260, 940, 0.62) + snowman(980, 942, 0.6) + snowman(1880, 944, 0.64) + children(rnd, p);
+    },
+  },
+  spring: {
+    sky: p => cloud(700, 200, 0.8, p.cloud) + cloud(1380, 360, 1.1, p.cloud),
+    fields: () => '',
+    foreground: p => {
+      const rnd = seeded(11);
+      return meadowThings(rnd, p, 90) + children(rnd, p);
+    },
+  },
+  summer: {
+    sky: p => cloud(700, 200, 0.8, p.cloud) + cloud(1380, 360, 1.1, p.cloud),
+    fields: () => '',
+    foreground: p => {
+      const rnd = seeded(11);
+      return meadowThings(rnd, p, 50) + children(rnd, p);
+    },
+  },
+  autumn: {
+    sky: p => cloud(700, 200, 0.9, p.cloud) + cloud(1380, 340, 1.2, p.cloud) + cloud(300, 330, 0.7, p.cloud),
+    fields: () => '',
+    foreground: p => {
+      const rnd = seeded(11);
+      return meadowThings(rnd, p, 90) + children(rnd, p);
     },
   },
 };
@@ -465,18 +681,46 @@ const THINGS = {
 /**
  * The scenery behind the journeys' cards (2000 × 700, x from -200 to 1800),
  * so the meadow is not empty: the cards stand in the middle, a few things
- * at the sides. The picture is as tall as the cards, so it is cut from the
- * top: everything stands low, between y 580 and 700.
+ * at the sides, the things of the season. The picture is as tall as the
+ * cards, so it is cut from the top: everything stands low, between y 580
+ * and 700.
  * @type {Record<string, (p: Palette) => string>}
  */
 const GROUND = {
+  winter: p => {
+    const rnd = seeded(41);
+    let out = '';
+    // at the left a snowman and a fir in the snow, a sled; at the right firs, a sled and a little snowman
+    out += fir(-150, 706, 120, p.conifer, true) + snowman(-10, 708, 0.85) + sled(150, 700, 1);
+    out += fir(1500, 706, 110, p.conifer, true) + fir(1580, 708, 86, p.conifer, true) + sled(1420, 700, 1) + snowman(1700, 708, 0.72);
+    for (let i = 0; i < 14; i++) out += `<ellipse cx="${r1(X0 + rnd() * (X1 - X0))}" cy="${r1(600 + rnd() * 100)}" rx="${r1(18 + rnd() * 24)}" ry="4" fill="#d6e2f0" opacity=".7"/>`;
+    return out;
+  },
+  spring: p => {
+    const rnd = seeded(41);
+    let out = flowers(rnd, 36, /** @type {string[]} */ (p.flowers), 480, 210);
+    // blossoming trees, tulips and butterflies at both sides
+    out += tree(-130, 708, 130, ['#f6b3cc', '#fde4ee'], rnd, '#ffffff') + tulip(-20, 712, 42, '#ff4f8b') + tulip(10, 712, 50, '#ffd84a') + tulip(40, 712, 44, '#b07cff');
+    out += butterfly(120, 618, '#ffd84a') + butterfly(-60, 590, '#42a5f5');
+    out += tree(1560, 708, 126, ['#ffffff', '#fde4ee'], rnd, '#f6a3c2') + tulip(1430, 712, 46, '#ff6f3c') + tulip(1460, 712, 40, '#ff4f8b') + butterfly(1700, 610, '#ec407a');
+    return out;
+  },
   summer: p => {
     const rnd = seeded(41);
-    let out = flowers(rnd, 30, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 480, 210);
+    let out = flowers(rnd, 30, /** @type {string[]} */ (p.flowers), 480, 210);
     // at the left sunflowers with butterflies, at the right a haystack and a slice of watermelon
     out += sunflower(-60, 712, 130, -5) + sunflower(-20, 712, 112, 4) + sunflower(20, 712, 136, 7);
     out += butterfly(120, 618, '#ff8a3d') + butterfly(-150, 600, '#42a5f5');
     out += haystack(1480, 692, 0.8) + watermelon(1630, 690) + butterfly(1720, 610, '#ec407a');
+    return out;
+  },
+  autumn: p => {
+    const rnd = seeded(41);
+    const colors = /** @type {string[]} */ (p.leaves);
+    let out = leaves(rnd, 40, colors, 480, 220);
+    // copper and yellow trees, heaps of leaves and pumpkins
+    out += tree(-140, 708, 130, ['#e0892c', '#e8b23a'], rnd, '#c95a22') + leafPile(10, 704, 0.9, colors, rnd) + pumpkin(130, 704, 0.9);
+    out += tree(1560, 708, 124, ['#c95a22', '#e0892c'], rnd, '#e8b23a') + pumpkin(1430, 704, 1) + pumpkin(1480, 706, 0.7) + leafPile(1700, 704, 0.8, colors, rnd);
     return out;
   },
 };
@@ -509,16 +753,33 @@ export function landscape(season) {
   const peaks = [[-600, 500], [-490, 420], [-380, 505], [-290, 430], [-200, 470], [-90, 420], [0, 520], [110, 440], [190, 490], [330, 380], [450, 470], [560, 420], [690, 500], [820, 400], [930, 455], [1040, 360], [1180, 470], [1290, 410], [1420, 480], [1520, 420], [1600, 450], [1700, 390], [1800, 470], [1900, 400], [2000, 490], [2100, 420], [2200, 480]];
   const mountains = `M${LX0} 660 ${peaks.map(([x, y]) => `L${x} ${y}`).join(' ')} L${LX1} 660Z`;
   let faces = '';
+  let caps = '';
   for (let i = 1; i < peaks.length - 1; i += 2) {
     const [px, py] = peaks[i];
     const [vx, vy] = peaks[i + 1];
     faces += `M${px} ${py} L${r1(px + (vx - px) * 0.75)} ${r1(py + (vy - py) * 0.75)} L${px + 20} ${py + 140}Z `;
+    if (p.caps) {
+      // the snow on the peak: down both slopes, with a jagged lower edge
+      const [lx, ly] = peaks[i - 1];
+      const f = p.caps;
+      const L = [px + (lx - px) * f, py + (ly - py) * f];
+      const R = [px + (vx - px) * f, py + (vy - py) * f];
+      const mid = py + ((L[1] + R[1]) / 2 - py) * 0.8;
+      caps += `M${px} ${py} L${r1(R[0])} ${r1(R[1])} L${r1(px + (R[0] - px) * 0.5)} ${r1(mid)} L${r1(px)} ${r1(mid + (R[1] - py) * 0.25)} L${r1(px + (L[0] - px) * 0.5)} ${r1(mid)} L${r1(L[0])} ${r1(L[1])}Z `;
+    }
   }
 
-  // the forest on the ridge in front of the mountains
+  // the forest on the ridge in front of the mountains (with leafy trees among the firs in spring and autumn)
   let forest = '';
   for (let x = LX0 - 10; x < LX1 + 20; x += 13 + rnd() * 8) {
-    forest += fir(x, forestTop(x) + 12 + rnd() * 10, 34 + rnd() * 22, p.conifer);
+    const y = forestTop(x) + 12 + rnd() * 10;
+    const h = 34 + rnd() * 22;
+    if (p.trees.length && rnd() < 0.42) {
+      const c = p.trees[Math.floor(rnd() * p.trees.length)];
+      forest += `<circle cx="${r1(x)}" cy="${r1(y - h * 0.45)}" r="${r1(h * 0.38)}" fill="${c}"/><circle cx="${r1(x + h * 0.2)}" cy="${r1(y - h * 0.6)}" r="${r1(h * 0.24)}" fill="${c}"/>`;
+    } else {
+      forest += fir(x, y, h, p.conifer, p.firSnow);
+    }
   }
 
   return `
@@ -538,6 +799,7 @@ export function landscape(season) {
       ${things.sky(p)}
       <path d="${mountains}" fill="${p.mountains[0]}"/>
       <path d="${faces}" fill="${p.mountains[1]}"/>
+      ${caps ? `<path d="${caps}" fill="#ffffff"/>` : ''}
       <path d="${ridge(forestTop, 720, LX0, LX1)}" fill="${p.mountains[2]}"/>
       ${forest}
       <path d="${ridge(villageTop, RAIL, LX0, LX1)}" fill="${p.hills[0]}"/>
