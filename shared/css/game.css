@@ -664,7 +664,10 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .luggage-icon { font-size: 40px; line-height: 1.1; }
 .luggage-item.is-dragging { position: relative; z-index: 2; transition: none; box-shadow: 0 10px 20px rgba(0, 0, 0, .25); }
 .luggage-item.is-packed { opacity: .25; transform: scale(.9); cursor: default; }
-.luggage-item.is-wrong { animation: shake .45s; border-color: var(--red); }
+/* a wrong choice shakes and turns red for a moment, then looks as before
+   (a red border left behind would still mark it when the next question comes) */
+.luggage-item.is-wrong { animation: shake .45s, wrong-flash 1.4s; }
+@keyframes wrong-flash { 0%, 60% { border-color: var(--red); } }
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-8px); }
@@ -794,6 +797,7 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .panel, .ticket-chip, .packed-item, .star.is-won, .mission-counter.is-bumped, .luggage-item.is-wrong { animation: none; }
+  .luggage-item.is-wrong { animation: wrong-flash 1.4s step-end; }
 }
 
 /* ---------- Rotating tiles puzzle ---------- */
