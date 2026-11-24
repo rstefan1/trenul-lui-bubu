@@ -213,23 +213,11 @@ function flowers(/** @type {() => number} */ rnd, /** @type {number} */ count, /
  * The railway and the train
  * ------------------------------------------------------------------------ */
 
-/** The track along the whole picture, on its embankment, with telegraph poles behind it. */
+/** The track along the whole picture, on its embankment. */
 function railway() {
   let sleepers = '';
   for (let x = LX0 + 4; x < LX1; x += 20) sleepers += `<rect x="${x}" y="${RAIL + 4}" width="12" height="8" rx="2"/>`;
-  let poles = '';
-  let wires = '';
-  const poleXs = [80, 300];
-  for (const x of poleXs) {
-    poles += `<path d="M${x} ${RAIL + 2} V${RAIL - 120} M${x - 16} ${RAIL - 110} H${x + 16}" stroke="#6b4a32" stroke-width="6" stroke-linecap="round"/>`;
-  }
-  for (let i = 0; i < poleXs.length - 1; i++) {
-    const a = poleXs[i];
-    const b = poleXs[i + 1];
-    wires += `<path d="M${a - 14} ${RAIL - 112} Q${(a + b) / 2} ${RAIL - 88} ${b - 14} ${RAIL - 112} M${a + 14} ${RAIL - 112} Q${(a + b) / 2} ${RAIL - 88} ${b + 14} ${RAIL - 112}" stroke="#4a4f5a" stroke-width="1.6" fill="none"/>`;
-  }
-  return `<g>${wires}${poles}</g>`
-    + `<path d="M${LX0} ${RAIL + 4} H${LX1} V${RAIL + 44} H${LX0}Z" fill="#a89580"/>`
+  return `<path d="M${LX0} ${RAIL + 4} H${LX1} V${RAIL + 44} H${LX0}Z" fill="#a89580"/>`
     + `<path d="M${LX0} ${RAIL + 30} H${LX1} V${RAIL + 44} H${LX0}Z" fill="#8c7a66"/>`
     + `<g fill="#6b4a32">${sleepers}</g>`
     + `<rect x="${LX0}" y="${RAIL - 4}" width="${LX1 - LX0}" height="8" fill="#5b616c"/>`
