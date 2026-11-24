@@ -34,9 +34,9 @@ import { Mission } from './mission.js';
  * @property {number} spacing      the distance between two places
  * @property {number} [stopBefore=140]  the train stops with its front this far before a place
  * @property {number} [room=120]   space kept on screen beyond the right end of a place
- * @property {boolean} [holdView=false]  once the view has panned to a place, it stays there
- *   (does not slide back towards the train as the train comes closer), until the
- *   mission stops framing that place (see focusPlace)
+ * @property {boolean} [holdView=false]  once the view has panned forward, it stays there until
+ *   the mission ends: it never slides back towards the train (as the train comes closer to a
+ *   place, between two places, or while it passes a place)
  */
 
 /** The view pans towards a place from this far before the train stops at it. */
@@ -59,9 +59,7 @@ export class LineStopMission extends Mission {
     this.endT = 0;
     /** @type {TrainPace | null} */
     this.pace = null;
-    /** The place the view frames now, and how far it is panned for it (holdView). */
-    /** @type {LinePlace | null} */
-    this.framed = null;
+    /** How far the view has panned forward so far (holdView: it never goes back). */
     this.framedPan = 0;
   }
 
@@ -140,14 +138,12 @@ export class LineStopMission extends Mission {
     // (never so far that the locomotive leaves the screen)
     const most = Math.max(0, w.baseAnchorX - this.ctx.stage.viewLeft - KEEP_LOCO);
     const want = near ? Math.min(most, Math.max(0, right - this.ctx.stage.viewRight)) : 0;
-    if (!this.options.holdView || !near) {
-      this.framed = null;
-      w.panTarget = want;
-    } else {
-      // the view stays where it went for this place, while the train comes closer
-      this.framedPan = this.framed === f ? Math.max(this.framedPan, want) : want;
-      this.framed = f;
+    if (this.options.holdView) {
+      // the view stays where it went, until the mission ends
+      this.framedPan = Math.max(this.framedPan, want);
       w.panTarget = this.framedPan;
+    } else {
+      w.panTarget = want;
     }
     if (this.pace) {
       if (p) {

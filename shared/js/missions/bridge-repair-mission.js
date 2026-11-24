@@ -49,7 +49,8 @@ export class BridgeRepairMission extends LineStopMission {
    * @param {BridgeConfig} config
    */
   constructor(ctx, config) {
-    super(ctx, config, { speed: 280, firstAhead: 2600, spacing: 0, stopBefore: 120, room: 160 });
+    // the view stays on the bridge from the moment it is seen until the train has crossed it
+    super(ctx, config, { speed: 280, firstAhead: 2600, spacing: 0, stopBefore: 120, room: 160, holdView: true });
     this.config = config;
     this.particles = new Particles();
     /** Where the last hammer stroke landed, and when. */
@@ -134,6 +135,11 @@ export class BridgeRepairMission extends LineStopMission {
         this.sound('hop');
       }
     }
+  }
+
+  /** The bridge, framed until it is behind the train, off the screen. */
+  focusPlace() {
+    return this.canEnd ? null : this.bridge;
   }
 
   /** The bridge is drawn by the mission: it ends only when the bridge is behind, off the screen. */

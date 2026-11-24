@@ -47,7 +47,8 @@ export class TrackRepairMission extends LineStopMission {
    * @param {TrackConfig} config
    */
   constructor(ctx, config) {
-    super(ctx, config, { speed: 300, firstAhead: 2400, spacing: 2600, stopBefore: 130, room: 150 });
+    // once the view has moved forward to the first place, it stays there
+    super(ctx, config, { speed: 300, firstAhead: 2400, spacing: 2600, stopBefore: 130, room: 150, holdView: true });
     this.config = config;
     this.particles = new Particles();
     this.quick = 0;

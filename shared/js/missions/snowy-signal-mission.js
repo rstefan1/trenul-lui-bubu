@@ -50,7 +50,8 @@ export class SnowySignalMission extends LineStopMission {
    * @param {SnowySignalConfig} config
    */
   constructor(ctx, config) {
-    super(ctx, config, { speed: 300, firstAhead: 2400, spacing: 2600, stopBefore: 220, room: 160 });
+    // the view stays on a signal from the moment it is seen until it has turned green
+    super(ctx, config, { speed: 300, firstAhead: 2400, spacing: 2600, stopBefore: 220, room: 160, holdView: true });
     this.config = config;
     this.particles = new Particles();
     this.quick = 0;
@@ -75,6 +76,11 @@ export class SnowySignalMission extends LineStopMission {
   /** @param {(i: number) => number} at */
   makePlaces(at) {
     return Array.from({ length: this.config.signals }, (_, i) => this.place(at(i), SIGNAL_W, { snow: 1, clearAt: -1 }));
+  }
+
+  /** A signal that has just turned green (kept framed a moment), or else the next one. */
+  focusPlace() {
+    return this.places.find(p => p.done && this.time - p.doneAt < 1.5) ?? this.next;
   }
 
   /** The signal the train waits before, while it still has snow on it. */
