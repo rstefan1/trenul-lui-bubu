@@ -290,8 +290,9 @@ function passenger(/** @type {number} */ w, /** @type {number} */ h, /** @type {
  * @param {Array<[string, string] | null>} people  hair and shirt of the child in every window (null: empty)
  */
 function car(x, w, people) {
-  const top = RAIL - 132;
-  const bottom = RAIL - 50;
+  // low on its wheels, like a real car: the body ends just above the wheels
+  const top = RAIL - 118;
+  const bottom = RAIL - 30;
   const winW = 26;
   const winH = 24;
   const doorW = 14;
@@ -308,14 +309,12 @@ function car(x, w, people) {
     `<rect x="${dx}" y="${top + 8}" width="${doorW}" height="${bottom - top - 10}" rx="2" fill="none" stroke="#6e1612" stroke-width="1.6"/>`
     + `<rect x="${dx + 3}" y="${top + 14}" width="${doorW - 6}" height="16" rx="2" fill="url(#tr-glass)" stroke="#6e1612" stroke-width="1.2"/>`;
   const bogie = (/** @type {number} */ bx) =>
-    `<rect x="${bx - 8}" y="${RAIL - 42}" width="16" height="14" fill="#2b3038"/>`
-    + carWheel(bx - 15, RAIL - 12, 12) + carWheel(bx + 15, RAIL - 12, 12)
-    + `<rect x="${bx - 28}" y="${RAIL - 30}" width="56" height="10" rx="3" fill="#3a4049"/>`
-    + `<circle cx="${bx - 15}" cy="${RAIL - 12}" r="3" fill="#c8ced8"/><circle cx="${bx + 15}" cy="${RAIL - 12}" r="3" fill="#c8ced8"/>`;
+    carWheel(bx - 16, RAIL - 13, 13) + carWheel(bx + 16, RAIL - 13, 13)
+    + `<rect x="${bx - 30}" y="${RAIL - 19}" width="60" height="10" rx="3" fill="#3a4049"/>`
+    + `<circle cx="${bx - 16}" cy="${RAIL - 13}" r="3" fill="#c8ced8"/><circle cx="${bx + 16}" cy="${RAIL - 13}" r="3" fill="#c8ced8"/>`;
   return `<g>`
-    + bogie(x + 32) + bogie(x + w - 32)
-    + `<rect x="${x + 4}" y="${bottom}" width="${w - 8}" height="10" fill="#2b3038"/>`
-    + `<rect x="${x - 6}" y="${bottom - 2}" width="8" height="6" rx="2" fill="#59606b"/><rect x="${x + w - 2}" y="${bottom - 2}" width="8" height="6" rx="2" fill="#59606b"/>`
+    + bogie(x + 38) + bogie(x + w - 38)
+    + `<rect x="${x - 6}" y="${bottom - 14}" width="8" height="6" rx="2" fill="#59606b"/><rect x="${x + w - 2}" y="${bottom - 14}" width="8" height="6" rx="2" fill="#59606b"/>`
     + `<rect x="${x}" y="${top}" width="${w}" height="${bottom - top}" rx="5" fill="url(#tr-car)"/>`
     + `<rect x="${x}" y="${top + 46}" width="${w}" height="3" fill="#f0c75e"/>`
     + `<rect x="${x}" y="${top + 52}" width="${w}" height="1.5" fill="#f0c75e" opacity=".7"/>`
@@ -330,15 +329,14 @@ function car(x, w, people) {
 /** The coal tender behind the engine, its left end at x. */
 function tender(/** @type {number} */ x) {
   const w = 66;
-  const top = RAIL - 112;
+  const top = RAIL - 100;
   return `<g>`
-    + `<rect x="${x + 4}" y="${RAIL - 48}" width="${w - 8}" height="18" fill="#2b3038"/>`
     + carWheel(x + 17, RAIL - 13, 13) + carWheel(x + w - 17, RAIL - 13, 13)
-    + `<rect x="${x + 2}" y="${RAIL - 30}" width="${w - 4}" height="10" rx="3" fill="#3a4049"/>`
+    + `<rect x="${x + 2}" y="${RAIL - 19}" width="${w - 4}" height="10" rx="3" fill="#3a4049"/>`
     + `<path d="M${x + 6} ${top + 2} Q${x + 16} ${top - 14} ${x + 30} ${top - 8} Q${x + 44} ${top - 18} ${x + w - 6} ${top + 2}Z" fill="#2b2f38"/>`
-    + `<rect x="${x}" y="${top}" width="${w}" height="${RAIL - 50 - top}" rx="4" fill="url(#tr-boiler)"/>`
-    + `<rect x="${x + 7}" y="${top + 10}" width="${w - 14}" height="${RAIL - 72 - top}" rx="3" fill="none" stroke="#f0c75e" stroke-width="2"/>`
-    + `<rect x="${x}" y="${RAIL - 56}" width="${w}" height="8" fill="#2b3038"/>`
+    + `<rect x="${x}" y="${top}" width="${w}" height="${RAIL - 30 - top}" rx="4" fill="url(#tr-boiler)"/>`
+    + `<rect x="${x + 7}" y="${top + 10}" width="${w - 14}" height="${RAIL - 54 - top}" rx="3" fill="none" stroke="#f0c75e" stroke-width="2"/>`
+    + `<rect x="${x}" y="${RAIL - 38}" width="${w}" height="8" fill="#2b3038"/>`
     + `</g>`;
 }
 
@@ -400,17 +398,17 @@ function smoke(/** @type {number} */ x) {
  * to the right.
  */
 function train() {
-  const carW = 220;
+  const carW = 290;
   const engineX = 760;
   const tenderX = engineX - 72;
   const kids = [['#5b3a26', '#ff8a3d'], ['#f2c14e', '#7e57c2'], ['#2b2f38', '#26a69a'], ['#c0612b', '#ec407a'], ['#3b2617', '#42a5f5'], ['#f2c14e', '#43a047']];
   let cars = '';
-  let couplers = `M${tenderX - 10} ${RAIL - 50} h10`;
+  let couplers = `M${tenderX - 10} ${RAIL - 42} h10`;
   for (let i = 0; i < 4; i++) {
     const x = tenderX - 10 - (i + 1) * carW - i * 10;
-    const who = [kids[(i * 2) % 6], i === 1 ? null : kids[(i * 2 + 1) % 6], kids[(i * 3 + 2) % 6], i === 2 ? null : kids[(i + 4) % 6]];
+    const who = [kids[(i * 2) % 6], i === 1 ? null : kids[(i * 2 + 1) % 6], kids[(i * 3 + 2) % 6], i === 2 ? null : kids[(i + 4) % 6], kids[(i + 1) % 6]];
     cars += car(x, carW, /** @type {Array<[string, string] | null>} */ (who));
-    if (i < 3) couplers += ` M${x - 10} ${RAIL - 50} h10`;
+    if (i < 3) couplers += ` M${x - 10} ${RAIL - 42} h10`;
   }
   return trainDefs()
     + smoke(engineX)
