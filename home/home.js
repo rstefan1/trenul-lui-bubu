@@ -173,6 +173,15 @@ list.replaceChildren(...[...ROUTES].sort((a, b) => a.number - b.number).map(rout
 const filter = seasonFilter(list);
 if (filter) list.before(filter);
 
+// the sign under the landscape: how many journeys there are, and that they are below
+const more = /** @type {HTMLAnchorElement} */ (document.getElementById('more'));
+more.append(
+  el('span', { class: 'home-more-count' }, [ROUTES.length === 1 ? '1 călătorie' : `${ROUTES.length} călătorii`]),
+  el('span', {}, ['Alege mai jos']),
+  el('span', { class: 'home-more-arrow', 'aria-hidden': 'true' }, ['⬇']),
+);
+more.hidden = ROUTES.length === 0;
+
 const scenery = /** @type {HTMLElement} */ (document.getElementById('scene'));
 // the SVGs are built from fixed values (no text from outside goes into them)
 const season = /** @type {Season} */ (document.documentElement.dataset.season || 'summer');
