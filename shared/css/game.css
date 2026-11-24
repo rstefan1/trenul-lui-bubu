@@ -1240,6 +1240,13 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 
 /* ---------- Counting the arches (viaducts) ---------- */
 .arches-controls { align-items: center; }
+/* high up on the right, in the sky: at the bottom it would hide the arches to count */
+.signal-controls.arches-controls {
+  left: auto;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: auto;
+  top: calc(var(--hud-bottom, 96px) + 12px);
+}
 .arches-question { max-width: 9em; color: #fff; font-size: clamp(16px, 2.4vmin, 20px); font-weight: 800; line-height: 1.15; }
 .arches-controls .signal-btn { font-size: clamp(26px, 4vmin, 34px); min-width: clamp(70px, 10vmin, 96px); }
 .arches-controls .signal-btn:disabled { opacity: .4; }
