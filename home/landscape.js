@@ -381,9 +381,8 @@ function smoke(/** @type {number} */ x) {
 }
 
 /**
- * The whole train, long and bright on the green hills: four long red cars
- * full of children, the tender and the black steam engine, going to the
- * right.
+ * The train, bright on the green hills: one long red car full of children,
+ * the tender and the black steam engine, going to the right.
  */
 function train() {
   const carW = 290;
@@ -392,11 +391,11 @@ function train() {
   const kids = [['#5b3a26', '#ff8a3d'], ['#f2c14e', '#7e57c2'], ['#2b2f38', '#26a69a'], ['#c0612b', '#ec407a'], ['#3b2617', '#42a5f5'], ['#f2c14e', '#43a047']];
   let cars = '';
   let couplers = `M${tenderX - 10} ${RAIL - 42} h10`;
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 1; i++) {
     const x = tenderX - 10 - (i + 1) * carW - i * 10;
     const who = [kids[(i * 2) % 6], i === 1 ? null : kids[(i * 2 + 1) % 6], kids[(i * 3 + 2) % 6], i === 2 ? null : kids[(i + 4) % 6], kids[(i + 1) % 6]];
     cars += car(x, carW, /** @type {Array<[string, string] | null>} */ (who));
-    if (i < 3) couplers += ` M${x - 10} ${RAIL - 42} h10`;
+    if (i > 0) couplers += ` M${x + carW} ${RAIL - 42} h10`;
   }
   return trainDefs()
     + smoke(engineX)
