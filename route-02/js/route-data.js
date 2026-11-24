@@ -64,15 +64,17 @@ export const FREIGHT_ROUTE = {
       train: 'freight',
     },
     // Vatra Dornei → Ilva Mică: the forests and viaducts of the Christmas night, now by day
-    // (the train slows down on every viaduct, while the child counts its arches)
+    // (the train slows down on every viaduct, while the child counts its arches), then
+    // a tunnel longer than the train, far enough from the viaducts that the view is
+    // no longer lifted over a valley, and left by the whole train before Ilva Mică
     {
       duration: 24,
       biomes: [[0, 'city'], [0.06, 'forest']],
       features: [
         { type: 'viaduct', at: 0.11, length: 720, depth: 420 },
-        { type: 'tunnel', at: 0.3, length: 400 },
-        { type: 'viaduct', at: 0.4, length: 960, depth: 480 },
-        { type: 'viaduct', at: 0.7, length: 600, depth: 380 },
+        { type: 'viaduct', at: 0.28, length: 960, depth: 480 },
+        { type: 'viaduct', at: 0.46, length: 600, depth: 380 },
+        { type: 'tunnel', at: 0.7, length: 1560 },
       ],
       snowfall: [[0, 0]],
       cover: [[0, 1]],
