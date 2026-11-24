@@ -554,7 +554,7 @@ export function landscape(season) {
     + tree(-60, villageTop(-60) + 30, 78, p) + tree(1690, villageTop(1690) + 30, 84, p);
 
   return `
-    <svg viewBox="${X0} 0 ${X1 - X0} ${H}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+    <svg viewBox="${X0} 0 ${X1 - X0} ${H - 30}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id="land-sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="${p.sky[0]}"/><stop offset=".62" stop-color="${p.sky[1]}"/>
