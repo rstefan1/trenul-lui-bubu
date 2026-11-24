@@ -10,6 +10,7 @@
  *
  * Configuration (besides id/title/text):
  *   seats   the window seats of the children (see TrainRenderer.passengerWindows)
+ *   count   how many of them get cold, one after the other (default: all)
  *   fact    shown after the last mug
  */
 
@@ -18,7 +19,7 @@ import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillRoundRect } from '../gfx/shapes.js';
 import { Mission } from './mission.js';
 
-/** @typedef {import('./mission.js').MissionConfig & {seats: number[], fact: string}} TeaConfig */
+/** @typedef {import('./mission.js').MissionConfig & {seats: number[], count?: number, fact: string}} TeaConfig */
 
 /** Seconds before the first child shivers, and between a mug and the next child. */
 const FIRST = 1.2;
@@ -38,7 +39,9 @@ export class TeaMission extends Mission {
     this.config = config;
     // the children shiver in a mixed order, not window after window
     /** @type {number[]} */
-    this.queue = config.seats.slice().sort(() => Math.random() - 0.5);
+    this.queue = config.seats.slice().sort(() => Math.random() - 0.5).slice(0, config.count ?? config.seats.length);
+    /** How many children get their mug. */
+    this.total = this.queue.length;
     /** @type {number | null} the seat of the child shivering now */
     this.cold = null;
     this.coldT = 0;
@@ -54,7 +57,7 @@ export class TeaMission extends Mission {
   /** @param {{duration?: number, window?: {from: number, to: number}}} hints */
   start(hints) {
     super.start(hints);
-    this.ctx.hud.setCounter('☕', 0, this.config.seats.length);
+    this.ctx.hud.setCounter('☕', 0, this.total);
   }
 
   /**
@@ -81,7 +84,7 @@ export class TeaMission extends Mission {
     this.sound('collect', w.x);
     this.cold = null;
     this.wait = NEXT;
-    this.ctx.hud.setCounter('☕', this.served.size, this.config.seats.length);
+    this.ctx.hud.setCounter('☕', this.served.size, this.total);
     if (!this.queue.length) this.ctx.hud.announce('Toți copiii s-au încălzit!', this.config.fact, 'Misiune', 4);
   }
 
@@ -104,7 +107,7 @@ export class TeaMission extends Mission {
   finishMission() {
     if (this.phase === 'finished') return;
     this.ctx.hud.hideCounter();
-    const n = this.config.seats.length;
+    const n = this.total;
     const all = this.served.size >= n;
     this.complete(all && this.quick >= n ? 3 : all && this.quick >= n - 1 ? 2 : 1, all
       ? 'Bravo! Cu ceai cald, copiilor nu le mai e frig.'

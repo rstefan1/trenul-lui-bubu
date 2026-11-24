@@ -29,6 +29,9 @@ export const CHILD_LOOKS = Object.freeze([
   { skin: '#f8dcc4', hair: '#d9a441', hat: '#00897b', pompom: '#ffffff', coat: '#fdd835', scarf: '#1e88e5', braids: true },
   { skin: '#c68a5e', hair: '#241812', hat: '#1565c0', pompom: '#ff7043', coat: '#e53935', scarf: '#ffffff' },
   { skin: '#f3cfae', hair: '#8d4a24', hat: '#ff8f00', pompom: '#6d4c41', coat: '#2e7d32', scarf: '#ff80ab' },
+  { skin: '#e8b892', hair: '#3b2416', hat: '#d81b60', pompom: '#ffffff', coat: '#5e35b1', scarf: '#ffca28', braids: true },
+  { skin: '#f6d2b4', hair: '#b5651d', hat: '#0277bd', pompom: '#ffeb3b', coat: '#8d6e63', scarf: '#43a047' },
+  { skin: '#d9a07a', hair: '#1d1d24', hat: '#fbc02d', pompom: '#e53935', coat: '#00838f', scarf: '#ff7043' },
 ]);
 
 /**

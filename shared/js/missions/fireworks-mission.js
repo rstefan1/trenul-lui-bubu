@@ -358,9 +358,9 @@ export class FireworksMission extends Mission {
     // the children: by the train at first, around the campfire later
     const kids = this.config.children;
     kids.forEach((look, i) => {
-      const a = Math.PI * (0.95 + (i / Math.max(1, kids.length - 1)) * 1.1);
-      const x = f.x + Math.cos(a) * 110;
-      const y = fy - 24 + Math.sin(a) * 26;
+      const a = Math.PI * (0.88 + (i / Math.max(1, kids.length - 1)) * 1.24);
+      const x = f.x + Math.cos(a) * 150;
+      const y = fy - 24 + Math.sin(a) * 30;
       const happy = this.step === 'show' || this.step === 'done';
       const hop = happy ? Math.abs(Math.sin(this.time * 6 + i)) * 22 : Math.abs(Math.sin(this.time * 2 + i)) * 4;
       // the children behind the fire face it; they cheer when the fireworks start

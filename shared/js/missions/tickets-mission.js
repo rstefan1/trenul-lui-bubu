@@ -21,6 +21,8 @@
  *   children   [{look, coach, ticket}] — in order; look: index in CHILD_LOOKS;
  *              ticket: "good" | "day" | "place" | "drawing"
  *   seats      [[seat, seat…] per coach] — window seats of every coach (see TrainRenderer.passengerWindows)
+ *   aboard     window seats of the children already on the train (they came with their
+ *              teacher, who showed their tickets): they sit there from the start
  *   flag       set at the end (all the children are on the train)
  */
 
@@ -34,7 +36,7 @@ import { Mission, starsForMistakes } from './mission.js';
  * @typedef {{look: number, coach: number, ticket: TicketKind}} TicketChild
  * @typedef {import('./mission.js').MissionConfig & {
  *   route: {from: string, to: string, toIcon: string, day: number, otherPlace: string},
- *   children: TicketChild[], seats: number[][], flag: string,
+ *   children: TicketChild[], seats: number[][], aboard?: number[], flag: string,
  * }} TicketsConfig
  */
 
@@ -75,6 +77,8 @@ export class TicketsMission extends Mission {
 
   start() {
     this.phase = 'running';
+    // (the train only keeps the seats: the journey draws the children at the windows)
+    for (const seat of this.config.aboard ?? []) this.ctx.world.train.addPassenger('', seat);
     // the child at the steps of the train, drawn in winter clothes
     const face = el('canvas', { class: 'ticket-child', width: '120', height: '120', 'aria-hidden': 'true' });
     const says = el('p', { class: 'wish-says' });

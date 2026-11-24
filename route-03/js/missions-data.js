@@ -16,10 +16,13 @@
 import { DAY } from '../../shared/js/world/clock.js';
 
 /**
- * The children of the camp: their look (shared/js/gfx/children.js), their
- * coach and their window seat. The seats are the windows of the coaches as
- * the train lists them (back of the train first): coach 3 has seats 0–2,
- * coach 2 has 3–5, coach 1 has 6–8.
+ * The children of the camp, one at every window of the train: their look
+ * (shared/js/gfx/children.js), their coach and their window seat. The seats
+ * are the windows of the coaches as the train lists them (back of the train
+ * first): coach 3 has seats 0–2, coach 2 has 3–5, coach 1 has 6–8.
+ *
+ * The first five show their tickets to Bubu at Vișeu de Sus; the others
+ * are already on the train, with their teacher.
  */
 export const CHILDREN = [
   { look: 0, coach: 1, seat: 6 },
@@ -27,7 +30,13 @@ export const CHILDREN = [
   { look: 2, coach: 3, seat: 0 },
   { look: 3, coach: 1, seat: 8 },
   { look: 4, coach: 2, seat: 5 },
+  { look: 5, coach: 3, seat: 2 },
+  { look: 6, coach: 1, seat: 7 },
+  { look: 7, coach: 2, seat: 4 },
+  { look: 8, coach: 3, seat: 1 },
 ];
+/** How many of them show their tickets to Bubu. */
+const CHECKED = 5;
 
 /** Set when the children are on the train (after their tickets were checked). */
 export const BOARDED_FLAG = 'children-boarded';
@@ -134,6 +143,7 @@ export const FOREST_MISSIONS = {
         title: 'Ceai cald pentru copii',
         text: 'Cu cât urcăm, cu atât e mai frig. Când un copil tremură la geam și spune „Brr!”, atinge-i geamul: Bubu îi aduce o cană de ceai cald.',
         seats: CHILDREN.map(c => c.seat),
+        count: 5,
         fact: 'Sus la munte e mai frig decât în vale: cu cât urci mai sus, cu atât aerul e mai rece.',
       },
     },
@@ -146,10 +156,11 @@ export const FOREST_MISSIONS = {
       config: {
         id: 'tickets-viseu',
         title: 'Controlorul de bilete',
-        text: 'Azi, Bubu lucrează la mocănița din Vișeu de Sus, una dintre ultimele căi ferate forestiere cu abur din Europa. Copiii vin cu biletele: verifică-le și arată-le vagonul.',
+        text: 'Azi, Bubu lucrează la mocănița din Vișeu de Sus, una dintre ultimele căi ferate forestiere cu abur din Europa. Câțiva copii au urcat deja cu doamna învățătoare; ceilalți vin cu biletele: verifică-le și arată-le vagonul.',
         route: { from: 'Vișeu de Sus', to: 'Paltin', toIcon: '🌲', day: 31, otherPlace: '🏙️ Vișeu de Jos' },
-        children: CHILDREN.map((c, i) => ({ look: c.look, coach: c.coach, ticket: /** @type {const} */ (['good', 'day', 'good', 'drawing', 'place'])[i] })),
+        children: CHILDREN.slice(0, CHECKED).map((c, i) => ({ look: c.look, coach: c.coach, ticket: /** @type {const} */ (['good', 'day', 'good', 'drawing', 'place'])[i] })),
         seats: [[6, 8], [3, 5], [0, 2]],
+        aboard: CHILDREN.slice(CHECKED).map(c => c.seat),
         flag: BOARDED_FLAG,
       },
     },

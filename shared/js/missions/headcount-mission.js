@@ -218,7 +218,7 @@ export class HeadcountMission extends Mission {
     // (they appear once they have hopped out of the coaches)
     if ((this.step === 'play' && this.stepT > 1.4) || this.step === 'call' || this.step === 'board') {
       this.playing.forEach((i, k) => {
-        const x = s.viewLeft + (s.viewRight - s.viewLeft) * (0.32 + k * 0.1);
+        const x = s.viewLeft + (s.viewRight - s.viewLeft) * (0.26 + (k * 0.52) / Math.max(1, this.config.children.length - 2));
         const hop = Math.abs(Math.sin(this.time * 4 + k * 1.7)) * 14;
         drawChild(c, x, y - KID * 2.2 - hop, KID, CHILD_LOOKS[this.config.children[i].look], { full: true, wave: hop / 14, face: k % 2 ? -1 : 1 });
         // a snowball flying between two of them
