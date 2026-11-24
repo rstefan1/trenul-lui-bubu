@@ -46,7 +46,7 @@ export const FREIGHT_MISSIONS = {
     {
       segment: 2,
       from: 0.01,
-      to: 0.64,
+      to: 0.58,
       type: 'sand',
       config: {
         id: 'sand-mestecanis',

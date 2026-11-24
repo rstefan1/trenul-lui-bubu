@@ -34,19 +34,22 @@ export const FREIGHT_ROUTE = {
 
   segments: [
     // Putna → Suceava Nord: the hills of Bucovina at sunrise, over the Suceava river
-    // (past Rădăuți and Dornești); the signals mission sets the pace
+    // (past Rădăuți and Dornești), then the town of Suceava: blocks of flats and
+    // houses for a long way around the station (the far layers of the landscape
+    // move slowly, so the town must start well before it); the signals mission
+    // sets the pace
     {
       duration: 34,
-      biomes: [[0, 'hills'], [0.12, 'forest'], [0.3, 'hills'], [0.5, 'plain'], [0.75, 'hills'], [0.9, 'city']],
+      biomes: [[0, 'hills'], [0.12, 'forest'], [0.3, 'hills'], [0.45, 'plain'], [0.74, 'city']],
       features: [{ type: 'bridge', at: 0.6, length: 340, depth: 110 }],
       snowfall: [[0, 0]],
       cover: [[0, 1]],
       train: 'freight',
     },
-    // Suceava Nord → Câmpulung Moldovenesc: up the Moldova valley, a sunny morning
+    // Suceava Nord → Câmpulung Moldovenesc: out of Suceava, then up the Moldova valley
     {
       duration: 24,
-      biomes: [[0, 'city'], [0.1, 'hills'], [0.4, 'forest'], [0.7, 'hills'], [0.9, 'city']],
+      biomes: [[0, 'city'], [0.26, 'plain'], [0.4, 'hills'], [0.55, 'forest'], [0.78, 'hills'], [0.9, 'city']],
       features: [{ type: 'bridge', at: 0.5, length: 380, depth: 120 }],
       snowfall: [[0, 0]],
       cover: [[0, 1]],
@@ -56,9 +59,9 @@ export const FREIGHT_ROUTE = {
     // mission) and through the long tunnel under it; Vatra Dornei comes soon
     // after the tunnel, so there is no long ride without anything to do
     {
-      duration: 22,
+      duration: 24,
       biomes: [[0, 'city'], [0.1, 'forest'], [0.86, 'city']],
-      features: [{ type: 'tunnel', at: 0.66, length: 1600 }],
+      features: [{ type: 'tunnel', at: 0.6, length: 2600 }],
       snowfall: [[0, 0], [0.2, 0.3], [0.5, 0.25], [0.8, 0]],
       cover: [[0, 1]],
       train: 'freight',
