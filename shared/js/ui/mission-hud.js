@@ -230,14 +230,23 @@ export class MissionHud {
   }
 }
 
+/**
+ * The frame requests that will fade boxes in (a box hidden before its fade-in
+ * starts must not appear after all).
+ * @type {WeakMap<HTMLElement, number>}
+ */
+const fadeIns = new WeakMap();
+
 /** @param {HTMLElement} node */
 function show(node) {
   node.hidden = false;
-  requestAnimationFrame(() => node.classList.add('is-visible'));
+  cancelAnimationFrame(fadeIns.get(node) ?? 0);
+  fadeIns.set(node, requestAnimationFrame(() => node.classList.add('is-visible')));
 }
 
 /** @param {HTMLElement} node */
 function hide(node) {
+  cancelAnimationFrame(fadeIns.get(node) ?? 0);
   node.classList.remove('is-visible');
   setTimeout(() => {
     if (!node.classList.contains('is-visible')) node.hidden = true;
