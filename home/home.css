@@ -130,7 +130,7 @@ body {
   padding: 0;
   display: grid;
   /* the cards stand in the middle, the scenery shows at their sides */
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 360px));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 380px));
   justify-content: center;
   gap: var(--list-gap) var(--list-gap);
   --list-gap: clamp(14px, 2.4vw, 24px);
@@ -141,22 +141,21 @@ body {
    then a perforation with a notch at each end, then the stub with the
    stamp (new, under way, done) and the button. The notches are cut out of
    the card (mask), so the shadow is drawn around the cut shape (filter). */
-.route-item { filter: drop-shadow(0 6px 10px rgba(20, 60, 20, .3)); }
+.route-item { filter: drop-shadow(0 8px 14px rgba(20, 60, 20, .28)); }
 .route-card {
-  --stub: 106px;
+  --stub: 104px;
   display: flex;
   height: 100%;
-  min-height: 132px;
-  background: #fffaf0;
+  background: #fffdf8;
   color: var(--ink);
-  border-radius: 14px;
+  border-radius: 16px;
   text-decoration: none;
   -webkit-mask:
-    radial-gradient(circle 11px at calc(100% - var(--stub)) 0, transparent 10.5px, #000 11px) top / 100% 51% no-repeat,
-    radial-gradient(circle 11px at calc(100% - var(--stub)) 100%, transparent 10.5px, #000 11px) bottom / 100% 51% no-repeat;
+    radial-gradient(circle 10px at calc(100% - var(--stub)) 0, transparent 9.5px, #000 10px) top / 100% 51% no-repeat,
+    radial-gradient(circle 10px at calc(100% - var(--stub)) 100%, transparent 9.5px, #000 10px) bottom / 100% 51% no-repeat;
   mask:
-    radial-gradient(circle 11px at calc(100% - var(--stub)) 0, transparent 10.5px, #000 11px) top / 100% 51% no-repeat,
-    radial-gradient(circle 11px at calc(100% - var(--stub)) 100%, transparent 10.5px, #000 11px) bottom / 100% 51% no-repeat;
+    radial-gradient(circle 10px at calc(100% - var(--stub)) 0, transparent 9.5px, #000 10px) top / 100% 51% no-repeat,
+    radial-gradient(circle 10px at calc(100% - var(--stub)) 100%, transparent 9.5px, #000 10px) bottom / 100% 51% no-repeat;
 }
 .route-card:hover .route-go, .route-card:focus-visible .route-go { filter: brightness(1.08); }
 .route-card:focus-visible .ticket-main { outline: 4px solid var(--gold); outline-offset: -6px; }
@@ -167,36 +166,47 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 0 14px 12px;
-  border-right: 3px dashed #d8ccb2;
+  border-right: 2px dashed #e0d6c2;
 }
+/* the band at the top, in the colour of the journey's season */
 .ticket-head {
   display: flex;
   justify-content: space-between;
-  margin: 0 -14px 6px;
-  padding: 4px 14px 5px;
-  background: var(--season, var(--station-blue));
+  margin: 0;
+  padding: 5px 14px 6px;
+  background: linear-gradient(90deg, var(--season, var(--station-blue)), color-mix(in srgb, var(--season, var(--station-blue)) 70%, #fff));
   color: #fff;
   font-size: 11.5px;
   font-weight: 800;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-.route-title { margin: 0; font-size: 21px; font-weight: 800; line-height: 1.05; color: var(--red); }
+.ticket-row { flex: 1; display: flex; align-items: center; gap: 12px; padding: 12px 14px 14px; }
+/* the small picture, framed like a photo */
+.ticket-pic {
+  flex: 0 0 64px;
+  height: 64px;
+  overflow: hidden;
+  border: 3px solid #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .18);
+}
+.ticket-pic svg { display: block; width: 100%; height: 100%; }
+.ticket-words { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.route-title { margin: 0; font-size: 20px; font-weight: 800; line-height: 1.05; color: var(--red); }
 .route-way {
   display: flex;
   align-items: center;
   gap: 6px;
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--station-blue);
 }
 /* the line between the two stations, with a dot at each end */
 .route-line {
   position: relative;
-  flex: 0 0 34px;
+  flex: 0 0 28px;
   height: 8px;
   background: linear-gradient(currentColor, currentColor) center / calc(100% - 8px) 2px no-repeat;
 }
@@ -211,7 +221,7 @@ body {
 }
 .route-line::before { left: 0; }
 .route-line::after { right: 0; }
-.ticket-meta { margin: auto 0 0; padding-top: 4px; font-size: 12.5px; font-weight: 700; color: #8a7e68; }
+.ticket-meta { margin: 0; font-size: 12px; font-weight: 700; color: #9a8f7a; }
 
 /* the stub: its colour and its stamp tell how far the journey got */
 .ticket-stub {
@@ -222,7 +232,7 @@ body {
   justify-content: center;
   gap: 6px;
   padding: 10px 8px;
-  background: #e6efff;
+  background: #eaf1ff;
   --stamp: var(--station-blue);
 }
 .is-started .ticket-stub { background: #fff2c2; --stamp: #b07800; }
@@ -230,8 +240,8 @@ body {
 .ticket-stamp {
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   padding: 4px;
   border: 3px double var(--stamp);
   border-radius: 50%;

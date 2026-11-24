@@ -25,6 +25,38 @@ const SEASONS = /** @type {const} */ ({
   summer: { name: 'Vară', icon: '☀️' },
 });
 
+/**
+ * The colours of the small picture on a ticket, for the journey's season.
+ * @type {Record<Season, {sky: [string, string], light: string, hills: [string, string], trees: string}>}
+ */
+const THUMB = {
+  winter: { sky: ['#14306e', '#4a6fc0'], light: '#fff6d8', hills: ['#dfe8f7', '#ffffff'], trees: '#1f5d3a' },
+  spring: { sky: ['#7cc4f2', '#d8f0ff'], light: '#fff3b0', hills: ['#8fcf7a', '#a9df8a'], trees: '#f29bb8' },
+  summer: { sky: ['#3d9be9', '#c4ecff'], light: '#ffe04a', hills: ['#6cb851', '#8fd16a'], trees: '#2f7a3a' },
+  autumn: { sky: ['#f2a65a', '#fde3b8'], light: '#fff1c9', hills: ['#c98f45', '#ddb060'], trees: '#d2491f' },
+};
+
+/**
+ * The small picture on a ticket: hills of the journey's season and a little
+ * red engine (an SVG built from fixed values only).
+ * @param {Season} season
+ * @param {number} n   the journey's number (gives the picture its own gradient id)
+ */
+function thumb(season, n) {
+  const p = THUMB[season];
+  const fir = (/** @type {number} */ x, /** @type {number} */ h) => `<path d="M${x} ${62 - h} l${h * 0.38} ${h} h-${h * 0.76}Z"/>`;
+  return `<svg viewBox="0 0 80 80" aria-hidden="true" focusable="false">`
+    + `<defs><linearGradient id="thumb${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p.sky[0]}"/><stop offset="1" stop-color="${p.sky[1]}"/></linearGradient></defs>`
+    + `<rect width="80" height="80" fill="url(#thumb${n})"/>`
+    + `<circle cx="60" cy="18" r="8" fill="${p.light}"/>`
+    + `<path d="M0 50 L20 30 L36 46 L52 26 L80 52 V80 H0Z" fill="${p.hills[0]}"/>`
+    + `<g fill="${p.trees}">${fir(10, 16)}${fir(68, 18)}</g>`
+    + `<rect y="62" width="80" height="18" fill="${p.hills[1]}"/>`
+    + `<rect y="64" width="80" height="2.5" fill="#6d6258"/>`
+    + `<g transform="translate(22 44)"><rect x="0" y="2" width="16" height="16" rx="2" fill="#d8382f"/><rect x="16" y="7" width="20" height="11" rx="4" fill="#1f6e4a"/><rect x="29" y="0" width="5" height="8" fill="#263238"/><rect x="3" y="5" width="9" height="6" rx="1.5" fill="#d7efff"/><circle cx="8" cy="19" r="3.4" fill="#263238"/><circle cx="22" cy="19" r="3.4" fill="#263238"/><circle cx="31" cy="19" r="3.4" fill="#263238"/></g>`
+    + `</svg>`;
+}
+
 /** What the ticket says about the journey: its stamp and its button. */
 const STATUS = {
   new: { label: 'Neîncepută', stamp: 'Nouă', button: 'Pornește' },
@@ -59,19 +91,27 @@ function progressOf(key) {
 function routeCard(route) {
   const p = progressOf(route.saveKey);
   const season = SEASONS[route.season];
+  const picture = el('div', { class: 'ticket-pic' });
+  // the SVG is built here from fixed values (no text from outside goes into it)
+  picture.innerHTML = thumb(route.season, route.number);
   return el('li', { class: `route-item season--${route.season} is-${p.status}`, 'data-season': route.season }, [
     el('a', { class: 'route-card', href: route.path }, [
       el('div', { class: 'ticket-main' }, [
-        el('p', { class: 'ticket-head' }, [el('span', {}, ['Bilet de tren']), el('span', {}, [`Ruta ${route.number}`])]),
-        el('h2', { class: 'route-title' }, [route.title]),
-        // the two ends of the journey, joined like on a railway map
-        el('p', { class: 'route-way' }, [
-          el('span', {}, [route.from]),
-          el('span', { class: 'route-line', 'aria-hidden': 'true' }),
-          el('span', { class: 'sr-only' }, [' → ']),
-          el('span', {}, [route.to]),
+        el('p', { class: 'ticket-head' }, [el('span', {}, ['🚂 Bilet de tren']), el('span', {}, [`Ruta ${route.number}`])]),
+        el('div', { class: 'ticket-row' }, [
+          picture,
+          el('div', { class: 'ticket-words' }, [
+            el('h2', { class: 'route-title' }, [route.title]),
+            // the two ends of the journey, joined like on a railway map
+            el('p', { class: 'route-way' }, [
+              el('span', {}, [route.from]),
+              el('span', { class: 'route-line', 'aria-hidden': 'true' }),
+              el('span', { class: 'sr-only' }, [' → ']),
+              el('span', {}, [route.to]),
+            ]),
+            el('p', { class: 'ticket-meta' }, [`${season.icon} ${season.name} · ${route.when}`]),
+          ]),
         ]),
-        el('p', { class: 'ticket-meta' }, [`${season.icon} ${season.name} · ${route.when}`]),
       ]),
       el('div', { class: 'ticket-stub' }, [
         el('span', { class: 'ticket-stamp' }, [el('span', { class: 'sr-only' }, ['Călătoria: ']), STATUS[p.status].stamp]),
