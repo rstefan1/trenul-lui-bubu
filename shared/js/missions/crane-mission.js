@@ -93,6 +93,20 @@ export class CraneMission extends Mission {
     super.start();
     this.layout();
     this.trolleyX = this.goods[0].groundX;
+    // the camera moves in on the crane, the goods and the wagon
+    const { left, right } = this.craneSpan();
+    const cam = this.ctx.world.cameraY;
+    this.ctx.world.zoomOn({ left: left - 60, right: right + 60, top: BEAM_Y - 110 - cam, bottom: GROUND_Y + 60 - cam });
+  }
+
+  /**
+   * Where the legs of the crane stand (stage x): around the goods on the
+   * ground and their places on the wagon.
+   * @private
+   */
+  craneSpan() {
+    const xs = this.goods.flatMap(g => [g.groundX, this.slotOnStage(g).x]);
+    return { left: Math.min(...xs) - 70, right: Math.max(...xs) + 70 };
   }
 
   /**
@@ -255,9 +269,7 @@ export class CraneMission extends Mission {
    * @param {CanvasRenderingContext2D} c
    */
   drawCrane(c) {
-    const xs = this.goods.flatMap(g => [g.groundX, this.slotOnStage(g).x]);
-    const left = Math.min(...xs) - 70;
-    const right = Math.max(...xs) + 70;
+    const { left, right } = this.craneSpan();
     const steel = '#f2b705';
     // the legs stand in front of the train
     for (const x of [left, right]) {
@@ -306,6 +318,7 @@ export class CraneMission extends Mission {
 
   dispose() {
     this.ctx.hud.hideCounter();
+    this.ctx.world.zoomOn(null);
   }
 }
 
