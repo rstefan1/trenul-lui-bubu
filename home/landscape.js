@@ -254,7 +254,7 @@ function railway() {
     + `<rect x="${X0}" y="${RAIL - 4}" width="${X1 - X0}" height="2.5" fill="#c8ced8"/>`;
 }
 
-/** The little station at the right, with its name board. */
+/** The little station at the right. */
 function station() {
   const x = 1440;
   const y = RAIL - 10;
@@ -267,9 +267,6 @@ function station() {
     + `<rect x="${x - 20}" y="${y - 70}" width="40" height="64" rx="4" fill="#8a5a3b"/>`
     + `<circle cx="${x}" cy="${y - 118}" r="13" fill="#fff" stroke="#2b2f38" stroke-width="3"/>`
     + `<path d="M${x} ${y - 118} V${y - 127} M${x} ${y - 118} H${x + 7}" stroke="#2b2f38" stroke-width="2.5" stroke-linecap="round"/>`
-    + `<rect x="${x - 76}" y="${y - 176}" width="152" height="30" rx="6" fill="#1f4f9c" stroke="#fff" stroke-width="3"/>`
-    + `<path d="M${x - 50} ${y - 146} V${y - 140} M${x + 50} ${y - 146} V${y - 140}" stroke="#2b2f38" stroke-width="4"/>`
-    + `<text x="${x}" y="${y - 154}" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="20" fill="#fff">BUBULEȘTI</text>`
     + `</g>`;
 }
 
