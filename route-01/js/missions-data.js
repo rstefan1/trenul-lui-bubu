@@ -180,7 +180,7 @@ export const WINTER_MISSIONS = {
         id: 'whistle-bucovina',
         title: 'Fluierul trenului',
         text: 'Copiii au ieșit lângă linie să vadă trenul. Când treci pe lângă ei, apasă „Fluieră!”.',
-        groups: 3,
+        groups: 5,
         pace: { far: 540, slow: 150, brake: 450, near: { ahead: 60, behind: 420 } },
       },
     },

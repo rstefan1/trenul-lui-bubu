@@ -155,9 +155,10 @@ export const WINTER_ROUTE = {
       cover: [[0, 1]],
     },
     // Rădăuți → Putna (past Marginea): sunrise over the hills of Bucovina
-    // (the gifts mission slows the train down itself near each village)
+    // (the whistle mission slows the train down itself near each group of children;
+    // long enough for its five groups)
     {
-      duration: 27,
+      duration: 36,
       train: 'regional',
       biomes: [[0, 'city'], [0.1, 'hills'], [0.55, 'forest'], [0.85, 'hills']],
       features: [{ type: 'bridge', at: 0.4, length: 300, depth: 100 }],
