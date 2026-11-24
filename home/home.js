@@ -36,14 +36,31 @@ const THUMB = {
   autumn: { sky: ['#f2a65a', '#fde3b8'], light: '#fff1c9', hills: ['#c98f45', '#ddb060'], trees: '#d2491f' },
 };
 
+/** The sky of a winter journey made by day (the winter colours are those of the night). */
+const WINTER_DAY = { sky: /** @type {[string, string]} */ (['#4a98e8', '#d8efff']), light: '#ffe27a' };
+
+/** The little red engine of the picture. */
+const ENGINE = `<g transform="translate(22 44)"><rect x="0" y="2" width="16" height="16" rx="2" fill="#d8382f"/><rect x="16" y="7" width="20" height="11" rx="4" fill="#1f6e4a"/><rect x="29" y="0" width="5" height="8" fill="#263238"/><rect x="3" y="5" width="9" height="6" rx="1.5" fill="#d7efff"/><circle cx="8" cy="19" r="3.4" fill="#263238"/><circle cx="22" cy="19" r="3.4" fill="#263238"/><circle cx="31" cy="19" r="3.4" fill="#263238"/></g>`;
+
+/** A freight train: an orange diesel locomotive pulling two empty flat wagons. */
+const FREIGHT = `<g transform="translate(4 48)">`
+  + `<rect x="0" y="11" width="18" height="4" fill="#6d4c41"/><rect x="2" y="5" width="2" height="6" fill="#3b4250"/><rect x="14" y="5" width="2" height="6" fill="#3b4250"/>`
+  + `<circle cx="4" cy="16.5" r="2.4" fill="#263238"/><circle cx="14" cy="16.5" r="2.4" fill="#263238"/>`
+  + `<rect x="20" y="11" width="18" height="4" fill="#6d4c41"/><rect x="22" y="5" width="2" height="6" fill="#3b4250"/><rect x="34" y="5" width="2" height="6" fill="#3b4250"/>`
+  + `<circle cx="24" cy="16.5" r="2.4" fill="#263238"/><circle cx="34" cy="16.5" r="2.4" fill="#263238"/>`
+  + `<rect x="40" y="0" width="32" height="15" rx="4" fill="#e0662c"/><rect x="40" y="8" width="32" height="2" fill="#fbeed2"/>`
+  + `<rect x="63" y="2.5" width="6" height="5" rx="1" fill="#d7efff"/><rect x="43" y="2.5" width="5" height="5" rx="1" fill="#d7efff"/><rect x="52" y="-3" width="3" height="4" fill="#3b4250"/>`
+  + `<circle cx="45" cy="16.5" r="2.4" fill="#263238"/><circle cx="51" cy="16.5" r="2.4" fill="#263238"/><circle cx="61" cy="16.5" r="2.4" fill="#263238"/><circle cx="67" cy="16.5" r="2.4" fill="#263238"/>`
+  + `</g>`;
+
 /**
- * The small picture on a ticket: hills of the journey's season and a little
- * red engine (an SVG built from fixed values only).
- * @param {Season} season
- * @param {number} n   the journey's number (gives the picture its own gradient id)
+ * The small picture on a ticket: hills of the journey's season and its
+ * train (an SVG built from fixed values only).
+ * @param {import('./routes.js').RouteInfo} route
  */
-function thumb(season, n) {
-  const p = THUMB[season];
+function thumb(route) {
+  const { season, number: n } = route;
+  const p = route.day && season === 'winter' ? { ...THUMB.winter, ...WINTER_DAY } : THUMB[season];
   const fir = (/** @type {number} */ x, /** @type {number} */ h) => `<path d="M${x} ${62 - h} l${h * 0.38} ${h} h-${h * 0.76}Z"/>`;
   return `<svg viewBox="0 0 80 80" aria-hidden="true" focusable="false">`
     + `<defs><linearGradient id="thumb${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p.sky[0]}"/><stop offset="1" stop-color="${p.sky[1]}"/></linearGradient></defs>`
@@ -53,7 +70,7 @@ function thumb(season, n) {
     + `<g fill="${p.trees}">${fir(10, 16)}${fir(68, 18)}</g>`
     + `<rect y="62" width="80" height="18" fill="${p.hills[1]}"/>`
     + `<rect y="64" width="80" height="2.5" fill="#6d6258"/>`
-    + `<g transform="translate(22 44)"><rect x="0" y="2" width="16" height="16" rx="2" fill="#d8382f"/><rect x="16" y="7" width="20" height="11" rx="4" fill="#1f6e4a"/><rect x="29" y="0" width="5" height="8" fill="#263238"/><rect x="3" y="5" width="9" height="6" rx="1.5" fill="#d7efff"/><circle cx="8" cy="19" r="3.4" fill="#263238"/><circle cx="22" cy="19" r="3.4" fill="#263238"/><circle cx="31" cy="19" r="3.4" fill="#263238"/></g>`
+    + (route.train === 'freight' ? FREIGHT : ENGINE)
     + `</svg>`;
 }
 
@@ -93,7 +110,7 @@ function routeCard(route) {
   const season = SEASONS[route.season];
   const picture = el('div', { class: 'ticket-pic' });
   // the SVG is built here from fixed values (no text from outside goes into it)
-  picture.innerHTML = thumb(route.season, route.number);
+  picture.innerHTML = thumb(route);
   return el('li', { class: `route-item season--${route.season} is-${p.status}`, 'data-season': route.season }, [
     el('a', { class: 'route-card', href: route.path }, [
       el('div', { class: 'ticket-main' }, [

@@ -23,6 +23,8 @@
  * @property {number} stations
  * @property {string} saveKey    where the journey keeps its progress (localStorage)
  * @property {Season} season
+ * @property {boolean} [day]     the journey happens by day (its picture has a blue winter sky)
+ * @property {'freight'} [train] the picture shows a freight train instead of the little engine
  */
 
 /** @type {RouteInfo[]} */
@@ -39,5 +41,20 @@ export const ROUTES = [
     stations: 14,
     saveKey: 'trenul-lui-bubu/route-01',
     season: 'winter',
+  },
+  {
+    number: 2,
+    path: 'route-02/',
+    title: 'Trenul de marfă',
+    from: 'Putna',
+    to: 'Vișeu de Jos',
+    when: '28 decembrie',
+    blurb: 'Bubu e mecanic de locomotivă și duce peste munți tot ce le trebuie copiilor din tabăra de la Vișeu.',
+    chapters: 2,
+    stations: 8,
+    saveKey: 'trenul-lui-bubu/route-02',
+    season: 'winter',
+    day: true,
+    train: 'freight',
   },
 ];

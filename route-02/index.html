@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Trenul lui Bubu – Trenul de marfă</title>
+  <meta name="description" content="Joc de iarnă: Bubu, o buburuză de pluș, conduce un tren de marfă de la Putna la Vișeu, cu cele de trebuință pentru copiii dintr-o tabără. Merge pe calculator, tabletă și telefon.">
+  <meta name="theme-color" content="#13295a">
+  <link rel="icon" href="../shared/assets/favicon.ico" sizes="48x48">
+  <link rel="icon" href="../shared/assets/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="preload" href="../shared/assets/bubu.webp" as="image" type="image/webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/css/tokens.css">
+  <link rel="stylesheet" href="../shared/css/game.css">
+</head>
+<body>
+  <!-- The world is drawn on this canvas (shared/js/world/world-view.js). -->
+  <canvas id="game" aria-label="Trenul de marfă al lui Bubu merge prin munți"></canvas>
+
+  <!-- ===== Heads-up display ===== -->
+  <header class="hud" aria-label="Informații despre călătorie">
+    <button class="hud-btn back-btn" id="btnExit" type="button" title="Înapoi" aria-label="Înapoi: ieși din călătorie">←</button>
+    <div class="hud-card clock-card" aria-live="off">
+      <span class="clock-time" id="hudTime">07:50</span>
+      <span class="clock-date" id="hudDate">28 decembrie</span>
+    </div>
+    <!-- the mission's help and progress: below the HUD on large screens,
+         inside it on phones (shared/css/game.css) -->
+    <button class="hud-btn help-btn" id="btnHelp" type="button" title="Ce am de făcut?" aria-label="Ce am de făcut?" hidden>?</button>
+    <div class="mission-counter" id="missionCounter" aria-live="polite" hidden></div>
+    <div class="hud-card route-card">
+      <div class="route-line">
+        <ol class="route-track" id="hudTrack" aria-hidden="true">
+          <!-- Bubu herself travels along the line -->
+          <li class="route-marker" id="hudMarker">
+            <img class="route-marker__bubu" src="../shared/assets/bubu.webp" alt="" width="34" height="34">
+          </li>
+        </ol>
+      </div>
+      <p class="route-next" id="hudNext">Suntem în gara <b>Putna</b></p>
+    </div>
+    <div class="hud-card stars-card" title="Stelele câștigate în misiuni">
+      <span class="stars-icon" aria-hidden="true">★</span>
+      <span class="stars-count" id="hudStars" aria-label="Stele">0</span>
+    </div>
+    <button class="hud-btn" id="btnSound" type="button" title="Fără sunet" aria-label="Fără sunet">🔊</button>
+    <button class="hud-btn" id="btnFullscreen" type="button" title="Ecran complet" aria-label="Ecran complet">⛶</button>
+  </header>
+
+  <!-- ===== Missions: announcement, progress, result, panels ===== -->
+  <div class="mission-card" id="missionCard" role="status" hidden>
+    <p class="mission-kicker" id="missionKicker">Misiune</p>
+    <h2 class="mission-title" id="missionTitle"></h2>
+    <p class="mission-text" id="missionText"></p>
+  </div>
+  <div class="briefing" id="briefing" role="dialog" aria-modal="true" aria-labelledby="briefingTitle" hidden>
+    <div class="briefing__card">
+      <img class="briefing__bubu" src="../shared/assets/bubu.webp" alt="" width="96" height="96">
+      <p class="mission-kicker" id="briefingKicker">Misiune</p>
+      <h2 class="mission-title" id="briefingTitle"></h2>
+      <p class="briefing__text" id="briefingText"></p>
+      <button class="big-btn" id="btnBriefingOk" type="button">Am înțeles! ▶</button>
+      <p class="briefing__note">Jocul așteaptă până apeși butonul.</p>
+    </div>
+  </div>
+  <!-- leaving the journey (the ← button of the HUD): back to the chapters or to the list of journeys -->
+  <div class="briefing exit-dialog" id="exitDialog" role="dialog" aria-modal="true" aria-labelledby="exitTitle" hidden>
+    <div class="briefing__card">
+      <img class="briefing__bubu" src="../shared/assets/bubu.webp" alt="" width="96" height="96">
+      <h2 class="mission-title" id="exitTitle">Ieși din călătorie?</h2>
+      <p class="briefing__text">Ce ai făcut până la ultima gară rămâne salvat. Poți continua altă dată.</p>
+      <div class="exit-dialog__buttons">
+        <button class="big-btn exit-dialog__leave exit-dialog__chapters" id="btnExitChapters" type="button">📖 La capitolele călătoriei</button>
+        <a class="big-btn exit-dialog__leave" href="../">🏠 La toate călătoriile</a>
+        <button class="link-btn" id="btnExitStay" type="button">Nu, rămân în tren</button>
+      </div>
+    </div>
+  </div>
+  <div class="mission-result" id="missionResult" role="status" hidden>
+    <div class="mission-result__stars" id="missionResultStars" aria-hidden="true"></div>
+    <p class="mission-result__text" id="missionResultText"></p>
+  </div>
+  <section class="mission-panel" id="missionPanel" aria-label="Misiune" hidden></section>
+
+  <!-- ===== Station sign, shown when the train stops ===== -->
+  <div class="station-banner" id="stationBanner" role="status" hidden>
+    <span class="station-banner__label">Gara</span>
+    <span class="station-banner__name" id="stationBannerName"></span>
+  </div>
+
+  <!-- ===== Intro: Bubu introduces herself ===== -->
+  <section class="overlay intro" id="intro" aria-labelledby="introTitle" hidden>
+    <div class="overlay-card intro-card">
+      <h1 class="intro-title" id="introTitle">Trenul lui Bubu</h1>
+      <p class="intro-subtitle">Trenul de marfă</p>
+      <div class="intro-body">
+        <img class="intro-bubu" src="../shared/assets/bubu.webp" alt="Bubu, o buburuză de pluș" width="200" height="200">
+        <div class="speech">
+          <p class="speech-hello">Eu sunt Bubu!</p>
+          <p>Am petrecut Crăciunul la Putna. Azi, pe 28 decembrie, nu sunt călătoare: sunt mecanic de locomotivă!</p>
+          <p>Conduc un tren de marfă peste munți, până la Vișeu. Copiii din tabăra de acolo au mare nevoie de ajutorul nostru.</p>
+          <p class="speech-ask">Vii cu mine, ca mecanic ajutor?</p>
+        </div>
+      </div>
+      <button class="big-btn" id="btnStart" type="button">🚂 Urc în locomotivă!</button>
+    </div>
+  </section>
+
+  <!-- ===== Main menu: the chapters ===== -->
+  <section class="overlay menu" id="menu" aria-labelledby="menuTitle" hidden>
+    <div class="overlay-card menu-card">
+      <div class="menu-head">
+        <img class="menu-bubu" src="../shared/assets/bubu.webp" alt="" width="96" height="96">
+        <div>
+          <h1 class="intro-title" id="menuTitle">Trenul lui Bubu</h1>
+          <p class="intro-subtitle">Trenul de marfă</p>
+        </div>
+      </div>
+      <p class="menu-traveler" id="menuTraveler" hidden></p>
+      <ol class="chapter-list" id="chapterList"></ol>
+      <button class="big-btn" id="btnContinue" type="button">🚂 Începe călătoria</button>
+      <div class="menu-links">
+        <button class="link-btn" id="btnWhoIsBubu" type="button">Cine e Bubu?</button>
+        <button class="link-btn" id="btnReset" type="button" hidden>Încep de la capăt</button>
+        <a class="link-btn" href="../">🏠 Toate călătoriile</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== End of a chapter ===== -->
+  <section class="overlay chapter-end" id="chapterEnd" aria-labelledby="chapterEndTitle" hidden>
+    <div class="overlay-card">
+      <p class="mission-kicker" id="chapterEndKicker">Capitolul 1 – terminat!</p>
+      <h2 class="intro-title" id="chapterEndTitle"></h2>
+      <p class="chapter-end-stars" id="chapterEndStars"></p>
+      <p class="chapter-end-next" id="chapterEndNext"></p>
+      <div class="chapter-end-buttons">
+        <button class="big-btn" id="btnNextChapter" type="button">Mergi mai departe 🚂</button>
+        <button class="link-btn" id="btnPause" type="button">Fac o pauză</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== End of the journey ===== -->
+  <section class="overlay finale" id="finale" aria-labelledby="finaleTitle" hidden>
+    <div class="overlay-card">
+      <img class="intro-bubu" src="../shared/assets/bubu.webp" alt="" width="160" height="160">
+      <h2 class="intro-title" id="finaleTitle">Am ajuns la Vișeu!</h2>
+      <p class="intro-subtitle">Sărbători fericite! ❄️</p>
+      <p class="intro-text">Bubu a adus copiilor din tabără tot ce le trebuia. Îți mulțumește că ai fost mecanicul ei ajutor!</p>
+      <p class="finale-stars" id="finaleStars" hidden></p>
+      <button class="big-btn" id="btnAgain" type="button">Înapoi la meniu</button>
+    </div>
+  </section>
+
+  <noscript><p class="noscript">Pentru acest joc trebuie activat JavaScript în browser.</p></noscript>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
