@@ -7,7 +7,7 @@
  */
 
 import { el } from '../shared/js/ui/dom.js';
-import { landscape, meadow } from './landscape.js';
+import { ground, landscape, meadow } from './landscape.js';
 import { ROUTES } from './routes.js';
 
 /**
@@ -167,3 +167,4 @@ const scenery = /** @type {HTMLElement} */ (document.getElementById('scene'));
 const season = /** @type {Season} */ (document.documentElement.dataset.season || 'summer');
 scenery.innerHTML = landscape(season);
 /** @type {HTMLElement} */ (document.getElementById('meadow')).innerHTML = meadow(season);
+/** @type {HTMLElement} */ (document.getElementById('ground')).innerHTML = ground(season);

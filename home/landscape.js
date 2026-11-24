@@ -528,6 +528,65 @@ const MEADOW = {
   },
 };
 
+/** A village well with its sweep (fântână cu cumpănă), the post's foot at (x, y). */
+function well(/** @type {number} */ x, /** @type {number} */ y) {
+  const wx = x + 100;
+  return `<g stroke-linecap="round">`
+    + `<path d="M${x} ${y} V${y - 128}" stroke="#7a5235" stroke-width="9"/>`
+    + `<path d="M${x - 70} ${y - 76} L${wx + 4} ${y - 168}" stroke="#8a5a3b" stroke-width="6"/>`
+    + `<circle cx="${x - 66}" cy="${y - 74}" r="10" fill="#8d8f94"/>`
+    + `<path d="M${wx + 4} ${y - 168} V${y - 50}" stroke="#4a4f5a" stroke-width="2"/>`
+    + `<path d="M${wx - 6} ${y - 52} h20 l-3 14 h-14Z" fill="#8a5a3b"/>`
+    + `<rect x="${wx - 30}" y="${y - 40}" width="68" height="40" rx="4" fill="#9a6a45"/>`
+    + `<path d="M${wx - 30} ${y - 27} h68 M${wx - 30} ${y - 14} h68" stroke="#7a5235" stroke-width="2.5"/>`
+    + `</g>`;
+}
+
+/** A wooden fence from x0 to x1, standing on y. */
+function fence(/** @type {number} */ x0, /** @type {number} */ x1, /** @type {number} */ y) {
+  let pickets = '';
+  for (let x = x0; x <= x1; x += 18) pickets += `<path d="M${x} ${y} V${y - 40} l4 -6 l4 6 V${y}Z"/>`;
+  return `<g fill="#c9925a">`
+    + `<rect x="${x0 - 4}" y="${y - 32}" width="${x1 - x0 + 16}" height="5"/><rect x="${x0 - 4}" y="${y - 14}" width="${x1 - x0 + 16}" height="5"/>`
+    + pickets
+    + `</g>`;
+}
+
+/**
+ * The scenery behind the journeys' cards (2000 × 700, x from -200 to 1800),
+ * so the meadow is not empty: the cards stand in the middle, the village
+ * and the children are at the sides.
+ * @type {Record<string, (p: Palette) => string>}
+ */
+const GROUND = {
+  summer: p => {
+    const rnd = seeded(41);
+    let out = flowers(rnd, 120, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 20, 660);
+    // at the left: a house with its fence and tree, the well, a girl
+    out += tree(-90, 330, 170, p) + house(70, 340, 1.7, '#b5452b', '#fdf8ee') + fence(-170, 250, 380) + tree(250, 300, 120, p);
+    out += well(330, 470);
+    // a girl with a balloon
+    out += `<path d="M${r1(150 + 22 * 1.15)} ${r1(600 - 108 * 1.15)} Q190 420 205 380" stroke="#4a4f5a" stroke-width="1.6" fill="none"/>`
+      + `<ellipse cx="205" cy="352" rx="24" ry="29" fill="#e53935"/><path d="M200 380 l5 -6 l5 6Z" fill="#c62828"/><ellipse cx="197" cy="342" rx="6" ry="9" fill="#fff" opacity=".35"/>`
+      + child(150, 600, { shirt: '#7e57c2', hair: '#f2c14e', pose: 'up', girl: true, s: 1.15 });
+    // at the right: a haystack, sunflowers, a boy waving and a tree
+    out += tree(1720, 320, 160, p) + haystack(1330, 400, 1.2);
+    out += sunflower(1460, 600, 190, -6) + sunflower(1505, 600, 160, 4) + sunflower(1550, 600, 200, 8);
+    out += child(1660, 620, { shirt: '#43a047', hair: '#5b3a26', pose: 'wave', s: 1.15, flip: true });
+    return out;
+  },
+};
+
+/**
+ * The scenery behind the journeys' cards, as SVG markup (fixed values only).
+ * @param {Season} season
+ */
+export function ground(season) {
+  const p = PALETTES[season] ?? PALETTES.summer;
+  const draw = GROUND[season] ?? GROUND.summer;
+  return `<svg viewBox="${X0} 0 ${X1 - X0} 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">${draw(p)}</svg>`;
+}
+
 /**
  * The meadow under the journeys, as SVG markup (fixed values only).
  * @param {Season} season
