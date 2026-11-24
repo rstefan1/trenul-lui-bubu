@@ -321,6 +321,15 @@ function drawValley(c, v, f, kind) {
       drawFir(c, x, valleyGround(u, depth) + 4, between(rng, 60, 110), { snowy: v.cover > 0.5 });
     }
   }
+
+  // 6. big firs standing on both rims: the ground beside the track is cut
+  //    straight down at the edges of the valley (see addHoles), and these
+  //    hide the cut, so no tree of the landscape is ever seen cut in half
+  for (const edge of [x0, x1]) {
+    for (const dx of [-34, 26]) {
+      drawFir(c, edge + dx + between(rng, -6, 6), NEAR_GROUND_Y + 8, between(rng, 262, 290), { snowy: v.cover > 0.5 });
+    }
+  }
 }
 
 /**
