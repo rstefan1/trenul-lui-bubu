@@ -6,8 +6,8 @@
  * Both trains go slowly, so the wagons cross the screen at a walking pace.
  * A card in the corner shows what to find; a tap on a wagon of that kind
  * ticks it, a tap on another kind is a gentle mistake that names the wagon
- * touched. After a mistake, or a few seconds, a note points at the nearest
- * wagon of the kind asked for. Only kinds still to come are ever asked for.
+ * touched. There are no other hints: the card's picture is enough. Only
+ * kinds still to come are ever asked for.
  *
  * The mission takes the controls of the train and gives them back at the end.
  *
@@ -16,7 +16,6 @@
  *   finds    how many wagons to find
  */
 
-import { drawTouchNote } from '../gfx/hints.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillCircle, fillRoundRect } from '../gfx/shapes.js';
 import { zoomed } from '../gfx/ui-style.js';
@@ -26,12 +25,12 @@ import { Mission } from './mission.js';
 /** @typedef {'tank' | 'covered' | 'logs' | 'coal'} WagonKind */
 /** @typedef {import('./mission.js').MissionConfig & {wagons: WagonKind[], finds: number}} PassingConfig */
 
-/** What each kind is called, with an article, and a hint about its shape. */
+/** What each kind is called, with an article. */
 const NAMES = {
-  tank: { name: 'cisterna', what: 'Cisterna', hint: 'arată ca un butoi lung și duce lichide' },
-  covered: { name: 'vagonul acoperit', what: 'Vagonul acoperit', hint: 'are pereți, acoperiș și o ușă mare' },
-  logs: { name: 'platforma cu bușteni', what: 'Platforma cu bușteni', hint: 'e o platformă cu trunchiuri de copaci' },
-  coal: { name: 'vagonul de cărbune', what: 'Vagonul de cărbune', hint: 'e deschis sus și plin cu cărbune negru' },
+  tank: { name: 'cisterna', what: 'Cisterna' },
+  covered: { name: 'vagonul acoperit', what: 'Vagonul acoperit' },
+  logs: { name: 'platforma cu bușteni', what: 'Platforma cu bușteni' },
+  coal: { name: 'vagonul de cărbune', what: 'Vagonul de cărbune' },
 };
 
 /** Speed of our train during the mission, and of the passing train (stage units/s). */
@@ -43,8 +42,6 @@ const SCALE = 0.62;
 /** Length of a wagon of the passing train and the gap between two (car units). */
 const WAGON_L = 230;
 const GAP = 14;
-/** Seconds without finding a wagon before the note shows one. */
-const HINT_AFTER = 4;
 
 export class PassingTrainMission extends Mission {
   /**
@@ -62,9 +59,7 @@ export class PassingTrainMission extends Mission {
     this.want = null;
     this.got = 0;
     this.mistakes = 0;
-    this.wrongHere = 0;
     this.time = 0;
-    this.askedAt = 0;
     this.endT = 0;
     /** @type {import('../journey/journey.js').Controls | null} */
     this.controls = null;
@@ -97,8 +92,6 @@ export class PassingTrainMission extends Mission {
     const fresh = kinds.filter(k => k !== this.want);
     const pool = fresh.length ? fresh : kinds;
     this.want = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
-    this.wrongHere = 0;
-    this.askedAt = this.time;
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */
@@ -125,10 +118,8 @@ export class PassingTrainMission extends Mission {
     }
     if (this.found[i]) return;
     this.mistakes += 1;
-    this.wrongHere += 1;
     this.oops();
-    const want = NAMES[this.want];
-    this.ctx.hud.announce('Ce vagon e?', `Acesta e ${NAMES[kind].name}. Caută ${want.name}: ${want.hint}.`, 'Misiune', 3);
+    this.ctx.hud.announce('Ce vagon e?', `Acesta e ${NAMES[kind].name}. Caută ${NAMES[this.want].name}!`, 'Misiune', 3);
   }
 
   /** @param {number} dt */
@@ -197,15 +188,6 @@ export class PassingTrainMission extends Mission {
       }
     });
     c.restore();
-    // help: after a mistake or a wait, point at the nearest wagon asked for
-    if (this.want && (this.wrongHere > 0 || this.time - this.askedAt > HINT_AFTER)) {
-      const i = this.config.wagons.findIndex((k, n) => k === this.want && !this.found[n]
-        && this.wagonSpan(n).right > stage.viewLeft + 60 && this.wagonSpan(n).left < stage.viewRight - 40);
-      if (i >= 0) {
-        const s = this.wagonSpan(i);
-        drawTouchNote(c, stage, (s.left + s.right) / 2, RAIL_Y - 150 * SCALE - 8 - cam, `Aici e ${NAMES[this.want].name}`);
-      }
-    }
     this.drawWantCard(c);
     this.particles.draw(c);
   }
