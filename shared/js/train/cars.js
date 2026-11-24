@@ -527,7 +527,7 @@ function dieselLoco(c, car, pos) {
   c.strokeRect(76, -158, 26, 106);
   c.fillStyle = 'rgba(0,0,0,0.2)';
   for (let x = 116; x < L - 128; x += 10) c.fillRect(x, -156, 5, 44);
-  drawLadybugEmblem(c, L * 0.5, -128, 14);
+  if (!car.plain) drawLadybugEmblem(c, L * 0.5, -128, 14);
   // handrails along the body
   c.strokeStyle = '#d8dde4';
   c.lineWidth = 3;

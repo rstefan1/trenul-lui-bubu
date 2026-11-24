@@ -3,11 +3,13 @@
  * the next track, the other way, and the child finds the wagons asked for:
  * a tank wagon, a covered wagon, a wagon of logs, a coal wagon.
  *
- * Both trains go slowly, so the wagons cross the screen at a walking pace.
- * A card in the corner shows what to find; a tap on a wagon of that kind
- * ticks it, a tap on another kind is a gentle mistake that names the wagon
- * touched. There are no other hints: the card's picture is enough. Only
- * kinds still to come are ever asked for.
+ * The passing train is as big as Bubu's, pulled by the same kind of diesel
+ * locomotive, painted in another colour. Both trains go slowly, so the
+ * wagons cross the screen at a walking pace. A card in the corner shows
+ * what to find; a tap on a wagon of that kind ticks it, a tap on another
+ * kind is a gentle mistake that names the wagon touched. There are no
+ * other hints: the card's picture is enough. Only kinds still to come are
+ * ever asked for.
  *
  * The mission takes the controls of the train and gives them back at the end.
  *
@@ -19,6 +21,8 @@
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillCircle, fillRoundRect } from '../gfx/shapes.js';
 import { zoomed } from '../gfx/ui-style.js';
+import { CAR_PAINTERS, WHEEL_R } from '../train/cars.js';
+import { FREIGHT_TRAIN } from '../train/specs.js';
 import { TRACK_Y } from '../world/track.js';
 import { Mission } from './mission.js';
 
@@ -36,12 +40,16 @@ const NAMES = {
 /** Speed of our train during the mission, and of the passing train (stage units/s). */
 const OUR_SPEED = 150;
 const THEIR_SPEED = 160;
-/** The passing train's rail (in front of ours, closer to the child) and its scale. */
+/** The passing train's rail (in front of ours, closer to the child). */
 const RAIL_Y = TRACK_Y + 104;
-const SCALE = 0.62;
-/** Length of a wagon of the passing train and the gap between two (car units). */
-const WAGON_L = 230;
-const GAP = 14;
+/** Its locomotive: the same as Bubu's, without her emblem. */
+const LOCO = { ...FREIGHT_TRAIN.cars[0], plain: true };
+/** Colours for it: the first one that is not the colour of Bubu's locomotive. */
+const LOCO_COLORS = ['#2f6fd0', '#2e8b57'];
+/** Length of a wagon (as long as Bubu's), the gap between two, and the height of the tallest. */
+const WAGON_L = FREIGHT_TRAIN.cars[1].length;
+const GAP = FREIGHT_TRAIN.gap;
+const WAGON_H = 160;
 
 export class PassingTrainMission extends Mission {
   /**
@@ -81,8 +89,8 @@ export class PassingTrainMission extends Mission {
    * @param {number} i
    */
   wagonSpan(i) {
-    const left = this.front + (140 + GAP) * SCALE + i * (WAGON_L + GAP) * SCALE;
-    return { left, right: left + WAGON_L * SCALE };
+    const left = this.front + LOCO.length + GAP + i * (WAGON_L + GAP);
+    return { left, right: left + WAGON_L };
   }
 
   /** @private Asks for a kind of wagon still to come (well on screen, or still to the right). */
@@ -98,7 +106,7 @@ export class PassingTrainMission extends Mission {
   pointerDown(p) {
     if (!this.want) return;
     const cam = this.ctx.world.cameraY;
-    if (p.y < RAIL_Y - 150 * SCALE - 30 - cam || p.y > RAIL_Y + 30 - cam) return;
+    if (p.y < RAIL_Y - WAGON_H - 30 - cam || p.y > RAIL_Y + 30 - cam) return;
     const i = this.config.wagons.findIndex((_, k) => {
       const s = this.wagonSpan(k);
       return p.x >= s.left - 8 && p.x <= s.right + 8;
@@ -170,17 +178,16 @@ export class PassingTrainMission extends Mission {
       if (s.right < stage.viewLeft - 20 || s.left > stage.viewRight + 20) return;
       c.save();
       c.translate(s.left, RAIL_Y);
-      c.scale(SCALE, SCALE);
-      drawWagon(c, kind, this.time + i);
+      drawWagon(c, kind, i, this.front);
       c.restore();
       if (this.found[i]) {
         c.fillStyle = '#2e9d57';
-        fillCircle(c, (s.left + s.right) / 2, RAIL_Y - 150 * SCALE - 20, 15);
+        fillCircle(c, (s.left + s.right) / 2, RAIL_Y - WAGON_H - 20, 15);
         c.strokeStyle = '#ffffff';
         c.lineWidth = 4;
         c.beginPath();
         const x = (s.left + s.right) / 2;
-        const y = RAIL_Y - 150 * SCALE - 20;
+        const y = RAIL_Y - WAGON_H - 20;
         c.moveTo(x - 6, y);
         c.lineTo(x - 1, y + 5);
         c.lineTo(x + 7, y - 5);
@@ -204,7 +211,7 @@ export class PassingTrainMission extends Mission {
     const top = stage.toStage(0, this.ctx.hud.hudBottom).y + 24;
     zoomed(c, stage.ui, right, top, () => {
       const w = 250;
-      const h = 150;
+      const h = 170;
       fillRoundRect(c, right - w, top, w, h, 18, '#fffaf0');
       c.fillStyle = '#1f4f9c';
       c.font = '800 16px "Baloo 2", system-ui, sans-serif';
@@ -215,53 +222,72 @@ export class PassingTrainMission extends Mission {
       c.font = '800 19px "Baloo 2", system-ui, sans-serif';
       c.fillText(NAMES[/** @type {WagonKind} */ (this.want)].what, right - w / 2, top + 44);
       c.save();
-      c.translate(right - w / 2 - 57, top + 140);
-      c.scale(0.5, 0.5);
-      drawWagon(c, /** @type {WagonKind} */ (this.want), 0);
+      c.translate(right - w / 2 - WAGON_L * 0.3, top + h - 12);
+      c.scale(0.6, 0.6);
+      drawWagon(c, /** @type {WagonKind} */ (this.want), 0, 0);
       c.restore();
     });
   }
 
   /**
-   * The passing train's locomotive, facing left.
+   * The passing train's locomotive: the same kind as Bubu's, facing left,
+   * in a colour unlike hers.
    * @private
    * @param {CanvasRenderingContext2D} c
    * @param {number} x  its front
    * @param {number} rail
    */
   drawLoco(c, x, rail) {
+    const own = (this.ctx.state.locoColor ?? LOCO.colors.body).toLowerCase();
+    const body = LOCO_COLORS.find(col => col !== own) ?? LOCO_COLORS[0];
     c.save();
-    c.translate(x, rail);
-    c.scale(SCALE, SCALE);
-    fillRoundRect(c, 0, -150, 140, 120, 18, '#2f6fd0');
-    c.fillStyle = '#fbeed2';
-    c.fillRect(0, -88, 140, 8);
-    fillRoundRect(c, 10, -136, 34, 30, 6, '#9fc3e6');
-    for (const wx of [24, 56, 92, 120]) {
-      c.fillStyle = '#2b2f38';
-      fillCircle(c, wx, -14, 14);
-    }
+    c.translate(x + LOCO.length, rail);
+    c.scale(-1, 1);
+    const geo = CAR_PAINTERS.dieselLoco(c, { ...LOCO, colors: { ...LOCO.colors, body } }, { leading: false, trailing: false });
+    drawWheels(c, geo.wheels, -this.front);
     c.restore();
   }
 }
 
 /**
+ * Wheels that turn as the train rolls.
+ * @param {CanvasRenderingContext2D} c
+ * @param {number[]} xs   their centres
+ * @param {number} rolled  how far the train has rolled (stage units)
+ */
+function drawWheels(c, xs, rolled) {
+  const a = rolled / WHEEL_R;
+  for (const wx of xs) {
+    c.fillStyle = '#2b2f38';
+    fillCircle(c, wx, -WHEEL_R, WHEEL_R);
+    c.fillStyle = '#8b95a5';
+    fillCircle(c, wx, -WHEEL_R, WHEEL_R - 5);
+    c.strokeStyle = '#4a5160';
+    c.lineWidth = 3;
+    c.beginPath();
+    c.moveTo(wx, -WHEEL_R);
+    c.lineTo(wx + Math.cos(a) * (WHEEL_R - 5), -WHEEL_R + Math.sin(a) * (WHEEL_R - 5));
+    c.stroke();
+  }
+}
+
+/**
  * A wagon of the passing train (car coordinates: x from 0 to WAGON_L, y = 0
- * on the rail).
+ * on the rail), with bogies, buffers and wheels like those of Bubu's wagons.
  * @param {CanvasRenderingContext2D} c
  * @param {WagonKind} kind
  * @param {number} seed
+ * @param {number} rolled  how far the train has rolled (turns the wheels)
  */
-function drawWagon(c, kind, seed) {
+function drawWagon(c, kind, seed, rolled) {
   const L = WAGON_L;
-  // frame and wheels
-  fillRoundRect(c, 0, -40, L, 14, 3, '#3b4250');
-  for (const wx of [30, 70, L - 70, L - 30]) {
-    c.fillStyle = '#2b2f38';
-    fillCircle(c, wx, -14, 14);
-    c.fillStyle = '#8b95a5';
-    fillCircle(c, wx, -14, 8);
-  }
+  const wheels = [L * 0.16, L * 0.16 + 46, L * 0.84 - 46, L * 0.84];
+  // bogies, buffers, the frame and the wheels
+  c.fillStyle = '#3b4250';
+  for (const [a, b] of [[wheels[0], wheels[1]], [wheels[2], wheels[3]]]) fillRoundRect(c, a - 22, -WHEEL_R - 10, b - a + 44, 14, 5, '#3b4250');
+  for (const x of [-6, L]) fillRoundRect(c, x, -50, 6, 12, 2, '#59606c');
+  fillRoundRect(c, 0, -46, L, 16, 3, '#3b4250');
+  drawWheels(c, wheels, -rolled);
   if (kind === 'tank') {
     fillRoundRect(c, 4, -128, L - 8, 88, 44, '#cfd5dc');
     c.fillStyle = '#9aa4b1';

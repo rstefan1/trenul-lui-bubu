@@ -26,6 +26,7 @@
  * @property {number | string} [number]  car number painted on the side (passenger coaches, wagons)
  * @property {string} [cargo]     the load of a flat wagon (a key of LOADS in gfx/cargo.js)
  * @property {boolean} [pusher]   a locomotive pushing at the back, turned round
+ * @property {boolean} [plain]    without Bubu's ladybug emblem (a locomotive of another train)
  */
 
 /**
