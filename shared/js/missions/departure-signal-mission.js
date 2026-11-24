@@ -11,8 +11,9 @@
  * round) and flat wagons loaded with logs. For each one the child:
  *
  *   1. throws the lever of the switch (it sets the way out of the station);
- *   2. raises the green paddle ("Ridică paleta"): the driver whistles and
- *      the train leaves. The paddle raised before the switch is set is a
+ *   2. raises the green paddle ("Ridică paleta"): Bubu, who has got off her
+ *      train and stands on the ground beside the line, lifts it towards the
+ *      other train; its driver whistles and the train leaves. The paddle raised before the switch is set is a
  *      gentle mistake ("Întâi macazul!").
  *
  * Then Bubu puts the switch back, and the next train rolls in.
@@ -27,6 +28,7 @@ import { TAU, clamp } from '../core/math.js';
 import { drawTouchNote } from '../gfx/hints.js';
 import { fillCircle, fillRoundRect } from '../gfx/shapes.js';
 import { CAR_PAINTERS, WHEEL_R } from '../train/cars.js';
+import { drawBubu } from '../train/bubu.js';
 import { SteamPlume } from '../train/steam.js';
 import { TRACK_Y } from '../world/track.js';
 import { el } from '../ui/dom.js';
@@ -58,6 +60,11 @@ const GAP = 10;
 const TROLLEY = 210;
 /** Lengths of the trains that wait there. */
 const LENGTH = { logs: LOG_TRAIN.reduce((sum, car) => sum + car.length + GAP, -GAP), trolley: TROLLEY };
+/** Bubu on the ground beside the line: her size, where she stands (share of the screen's
+ *  width, left of the waiting trains) and the seconds she takes to hop down or back up. */
+const BUBU_SIZE = 96;
+const BUBU_AT = 0.23;
+const BUBU_HOP = 0.8;
 /** Vertical extent of a painted train, relative to its rail. */
 const TOP = -262;
 const BOTTOM = 8;
@@ -87,6 +94,8 @@ export class DepartureSignalMission extends Mission {
     this.leverOn = false;
     /** Seconds the paddle has been raised (−1: down). */
     this.paddle = -1;
+    /** Bubu out of her train: 0 at her window … 1 on the ground (animated). */
+    this.out = 0;
     /** How far the wheels of the waiting train have turned (radians). */
     this.spin = 0;
     /**
@@ -108,6 +117,26 @@ export class DepartureSignalMission extends Mission {
     document.body.append(this.button);
     this.ctx.hud.setCounter('🚂', 0, this.config.trains.length);
     this.bringTrain(true);
+    // Bubu gets off her train: she leaves her window and hops down beside the line
+    this.ctx.world.train.setBubuVisible(false);
+  }
+
+  /**
+   * Where Bubu is now, on the stage (the middle of her picture): at her window,
+   * on the ground beside the line, or hopping between the two.
+   * @private
+   */
+  bubuOnStage() {
+    const s = this.ctx.stage;
+    const w = this.ctx.world;
+    const win = w.trainToStage(w.train.bubuPosition);
+    const ground = { x: s.viewLeft + (s.viewRight - s.viewLeft) * BUBU_AT, y: TRACK_Y + 54 - w.cameraY - BUBU_SIZE / 2 };
+    const k = this.out;
+    const e = k * k * (3 - 2 * k);
+    return {
+      x: win.x + (ground.x - win.x) * e,
+      y: win.y + (ground.y - win.y) * e - Math.sin(k * Math.PI) * 120,
+    };
   }
 
   /** The train waiting now. */
@@ -172,6 +201,10 @@ export class DepartureSignalMission extends Mission {
     this.stepT += dt;
     this.lever = clamp(this.lever + (this.leverOn ? 1 : -1) * dt * 4, 0, 1);
     if (this.paddle >= 0) this.paddle += dt;
+    // Bubu hops down at the start, and back up to her window when all is done
+    const back = this.step === 'done' && this.stepT > 0.8;
+    this.out = clamp(this.out + (back ? -dt : dt) / BUBU_HOP, 0, 1);
+    if (back && this.out <= 0) this.ctx.world.train.setBubuVisible(true);
     this.spin += (-this.speed * dt) / WHEEL_R;
     const chimney = this.kind === 'logs' && this.painted
       ? { x: this.trainX + this.painted.chimney.x, y: RAIL_Y + this.painted.chimney.y - this.ctx.world.cameraY }
@@ -235,6 +268,8 @@ export class DepartureSignalMission extends Mission {
     c.fillRect(stage.viewLeft, RAIL_Y - 3, stage.viewRight - stage.viewLeft, 2);
     c.restore();
 
+    this.drawBubu(c);
+
     // the waiting train
     if (this.index < this.config.trains.length) {
       c.save();
@@ -284,20 +319,40 @@ export class DepartureSignalMission extends Mission {
       c.stroke();
       drawTouchNote(c, stage, l.x, l.y - 130, 'Mută macazul!');
     }
+  }
 
-    // Bubu's green paddle, raised from her window
-    if (this.paddle >= 0) {
-      const b = this.ctx.world.trainToStage(this.ctx.world.train.bubuPosition);
-      const up = Math.min(1, this.paddle / 0.3);
-      const x = b.x - 60;
-      const y = b.y - 20 - up * 50;
-      c.fillStyle = '#6d4524';
-      c.fillRect(x - 4, y, 8, 70);
+  /**
+   * Bubu out of her train, with her green paddle: held low, or raised high
+   * towards the waiting train.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   */
+  drawBubu(c) {
+    if (this.out <= 0) return;
+    const b = this.bubuOnStage();
+    const up = this.paddle >= 0 ? Math.min(1, this.paddle / 0.3) : 0;
+    // a little hop of pride when she raises the paddle
+    const hop = up > 0 && this.paddle < 0.6 ? Math.sin((this.paddle / 0.6) * Math.PI) * 10 : 0;
+    const y = b.y - hop;
+    if (this.out >= 1) {
+      // the paddle: its handle in her hand, the green disc low by her side or high up
+      const hx = b.x + BUBU_SIZE * 0.36;
+      const hy = y + BUBU_SIZE * 0.12;
+      const dx = hx + 10 + up * 26;
+      const dy = hy - 40 - up * 90;
+      c.strokeStyle = '#6d4524';
+      c.lineWidth = 7;
+      c.lineCap = 'round';
+      c.beginPath();
+      c.moveTo(hx, hy);
+      c.lineTo(dx, dy + 26);
+      c.stroke();
       c.fillStyle = '#ffffff';
-      fillCircle(c, x, y, 30);
+      fillCircle(c, dx, dy, 30);
       c.fillStyle = '#2e9d57';
-      fillCircle(c, x, y, 24);
+      fillCircle(c, dx, dy, 24);
     }
+    drawBubu(c, b.x, y, BUBU_SIZE, (1 - this.out) * 0.4 + up * 0.08);
   }
 
   /**
@@ -342,6 +397,7 @@ export class DepartureSignalMission extends Mission {
   }
 
   dispose() {
+    this.ctx.world.train.setBubuVisible(true);
     leave(this.button);
     this.ctx.hud.hideCounter();
     releaseCanvas(this.painted?.canvas);
