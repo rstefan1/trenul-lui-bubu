@@ -65,7 +65,7 @@ export const ROUTES = [
     to: 'Paltin',
     when: '31 decembrie',
     blurb: 'Bubu lucrează la mocănița de pe Valea Vaserului și duce copiii din tabără la artificiile de la miezul nopții.',
-    chapters: 2,
+    chapters: 1,
     stations: 7,
     saveKey: 'trenul-lui-bubu/route-03',
     season: 'winter',

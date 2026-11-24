@@ -1,24 +1,15 @@
 /**
- * @file The two chapters of the New Year's Eve journey.
- *
- * Each chapter can be played in one sitting (about 10–15 minutes) and has
- * its own "wow" moment.
+ * @file The chapters of the New Year's Eve journey: just one, since the
+ * journey is short and is played in one sitting (about 15 minutes).
  */
 
 /** @type {import('../../shared/js/game/chapters.js').ChapterData[]} */
 export const FOREST_CHAPTERS = [
   {
-    id: 'valea-vaserului',
-    title: 'Valea Vaserului',
+    id: 'mocanita',
+    title: 'Mocănița de Revelion',
     from: 'viseu-de-sus',
-    to: 'novat',
-    teaser: 'Biletele copiilor, focul locomotivei, podul stricat de viitură și semnalele înzăpezite.',
-  },
-  {
-    id: 'spre-paltin',
-    title: 'Spre Paltin',
-    from: 'novat',
     to: 'paltin',
-    teaser: 'Linia de reparat, ninsoarea din pădure și lada misterioasă de la miezul nopții.',
+    teaser: 'Biletele copiilor, focul locomotivei, podul și linia de reparat, ninsoarea din pădure și lada misterioasă de la miezul nopții.',
   },
 ];
