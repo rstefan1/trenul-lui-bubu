@@ -33,7 +33,7 @@ body {
     var(--ground, var(--night));
 }
 
-/* ---------- The landscape, with the name of the game on a station sign ---------- */
+/* ---------- The landscape, with the name of the game on its sky ---------- */
 .home-hero {
   position: relative;
   /* tall enough that the train, the children and the season are big on every
@@ -58,26 +58,26 @@ body {
   height: auto;
   filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .35));
 }
-/* the blue board of a railway station, with white letters */
-.home-sign {
-  padding: clamp(6px, 1.4vw, 12px) clamp(16px, 3vw, 30px) clamp(8px, 1.6vw, 14px);
-  border: 5px solid #fff;
-  border-radius: var(--radius-m);
-  background: var(--station-blue);
-  box-shadow: var(--shadow-l);
-  text-align: center;
-}
+/* the name of the game, straight on the sky (no box around it) */
+.home-sign { text-align: left; }
 .home-title {
   margin: 0;
-  font-size: clamp(30px, 7.4vw, 64px);
+  font-size: clamp(32px, 7vw, 60px);
   font-weight: 800;
   line-height: 1;
   color: #fff;
-  text-shadow: 0 3px 0 rgba(0, 0, 0, .3);
+  text-shadow: 0 2px 0 rgba(20, 50, 100, .55), 0 0 14px rgba(20, 50, 100, .35);
 }
-.home-subtitle { margin: 4px 0 0; font-size: clamp(17px, 3.2vw, 26px); font-weight: 700; line-height: 1.1; color: var(--gold); }
+.home-subtitle {
+  margin: 2px 0 0;
+  font-size: clamp(17px, 3vw, 24px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(20, 50, 100, .5), 0 0 10px rgba(20, 50, 100, .35);
+}
 
-/* wide screens: the sign goes to the left, out of the way of the sun and the kite */
+/* wide screens: the name goes to the left, out of the way of the sun */
 @media (min-aspect-ratio: 4/3) {
   .home-head { justify-content: flex-start; padding-left: max(3vw, env(safe-area-inset-left)); }
 }
@@ -226,7 +226,6 @@ body {
   .home-hero { height: 100svh; }
   .home-head { padding-top: max(8px, env(safe-area-inset-top)); }
   .home-bubu { width: 56px; }
-  .home-sign { padding: 4px 16px 6px; border-width: 4px; }
   .home-title { font-size: 30px; }
   .home-subtitle { font-size: 16px; margin-top: 2px; }
 }
