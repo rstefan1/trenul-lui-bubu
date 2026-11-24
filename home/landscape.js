@@ -6,16 +6,20 @@
  *
  * It is one SVG, drawn once and never again: nothing moves on the home page.
  *
- * The picture is 1600 × 1000 and is cut to fit the screen (the bottom is
- * always shown): on a tall phone only the middle (x 500–1100) is seen, on a
- * wide screen the top of the sky is cut away. So the train, the children
- * and the season's main things stay in the middle and in the lower part.
+ * The picture is 2000 × 1000 (x from -200 to 1800) and is cut to fit the
+ * screen (the bottom is always shown): on a tall phone only the middle
+ * (x 450–1150) is seen, on a wide screen the top of the sky is cut away. So
+ * the train, the children and the season's main things stay in the middle
+ * and in the lower part; the two sides (x < 0, x > 1600) are only meadow,
+ * forest and mountains, for very wide screens.
  */
 
 /** @typedef {'winter' | 'spring' | 'summer' | 'autumn'} Season */
 
-const W = 1600;
 const H = 1000;
+/** the whole picture, wider than its middle (0–1600) at both sides */
+const X0 = -200;
+const X1 = 1800;
 /** the top of the rails */
 const RAIL = 798;
 
@@ -66,9 +70,9 @@ const r1 = n => Math.round(n * 10) / 10;
 
 /** The top line of a ridge, as the points of a closed shape down to `bottom`. */
 function ridge(/** @type {(x: number) => number} */ top, /** @type {number} */ bottom, step = 20) {
-  let d = `M0 ${bottom} L0 ${r1(top(0))}`;
-  for (let x = step; x <= W; x += step) d += ` L${x} ${r1(top(x))}`;
-  return `${d} L${W} ${bottom}Z`;
+  let d = `M${X0} ${bottom} L${X0} ${r1(top(X0))}`;
+  for (let x = X0 + step; x <= X1; x += step) d += ` L${x} ${r1(top(x))}`;
+  return `${d} L${X1} ${bottom}Z`;
 }
 
 /** the forested ridge in front of the mountains */
@@ -200,7 +204,7 @@ function sunflower(/** @type {number} */ x, /** @type {number} */ y, /** @type {
 function flowers(/** @type {() => number} */ rnd, /** @type {number} */ count, /** @type {string[]} */ colors) {
   let out = '';
   for (let i = 0; i < count; i++) {
-    const x = rnd() * W;
+    const x = X0 + rnd() * (X1 - X0);
     const y = 850 + rnd() * 145;
     const k = 0.6 + (y - 850) / 145;           // bigger in front
     const c = colors[Math.floor(rnd() * colors.length)];
@@ -229,7 +233,7 @@ function kite(/** @type {number} */ x, /** @type {number} */ y) {
 /** The track along the whole picture, on its embankment, with telegraph poles behind it. */
 function railway() {
   let sleepers = '';
-  for (let x = 4; x < W; x += 20) sleepers += `<rect x="${x}" y="${RAIL + 4}" width="12" height="8" rx="2"/>`;
+  for (let x = X0 + 4; x < X1; x += 20) sleepers += `<rect x="${x}" y="${RAIL + 4}" width="12" height="8" rx="2"/>`;
   let poles = '';
   let wires = '';
   const poleXs = [80, 300];
@@ -242,11 +246,11 @@ function railway() {
     wires += `<path d="M${a - 14} ${RAIL - 112} Q${(a + b) / 2} ${RAIL - 88} ${b - 14} ${RAIL - 112} M${a + 14} ${RAIL - 112} Q${(a + b) / 2} ${RAIL - 88} ${b + 14} ${RAIL - 112}" stroke="#4a4f5a" stroke-width="1.6" fill="none"/>`;
   }
   return `<g>${wires}${poles}</g>`
-    + `<path d="M0 ${RAIL + 4} H${W} V${RAIL + 44} H0Z" fill="#a89580"/>`
-    + `<path d="M0 ${RAIL + 30} H${W} V${RAIL + 44} H0Z" fill="#8c7a66"/>`
+    + `<path d="M${X0} ${RAIL + 4} H${X1} V${RAIL + 44} H${X0}Z" fill="#a89580"/>`
+    + `<path d="M${X0} ${RAIL + 30} H${X1} V${RAIL + 44} H${X0}Z" fill="#8c7a66"/>`
     + `<g fill="#6b4a32">${sleepers}</g>`
-    + `<rect x="0" y="${RAIL - 4}" width="${W}" height="8" fill="#5b616c"/>`
-    + `<rect x="0" y="${RAIL - 4}" width="${W}" height="2.5" fill="#c8ced8"/>`;
+    + `<rect x="${X0}" y="${RAIL - 4}" width="${X1 - X0}" height="8" fill="#5b616c"/>`
+    + `<rect x="${X0}" y="${RAIL - 4}" width="${X1 - X0}" height="2.5" fill="#c8ced8"/>`;
 }
 
 /** The little station at the right, with its name board. */
@@ -460,14 +464,14 @@ const THINGS = {
     sky: () => {
       const cloud = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s) =>
         `<g fill="#fff"><ellipse cx="${x}" cy="${y}" rx="${70 * s}" ry="${24 * s}"/><circle cx="${x - 28 * s}" cy="${y - 14 * s}" r="${26 * s}"/><circle cx="${x + 18 * s}" cy="${y - 22 * s}" r="${34 * s}"/></g>`;
-      return cloud(240, 440, 1) + cloud(700, 200, 0.8) + cloud(1380, 360, 1.1);
+      return cloud(700, 200, 0.8) + cloud(1380, 360, 1.1);
     },
     fields: () => {
       // meadows and a mown field, with haystacks on it
       const strips = [
-        { x0: 0, x1: 330, fill: '#9bd36f' },
+        { x0: X0, x1: 330, fill: '#9bd36f' },
         { x0: 330, x1: 600, fill: '#c9dc74' },
-        { x0: 600, x1: 1600, fill: '#9bd36f' },
+        { x0: 600, x1: X1, fill: '#9bd36f' },
       ];
       const top = (/** @type {number} */ x) => villageTop(x) + 40;
       let out = '';
@@ -479,18 +483,18 @@ const THINGS = {
     },
     foreground: () => {
       const rnd = seeded(11);
-      let out = flowers(rnd, 30, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0']);
-      // a boy with a kite (its string goes up to the kite in the sky, left of the train)
-      out += kite(330, 450) + `<path d="M457 858 Q380 700 330 502" stroke="#fff" stroke-width="2" fill="none"/>`;
-      out += child(435, 975, { shirt: '#26a69a', hair: '#c0612b', pose: 'up', s: 1.1 });
+      let out = flowers(rnd, 36, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0']);
+      // a boy with a kite, at the right (its string goes up past the station)
+      out += kite(1320, 450) + `<path d="M1324 858 Q1300 700 1320 502" stroke="#fff" stroke-width="2" fill="none"/>`;
+      out += child(1302, 975, { shirt: '#26a69a', hair: '#c0612b', pose: 'up', s: 1.1 });
       // a girl waving at the train
       out += child(700, 960, { shirt: '#ec407a', hair: '#5b3a26', pose: 'wave', girl: true, s: 1.05 });
       // a boy kicking a ball
       out += child(900, 965, { shirt: '#ff7043', hair: '#2b2f38', pose: 'kick', s: 1.05 });
       out += `<circle cx="985" cy="925" r="17" fill="#fff" stroke="#2b2f38" stroke-width="3"/><path d="M973 917 q12 6 24 0 M978 937 q8 -10 16 -2" stroke="#e53935" stroke-width="4" fill="none" stroke-linecap="round"/>`;
       // a big haystack and two tall sunflowers at the right
-      out += haystack(1330, 935, 1.05);
-      out += sunflower(1180, H + 10, 180, -6) + sunflower(1220, H + 10, 150, 6);
+      out += haystack(1440, 935, 1.05);
+      out += sunflower(1160, H + 10, 165, -6) + sunflower(1200, H + 10, 135, 6);
       return out;
     },
   },
@@ -511,8 +515,8 @@ export function landscape(season) {
   const rnd = seeded(3);
 
   // the mountains, with a lighter face on the sunny side of every peak
-  const peaks = [[0, 520], [110, 440], [190, 490], [330, 380], [450, 470], [560, 420], [690, 500], [820, 400], [930, 455], [1040, 360], [1180, 470], [1290, 410], [1420, 480], [1520, 420], [1600, 450]];
-  const mountains = `M0 660 ${peaks.map(([x, y]) => `L${x} ${y}`).join(' ')} L${W} 660Z`;
+  const peaks = [[-200, 470], [-90, 420], [0, 520], [110, 440], [190, 490], [330, 380], [450, 470], [560, 420], [690, 500], [820, 400], [930, 455], [1040, 360], [1180, 470], [1290, 410], [1420, 480], [1520, 420], [1600, 450], [1700, 390], [1800, 470]];
+  const mountains = `M${X0} 660 ${peaks.map(([x, y]) => `L${x} ${y}`).join(' ')} L${X1} 660Z`;
   let faces = '';
   for (let i = 1; i < peaks.length - 1; i += 2) {
     const [px, py] = peaks[i];
@@ -522,7 +526,7 @@ export function landscape(season) {
 
   // the forest on the ridge in front of the mountains
   let forest = '';
-  for (let x = -10; x < W + 20; x += 13 + rnd() * 8) {
+  for (let x = X0 - 10; x < X1 + 20; x += 13 + rnd() * 8) {
     forest += fir(x, forestTop(x) + 12 + rnd() * 10, 34 + rnd() * 22, p.conifer);
   }
 
@@ -534,10 +538,11 @@ export function landscape(season) {
     village += tree(x - 40, villageTop(x - 40) + 24, 62 + rnd() * 20, p);
     village += house(x, villageTop(x) + 26, 0.9 + rnd() * 0.25, roofs[i % roofs.length], '#fdf8ee');
   }
-  village += church(810, villageTop(810) + 22) + tree(1230, villageTop(1230) + 30, 80, p);
+  village += church(810, villageTop(810) + 22) + tree(1230, villageTop(1230) + 30, 80, p)
+    + tree(-60, villageTop(-60) + 30, 78, p) + tree(1690, villageTop(1690) + 30, 84, p);
 
   return `
-    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+    <svg viewBox="${X0} 0 ${X1 - X0} ${H}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id="land-sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="${p.sky[0]}"/><stop offset=".62" stop-color="${p.sky[1]}"/>
@@ -546,7 +551,7 @@ export function landscape(season) {
           <stop offset="0" stop-color="${p.meadow}"/><stop offset="1" stop-color="${p.meadowDark}"/>
         </linearGradient>
       </defs>
-      <rect width="${W}" height="${H}" fill="url(#land-sky)"/>
+      <rect x="${X0}" width="${X1 - X0}" height="${H}" fill="url(#land-sky)"/>
       <circle cx="1040" cy="300" r="105" fill="${p.sun}" opacity=".22"/>
       <circle cx="1040" cy="300" r="78" fill="${p.sun}" opacity=".35"/>
       <circle cx="1040" cy="300" r="56" fill="${p.sun}"/>
@@ -562,7 +567,7 @@ export function landscape(season) {
       ${railway()}
       ${station()}
       ${train()}
-      <path d="M0 ${RAIL + 44} H${W} V${H} H0Z" fill="url(#land-meadow)"/>
+      <path d="M${X0} ${RAIL + 44} H${X1} V${H} H${X0}Z" fill="url(#land-meadow)"/>
       ${things.foreground(p)}
     </svg>`;
 }
