@@ -65,6 +65,10 @@ do not save anything):
 They can be combined: `?from=ilva-mica&speed=3` shows the viaducts quickly.
 Station ids are listed in `route-01/js/route-data.js`.
 
+The game is published inside [lumea-lui-bubu](../lumea-lui-bubu), in its
+folder `trenul-lui-bubu/`: the “← Lumea lui Bubu” button of the home page
+goes back to the village (`../`).
+
 The home page shows a landscape with a train in the colours of the season,
 chosen from the calendar (`home/season.js`). To see another season, add
 `?anotimp=iarna`, `?anotimp=primavara`, `?anotimp=vara` or `?anotimp=toamna`

@@ -52,6 +52,29 @@ body {
   height: auto;
   filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .35));
 }
+/* back to the village of lumea-lui-bubu: above the name on narrow screens,
+   in the top right corner on wide ones */
+.home-back {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: max(10px, env(safe-area-inset-top)) 0 0 max(12px, env(safe-area-inset-left));
+  padding: 5px 14px 6px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .94);
+  color: var(--station-blue);
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .2);
+}
+.home-back:hover, .home-back:focus-visible { background: #fff; }
+.home-back:focus-visible { outline: 4px solid var(--gold); outline-offset: 2px; }
+.home-back + .home-head { padding-top: 6px; }
+
 /* the name of the game, straight on the sky (no box around it) */
 .home-sign { text-align: left; }
 /* white letters with a dark blue outline, so they read on any sky */
@@ -80,6 +103,8 @@ body {
 @media (min-aspect-ratio: 4/3) {
   .home-head { justify-content: flex-start; padding-left: max(3vw, env(safe-area-inset-left)); }
   .land-engine { transform: translateX(-360px); }
+  .home-back { position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); margin: 0; }
+  .home-back + .home-head { padding-top: max(10px, env(safe-area-inset-top)); }
   /* the landscape is a low strip there: a smaller name, so it stays above the engine */
   .home-head { padding-top: max(10px, env(safe-area-inset-top)); }
   .home-bubu { width: clamp(56px, 6vw, 84px); }
