@@ -31,6 +31,11 @@
 
 /** Seconds between the start of a chapter and the departure. */
 const CHAPTER_START_DELAY = 2.5;
+/**
+ * Seconds the chapter's title stays on screen; a mission at the chapter's
+ * first station starts only after it (their boxes would cover each other).
+ */
+const CHAPTER_TITLE_SECONDS = 4;
 
 export class Campaign {
   /** @param {CampaignParts} parts */
@@ -129,12 +134,12 @@ export class Campaign {
     this.director.reset();
     const index = this.save.stationIndex;
     if (index === null) {
-      // a brand new journey: the first station's mission starts at once
+      // a brand new journey: the first station's mission starts after the chapter's title
       this.state.load(null);
       this.save.chapterStart[this.book.chapters[0].id] = this.state.toJSON();
       this.placeTrain(0, null);
       this.announceChapter(this.book.chapters[0]);
-      this.director.atStation(this.journey.station);
+      this.director.atStation(this.journey.station, { wait: CHAPTER_TITLE_SECONDS });
       return;
     }
     this.placeTrain(index, this.save.state);
@@ -161,7 +166,7 @@ export class Campaign {
     const snapshot = this.save.chapterStart[chapter.id] ?? null;
     this.placeTrain(chapter.fromIndex, snapshot);
     this.announceChapter(chapter);
-    if (chapter.fromIndex === 0) this.director.atStation(this.journey.station);
+    if (chapter.fromIndex === 0) this.director.atStation(this.journey.station, { wait: CHAPTER_TITLE_SECONDS });
     else this.director.atStation(this.journey.station, { skipMission: true, wait: CHAPTER_START_DELAY });
   }
 
@@ -183,7 +188,7 @@ export class Campaign {
    * @param {import('./chapters.js').Chapter} chapter
    */
   announceChapter(chapter) {
-    this.missionHud.announce(chapter.title, chapter.teaser, `Capitolul ${chapter.number}`, 4);
+    this.missionHud.announce(chapter.title, chapter.teaser, `Capitolul ${chapter.number}`, CHAPTER_TITLE_SECONDS);
   }
 
   // ------------------------------------------------------------ events

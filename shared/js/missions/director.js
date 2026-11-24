@@ -103,7 +103,9 @@ export class MissionDirector extends Emitter {
    * The train is stopped at a station: run its mission, or wait a little.
    * @param {import('../journey/route.js').Station} station
    * @param {{skipMission?: boolean, wait?: number}} [options]
-   *        skipMission: the mission was already played (resuming a saved journey)
+   *        skipMission: the mission was already played (resuming a saved journey);
+   *        wait: seconds before the train leaves (without a mission) or before
+   *        the mission starts (e.g. while the chapter's title is shown)
    */
   atStation(station, options = {}) {
     const entry = this.plan.stations[station.id];
@@ -113,7 +115,7 @@ export class MissionDirector extends Emitter {
     }
     this.holding = true;
     // the first station's mission starts at once (the train is already there)
-    this.pending = { entry, wait: station.index === 0 ? 0 : BEFORE_STATION_MISSION };
+    this.pending = { entry, wait: options.wait ?? (station.index === 0 ? 0 : BEFORE_STATION_MISSION) };
   }
 
   /** Lets a held train leave. */
