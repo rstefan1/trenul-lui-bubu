@@ -73,9 +73,10 @@ export const FOREST_ROUTE = {
       cover: [[0, 1]],
       train: 'forest',
     },
-    // Novicior → Paltin: a short, slow ride through the firs, up to the last station
+    // Novicior → Paltin: a slow ride through the firs, up to the last station; it is
+    // cold up there, and the children get hot tea
     {
-      duration: 16,
+      duration: 20,
       biomes: [[0, 'forest']],
       slow: [[0.08, 0.9, 360]],
       snowfall: [[0, 0.2], [1, 0.1]],

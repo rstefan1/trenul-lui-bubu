@@ -40,6 +40,7 @@ import { FireworksMission } from '../../shared/js/missions/fireworks-mission.js'
 import { HeadcountMission } from '../../shared/js/missions/headcount-mission.js';
 import { SnowySignalMission } from '../../shared/js/missions/snowy-signal-mission.js';
 import { StokerMission } from '../../shared/js/missions/stoker-mission.js';
+import { TeaMission } from '../../shared/js/missions/tea-mission.js';
 import { TicketsMission } from '../../shared/js/missions/tickets-mission.js';
 import { TrackRepairMission } from '../../shared/js/missions/track-repair-mission.js';
 import { WaterCraneMission } from '../../shared/js/missions/water-crane-mission.js';
@@ -77,6 +78,7 @@ const MISSION_TYPES = {
   headcount: HeadcountMission,
   'snowy-signal': SnowySignalMission,
   stoker: StokerMission,
+  tea: TeaMission,
   tickets: TicketsMission,
   'track-repair': TrackRepairMission,
   'water-crane': WaterCraneMission,

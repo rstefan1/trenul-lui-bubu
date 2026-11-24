@@ -123,6 +123,20 @@ export const FOREST_MISSIONS = {
         drifts: 3,
       },
     },
+    // Novicior → Paltin: up high it is cold in the coaches; hot tea for the children
+    {
+      segment: 5,
+      from: 0.02,
+      to: 0.95,
+      type: 'tea',
+      config: {
+        id: 'tea-paltin',
+        title: 'Ceai cald pentru copii',
+        text: 'Cu cât urcăm, cu atât e mai frig. Când un copil tremură la geam și spune „Brr!”, atinge-i geamul: Bubu îi aduce o cană de ceai cald.',
+        seats: CHILDREN.map(c => c.seat),
+        fact: 'Sus la munte e mai frig decât în vale: cu cât urci mai sus, cu atât aerul e mai rece.',
+      },
+    },
   ],
 
   stations: {
