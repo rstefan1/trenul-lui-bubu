@@ -73,8 +73,8 @@ body {
 
 /* the name of the game on a wooden sign, the same as the sign at the
    entrance of lumea-lui-bubu: three planks with a nail in every corner, a
-   dark wooden edge, a little crooked, on two thick posts; Bubu sits on its
-   top right corner */
+   dark wooden edge, a little crooked (the other way), on two thick posts;
+   Bubu sits on its top right corner */
 .home-sign {
   --wood: #b5763c;
   --wood-dark: #7a4a22;
@@ -92,7 +92,7 @@ body {
     linear-gradient(180deg, var(--wood-light), var(--wood) 60%, #a5682f);
   box-shadow: inset 0 0 0 4px var(--wood-dark), 0 8px 0 rgba(90, 52, 22, .35), 0 16px 26px rgba(43, 42, 58, .25);
   text-align: center;
-  transform: rotate(-1.5deg);
+  transform: rotate(1.5deg);   /* crooked the other way than the sign of lumea-lui-bubu, as in a mirror */
 }
 /* the two posts, going down behind the board */
 .home-sign::before, .home-sign::after {
