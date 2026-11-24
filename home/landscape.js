@@ -432,20 +432,33 @@ const THINGS = {
     foreground: () => {
       const rnd = seeded(11);
       let out = flowers(rnd, 50, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 852, 90, LX0, LX1);
-      // children all along the line, right under the track, waving at the train
+      // children all along the line, right under the track, waving at the train:
+      // in little groups, at uneven distances, some a little nearer (lower and bigger)
       const shirts = ['#26a69a', '#ec407a', '#ffcf3f', '#7e57c2', '#ff7043', '#42a5f5', '#43a047', '#e53935'];
       const hairs = ['#c0612b', '#5b3a26', '#2b2f38', '#f2c14e', '#3b2617'];
       const poses = /** @type {const} */ (['wave', 'up', 'wave', 'catch', 'wave', 'up', 'kick']);
-      for (let i = 0, x = LX0 + 110; x < LX1; i++, x += 230) {
-        const pose = poses[i % poses.length];
-        out += child(x, 932 + (i % 2) * 3, { shirt: shirts[i % shirts.length], hair: hairs[i % hairs.length], pose, girl: i % 2 === 1, s: 0.88, flip: i % 3 === 2 });
+      const kids = [];
+      for (let x = LX0 + 60 + rnd() * 80; x < LX1 - 40;) {
+        const group = 1 + Math.floor(rnd() * 3);                 // one, two or three together
+        for (let k = 0; k < group && x < LX1 - 40; k++) {
+          kids.push({ x, y: 922 + rnd() * 22 });
+          x += 46 + rnd() * 40;                                  // close to each other in a group
+        }
+        x += 120 + rnd() * 260;                                  // then a gap
+      }
+      kids.sort((a, b) => a.y - b.y);                            // the nearer ones in front
+      kids.forEach(({ x, y }, i) => {
+        const k = Math.round(x * 7 + y) % 997;                   // the same child every time
+        const pose = poses[k % poses.length];
+        const sc = 0.8 + ((y - 922) / 22) * 0.14;
+        out += child(r1(x), r1(y), { shirt: shirts[k % shirts.length], hair: hairs[(k >> 3) % hairs.length], pose, girl: k % 2 === 1, s: r1(sc * 100) / 100, flip: (k >> 2) % 2 === 1 });
         if (pose === 'catch') {
-          out += `<circle cx="${x}" cy="${r1(932 - 120 * 0.88)}" r="13" fill="#fff" stroke="#2b2f38" stroke-width="2.5"/><path d="M${x - 9} ${r1(932 - 126 * 0.88)} q9 5 18 0" stroke="#e53935" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+          out += `<circle cx="${r1(x)}" cy="${r1(y - 120 * sc)}" r="13" fill="#fff" stroke="#2b2f38" stroke-width="2.5"/><path d="M${r1(x - 9)} ${r1(y - 126 * sc)} q9 5 18 0" stroke="#e53935" stroke-width="3" fill="none" stroke-linecap="round"/>`;
         }
         if (pose === 'kick') {
-          out += `<circle cx="${x + 46}" cy="922" r="11" fill="#fff" stroke="#2b2f38" stroke-width="2.5"/>`;
+          out += `<circle cx="${r1(x + 48 * sc * ((k >> 2) % 2 === 1 ? -1 : 1))}" cy="${r1(y - 10)}" r="11" fill="#fff" stroke="#2b2f38" stroke-width="2.5"/>`;
         }
-      }
+      });
       return out;
     },
   },
