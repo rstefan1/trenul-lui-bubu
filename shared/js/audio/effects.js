@@ -71,6 +71,8 @@ const MIX = {
   birdsong: -16, sleigh: -11,
   // the sounds of the landscape on the way (far away, under the train)
   owl: -13, crow: -16, twig: -17,
+  // the sounds of the winter forest in the mountains
+  woodpecker: -15, jay: -17, bullfinch: -16, snowPlop: -15, fox: -16,
 };
 /** The effects that lower the music while they play, and for how long (seconds). */
 const DUCK = { success: 1, chime: 1.6, chapterEnd: 2, finale: 3, star: 0.5 };
@@ -478,6 +480,76 @@ const SOUNDS = {
       wobble.start(t);
       osc.stop(t + 0.95);
       wobble.stop(t + 0.95);
+    }
+  },
+  /** A woodpecker drumming on a dead tree: a quick, fading roll of knocks. */
+  woodpecker(ctx, out, t) {
+    const n = 12 + Math.floor(Math.random() * 8);
+    const gap = 0.05 + Math.random() * 0.012;
+    for (let k = 0; k < n; k++) {
+      const at = t + k * gap;
+      const level = 0.12 * (1 - (k / n) * 0.6);
+      noisePuff(ctx, out, { t: at, length: 0.03, level, type: 'bandpass', from: 1300, q: 3, attack: 0.001 });
+      sweep(ctx, out, { t: at, from: 900, to: 650, slide: 0.02, level: level * 0.5, length: 0.03, attack: 0.001 });
+    }
+  },
+  /** A jay, the noisy bird of the forest: a harsh, scratchy "kschaaa", once or twice. */
+  jay(ctx, out, t) {
+    const n = 1 + Math.floor(Math.random() * 2);
+    for (let k = 0; k < n; k++) {
+      const at = t + k * 0.5;
+      noisePuff(ctx, out, { t: at, length: 0.32, level: 0.07, type: 'bandpass', from: 2600, to: 2100, q: 2, attack: 0.02 });
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(hz(1500), at);
+      osc.frequency.exponentialRampToValueAtTime(hz(1100), at + 0.3);
+      const voice = ctx.createBiquadFilter();
+      voice.type = 'bandpass';
+      voice.frequency.value = hz(2200);
+      voice.Q.value = 2;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(0.04, at + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 0.32);
+      osc.connect(voice).connect(g).connect(out);
+      osc.start(at);
+      osc.stop(at + 0.34);
+    }
+  },
+  /** A bullfinch, the red-breasted bird of the winter: a few soft, low, piping whistles. */
+  bullfinch(ctx, out, t) {
+    const n = 2 + Math.floor(Math.random() * 2);
+    for (let k = 0; k < n; k++) {
+      const at = t + k * (0.8 + Math.random() * 0.3);
+      sweep(ctx, out, { t: at, from: 2000, to: 1550, slide: 0.24, level: 0.05, length: 0.3, attack: 0.04 });
+    }
+  },
+  /** A load of snow sliding off a fir branch and falling softly into the snow below. */
+  snowPlop(ctx, out, t) {
+    noisePuff(ctx, out, { t, length: 0.45, level: 0.07, type: 'lowpass', from: 1400, to: 350, attack: 0.06 });
+    noisePuff(ctx, out, { t: t + 0.42, length: 0.18, level: 0.08, type: 'lowpass', from: 500, to: 200, attack: 0.005 });
+    sweep(ctx, out, { t: t + 0.42, from: 130, to: 60, slide: 0.12, level: 0.05, length: 0.16, attack: 0.004 });
+  },
+  /** A fox far away in the forest: two or three short, high yaps. */
+  fox(ctx, out, t) {
+    const n = 2 + Math.floor(Math.random() * 2);
+    for (let k = 0; k < n; k++) {
+      const at = t + k * (0.28 + Math.random() * 0.08);
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(hz(950), at);
+      osc.frequency.exponentialRampToValueAtTime(hz(620), at + 0.12);
+      const voice = ctx.createBiquadFilter();
+      voice.type = 'bandpass';
+      voice.frequency.value = hz(1200);
+      voice.Q.value = 4;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(0.06, at + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 0.14);
+      osc.connect(voice).connect(g).connect(out);
+      osc.start(at);
+      osc.stop(at + 0.16);
     }
   },
   /** The doors close: they slide, shut with a soft bump, and the air hisses. */
