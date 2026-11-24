@@ -12,6 +12,10 @@
  * Subclasses describe the places (`makePlaces`), draw them (`drawPlace`),
  * react to touches and say how it went (`result`). A place done before the
  * train had to stop never stops it.
+ *
+ * A subclass may give Bubu work on foot (`this.worker`, a BubuWorker): she
+ * gets off at a place, and when the place is done she climbs back; the
+ * train waits for her before it goes on.
  */
 
 import { fillRoundRect } from '../gfx/shapes.js';
@@ -59,6 +63,11 @@ export class LineStopMission extends Mission {
     this.endT = 0;
     /** @type {TrainPace | null} */
     this.pace = null;
+    /**
+     * Bubu on foot, if she works at the places (see bubu-worker.js).
+     * @type {import('./bubu-worker.js').BubuWorker | null}
+     */
+    this.worker = null;
     /** How far the view has panned forward so far (holdView: it never goes back). */
     this.framedPan = 0;
   }
@@ -123,11 +132,14 @@ export class LineStopMission extends Mission {
     if (p.done) return;
     p.done = true;
     p.doneAt = this.time;
+    // the work is done: Bubu climbs back into her train
+    this.worker?.comeBack();
   }
 
   /** @param {number} dt */
   update(dt) {
     this.time += dt;
+    this.worker?.update(dt);
     const j = this.ctx.journey;
     const w = this.ctx.world;
     const p = this.next;
@@ -145,7 +157,10 @@ export class LineStopMission extends Mission {
     } else {
       w.panTarget = want;
     }
-    if (this.pace) {
+    if (this.pace && this.worker && !this.worker.aboard) {
+      // the train never leaves without Bubu
+      this.pace.stopAt(0);
+    } else if (this.pace) {
       if (p) {
         const gap = p.worldX - this.options.stopBefore - j.distance;
         this.pace.stopAt(gap);
@@ -157,7 +172,7 @@ export class LineStopMission extends Mission {
         this.pace.cruise();
       }
     }
-    const done = this.places.length > 0 && this.places.every(x => x.done);
+    const done = this.places.length > 0 && this.places.every(x => x.done) && (!this.worker || this.worker.aboard);
     this.endT = done ? this.endT + dt : 0;
     if ((this.endT > 1.2 && this.canEnd) || this.phase === 'wrapping') this.finishMission();
   }
@@ -217,6 +232,7 @@ export class LineStopMission extends Mission {
       this.drawPlace(c, p, x);
     }
     c.restore();
+    this.worker?.draw(c);
     this.drawOver(c);
   }
 
@@ -238,6 +254,7 @@ export class LineStopMission extends Mission {
 
   dispose() {
     this.ctx.world.panTarget = 0;
+    if (this.worker && !this.worker.aboard) this.ctx.world.train.setBubuVisible(true);
     this.pace?.release();
     this.ctx.hud.hideCounter();
   }
