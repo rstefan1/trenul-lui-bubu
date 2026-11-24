@@ -41,7 +41,9 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   display: flex;
   align-items: stretch;
   gap: var(--gap);
-  z-index: 20;
+  /* above the mission panels (which cover the whole screen), so its buttons
+     (back, sound, fullscreen) can be touched during a mission too */
+  z-index: 26;
   pointer-events: none;
 }
 .hud > * { pointer-events: auto; }
