@@ -98,11 +98,9 @@ body {
   paint-order: stroke fill;
 }
 
-/* wide screens: the name goes to the left, out of the way of the sun, and
-   the engine goes further left too (the whole width of the landscape shows) */
+/* wide screens: the name goes to the left, out of the way of the sun */
 @media (min-aspect-ratio: 4/3) {
   .home-head { justify-content: flex-start; padding-left: max(3vw, env(safe-area-inset-left)); }
-  .land-engine { transform: translateX(-360px); }
   .home-back { position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); margin: 0; }
   .home-back + .home-head { padding-top: max(10px, env(safe-area-inset-top)); }
   /* the landscape is a low strip there: a smaller name, so it stays above the engine */

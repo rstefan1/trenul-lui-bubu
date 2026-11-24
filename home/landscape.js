@@ -280,10 +280,11 @@ function trainDefs() {
   const v = (/** @type {string} */ id, /** @type {string[]} */ stops) =>
     `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${stops.map((c, i) => `<stop offset="${r1(i / (stops.length - 1))}" stop-color="${c}"/>`).join('')}</linearGradient>`;
   return `<defs>`
+    + v('tr-car', ['#e2463f', '#c62d26', '#9c1f19'])
     + v('tr-roof', ['#6b7480', '#3a4049'])
     + v('tr-glass', ['#eef8ff', '#bfdff2'])
     + v('tr-cab', ['#e2463f', '#c62d26', '#9c1f19'])
-    + v('tr-boiler', ['#2f8a5e', '#1f6e4a', '#164f35', '#1f6e4a'])
+    + v('tr-boiler', ['#4a5363', '#2a3038', '#171b21', '#2a3038'])
     + v('tr-smokebox', ['#4a525c', '#2b3038', '#3a4049'])
     + v('tr-brass', ['#f7dc8c', '#d4a43c', '#a87a22'])
     + v('tr-steel', ['#e3e7ec', '#9aa3ad'])
@@ -311,6 +312,73 @@ function driveWheel(/** @type {number} */ x, /** @type {number} */ y, /** @type 
     + `<path d="${spokes}" stroke="#2b3038" stroke-width="2.4"/>`
     + `<path d="M${r1(x - cw * 0.87)} ${r1(y - cw * 0.5)} A${r1(cw)} ${r1(cw)} 0 0 1 ${r1(x + cw * 0.87)} ${r1(y - cw * 0.5)} Q${x} ${r1(y - cw * 0.2)} ${r1(x - cw * 0.87)} ${r1(y - cw * 0.5)}Z" fill="#8f1c16"/>`
     + `<circle cx="${x}" cy="${y}" r="${r1(r * 0.2)}" fill="url(#tr-steel)" stroke="#2b3038" stroke-width="1.5"/>`;
+}
+
+/** A child's head and shoulders in a train window (drawn inside the window). */
+function passenger(/** @type {number} */ w, /** @type {number} */ h, /** @type {string} */ hair, /** @type {string} */ shirt) {
+  const cx = w / 2;
+  return `<rect x="${cx - 9}" y="${h - 6}" width="18" height="10" rx="5" fill="${shirt}"/>`
+    + `<circle cx="${cx}" cy="${h - 13}" r="7" fill="#f6c9a0"/>`
+    + `<path d="M${cx - 7} ${h - 13} A7 7 0 0 1 ${cx + 7} ${h - 13} Q${cx} ${h - 16} ${cx - 7} ${h - 13}Z" fill="${hair}"/>`;
+}
+
+/**
+ * A passenger car whose left end is at x.
+ * @param {number} x
+ * @param {number} w
+ * @param {Array<[string, string] | null>} people  hair and shirt of the child in every window (null: empty)
+ */
+function car(x, w, people) {
+  const top = RAIL - 132;
+  const bottom = RAIL - 50;
+  const winW = 26;
+  const winH = 24;
+  const doorW = 14;
+  const inner = w - 2 * (doorW + 8);
+  const gap = (inner - people.length * winW) / (people.length + 1);
+  let windows = '';
+  people.forEach((who, i) => {
+    const wx = r1(x + doorW + 8 + gap + i * (winW + gap));
+    const wy = top + 14;
+    windows += `<svg x="${wx}" y="${wy}" width="${winW}" height="${winH}"><rect width="${winW}" height="${winH}" fill="url(#tr-glass)"/>${who ? passenger(winW, winH, who[0], who[1]) : ''}<path d="M0 ${winH * 0.7} L${winW * 0.7} 0 H${winW} L0 ${winH}Z" fill="#fff" opacity=".18"/></svg>`
+      + `<rect x="${wx}" y="${wy}" width="${winW}" height="${winH}" rx="3" fill="none" stroke="#6e1612" stroke-width="2.5"/>`;
+  });
+  const door = (/** @type {number} */ dx) =>
+    `<rect x="${dx}" y="${top + 8}" width="${doorW}" height="${bottom - top - 10}" rx="2" fill="none" stroke="#6e1612" stroke-width="1.6"/>`
+    + `<rect x="${dx + 3}" y="${top + 14}" width="${doorW - 6}" height="16" rx="2" fill="url(#tr-glass)" stroke="#6e1612" stroke-width="1.2"/>`;
+  const bogie = (/** @type {number} */ bx) =>
+    `<rect x="${bx - 8}" y="${RAIL - 42}" width="16" height="14" fill="#2b3038"/>`
+    + carWheel(bx - 15, RAIL - 12, 12) + carWheel(bx + 15, RAIL - 12, 12)
+    + `<rect x="${bx - 28}" y="${RAIL - 30}" width="56" height="10" rx="3" fill="#3a4049"/>`
+    + `<circle cx="${bx - 15}" cy="${RAIL - 12}" r="3" fill="#c8ced8"/><circle cx="${bx + 15}" cy="${RAIL - 12}" r="3" fill="#c8ced8"/>`;
+  return `<g>`
+    + bogie(x + 32) + bogie(x + w - 32)
+    + `<rect x="${x + 4}" y="${bottom}" width="${w - 8}" height="10" fill="#2b3038"/>`
+    + `<rect x="${x - 6}" y="${bottom - 2}" width="8" height="6" rx="2" fill="#59606b"/><rect x="${x + w - 2}" y="${bottom - 2}" width="8" height="6" rx="2" fill="#59606b"/>`
+    + `<rect x="${x}" y="${top}" width="${w}" height="${bottom - top}" rx="5" fill="url(#tr-car)"/>`
+    + `<rect x="${x}" y="${top + 46}" width="${w}" height="3" fill="#f0c75e"/>`
+    + `<rect x="${x}" y="${top + 52}" width="${w}" height="1.5" fill="#f0c75e" opacity=".7"/>`
+    + `<rect x="${x}" y="${bottom - 6}" width="${w}" height="6" fill="#6e1612"/>`
+    + door(x + 6) + door(x + w - 6 - doorW)
+    + windows
+    + `<path d="M${x - 3} ${top + 2} Q${x - 2} ${top - 12} ${x + 14} ${top - 13} H${x + w - 14} Q${x + w + 2} ${top - 12} ${x + w + 3} ${top + 2}Z" fill="url(#tr-roof)"/>`
+    + `<rect x="${x + w * 0.3 - 7}" y="${top - 18}" width="14" height="6" rx="2" fill="#3a4049"/><rect x="${x + w * 0.7 - 7}" y="${top - 18}" width="14" height="6" rx="2" fill="#3a4049"/>`
+    + `</g>`;
+}
+
+/** The coal tender behind the engine, its left end at x. */
+function tender(/** @type {number} */ x) {
+  const w = 66;
+  const top = RAIL - 112;
+  return `<g>`
+    + `<rect x="${x + 4}" y="${RAIL - 48}" width="${w - 8}" height="18" fill="#2b3038"/>`
+    + carWheel(x + 17, RAIL - 13, 13) + carWheel(x + w - 17, RAIL - 13, 13)
+    + `<rect x="${x + 2}" y="${RAIL - 30}" width="${w - 4}" height="10" rx="3" fill="#3a4049"/>`
+    + `<path d="M${x + 6} ${top + 2} Q${x + 16} ${top - 14} ${x + 30} ${top - 8} Q${x + 44} ${top - 18} ${x + w - 6} ${top + 2}Z" fill="#2b2f38"/>`
+    + `<rect x="${x}" y="${top}" width="${w}" height="${RAIL - 50 - top}" rx="4" fill="url(#tr-boiler)"/>`
+    + `<rect x="${x + 7}" y="${top + 10}" width="${w - 14}" height="${RAIL - 72 - top}" rx="3" fill="none" stroke="#f0c75e" stroke-width="2"/>`
+    + `<rect x="${x}" y="${RAIL - 56}" width="${w}" height="8" fill="#2b3038"/>`
+    + `</g>`;
 }
 
 /** The steam engine, its cab's left side at x (it goes to the right). */
@@ -366,12 +434,28 @@ function smoke(/** @type {number} */ x) {
 }
 
 /**
- * The engine with Bubu, at the left of the village (on wide screens it goes
- * further left, see .land-engine in home/home.css), so the village shows.
+ * The whole train, long and bright on the green hills: four red cars full of
+ * children, the tender and the black engine with Bubu, going to the right.
  */
 function train() {
-  const x = 500;
-  return trainDefs() + `<g class="land-engine">${smoke(x)}${engine(x)}</g>`;
+  const carW = 150;
+  const engineX = 760;
+  const tenderX = engineX - 72;
+  const kids = [['#5b3a26', '#ff8a3d'], ['#f2c14e', '#7e57c2'], ['#2b2f38', '#26a69a'], ['#c0612b', '#ec407a'], ['#3b2617', '#42a5f5'], ['#f2c14e', '#43a047']];
+  let cars = '';
+  let couplers = `M${tenderX - 10} ${RAIL - 50} h10`;
+  for (let i = 0; i < 4; i++) {
+    const x = tenderX - 10 - (i + 1) * carW - i * 10;
+    const who = [kids[(i * 2) % 6], i === 1 ? null : kids[(i * 2 + 1) % 6], kids[(i * 3 + 2) % 6]];
+    cars += car(x, carW, /** @type {Array<[string, string] | null>} */ (who));
+    if (i < 3) couplers += ` M${x - 10} ${RAIL - 50} h10`;
+  }
+  return trainDefs()
+    + smoke(engineX)
+    + `<path d="${couplers}" stroke="#2b3038" stroke-width="6"/>`
+    + cars
+    + tender(tenderX)
+    + engine(engineX);
 }
 
 /* ---------------------------------------------------------------------------
@@ -395,9 +479,7 @@ const THINGS = {
       return cloud(700, 200, 0.8) + cloud(1380, 360, 1.1);
     },
     fields: () => {
-      // haystacks on the field under the village
-      let out = haystack(640, 756, 0.5) + haystack(720, 762, 0.45);
-      return out;
+      return '';
     },
     foreground: () => {
       const rnd = seeded(11);
@@ -411,7 +493,6 @@ const THINGS = {
       out += child(900, 965, { shirt: '#ff7043', hair: '#2b2f38', pose: 'kick', s: 1.05 });
       out += `<circle cx="985" cy="925" r="17" fill="#fff" stroke="#2b2f38" stroke-width="3"/><path d="M973 917 q12 6 24 0 M978 937 q8 -10 16 -2" stroke="#e53935" stroke-width="4" fill="none" stroke-linecap="round"/>`;
       // a big haystack and two tall sunflowers at the right
-      out += haystack(1540, 935, 1.05);
       out += sunflower(1160, H + 10, 165, -6) + sunflower(1200, H + 10, 135, 6);
       return out;
     },
@@ -476,16 +557,9 @@ export function landscape(season) {
     forest += fir(x, forestTop(x) + 12 + rnd() * 10, 34 + rnd() * 22, p.conifer);
   }
 
-  // the village on its hill: houses, trees and the wooden church in the middle
-  const roofs = ['#b5452b', '#8f3a24', '#c0612b'];
-  let village = '';
-  const homes = [-420, -260, 500, 640, 990, 1130, 1880, 2040];
-  for (const [i, x] of homes.entries()) {
-    village += tree(x - 40, villageTop(x - 40) + 24, 62 + rnd() * 20, p);
-    village += house(x, villageTop(x) + 26, 0.9 + rnd() * 0.25, roofs[i % roofs.length], '#fdf8ee');
-  }
-  village += church(810, villageTop(810) + 22) + tree(1230, villageTop(1230) + 30, 80, p)
-    + tree(-60, villageTop(-60) + 30, 78, p) + tree(1690, villageTop(1690) + 30, 84, p);
+  // the wooden church and a few trees on the hill
+  const village = church(810, villageTop(810) + 22)
+    + [[-60, 78], [380, 70], [600, 76], [1060, 72], [1230, 80], [1690, 84], [1980, 76]].map(([x, h]) => tree(x, villageTop(x) + 30, h, p)).join('');
 
   return `
     <svg viewBox="${LX0} 0 ${LX1 - LX0} ${H - 30}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
