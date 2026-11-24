@@ -97,29 +97,6 @@ function fir(/** @type {number} */ x, /** @type {number} */ y, /** @type {number
   return `<path d="M${r1(x)} ${r1(y - h)} L${r1(x + w)} ${r1(y - h * 0.3)} L${r1(x + w * 0.55)} ${r1(y - h * 0.3)} L${r1(x + w * 1.15)} ${r1(y)} L${r1(x - w * 1.15)} ${r1(y)} L${r1(x - w * 0.55)} ${r1(y - h * 0.3)} L${r1(x - w)} ${r1(y - h * 0.3)}Z" fill="${color}"/>`;
 }
 
-/** A leafy tree standing at (x, y). */
-function tree(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ h, /** @type {Palette} */ p) {
-  const r = h * 0.3;
-  return `<g><rect x="${r1(x - h * 0.05)}" y="${r1(y - h * 0.5)}" width="${r1(h * 0.1)}" height="${r1(h * 0.5)}" fill="#7a5235"/>`
-    + `<circle cx="${r1(x - r * 0.55)}" cy="${r1(y - h * 0.6)}" r="${r1(r * 0.8)}" fill="${p.leaves[0]}"/>`
-    + `<circle cx="${r1(x + r * 0.55)}" cy="${r1(y - h * 0.6)}" r="${r1(r * 0.8)}" fill="${p.leaves[0]}"/>`
-    + `<circle cx="${r1(x)}" cy="${r1(y - h * 0.78)}" r="${r1(r)}" fill="${p.leaves[0]}"/>`
-    + `<circle cx="${r1(x + r * 0.3)}" cy="${r1(y - h * 0.85)}" r="${r1(r * 0.5)}" fill="${p.leaves[1]}"/></g>`;
-}
-
-/** A village house with its base at (x, y). */
-function house(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s, /** @type {string} */ roof, /** @type {string} */ wall) {
-  const w = 64 * s;
-  const h = 38 * s;
-  return `<g>`
-    + `<rect x="${r1(x - w / 2)}" y="${r1(y - h)}" width="${r1(w)}" height="${r1(h)}" fill="${wall}"/>`
-    + `<path d="M${r1(x - w / 2 - 8 * s)} ${r1(y - h + 2)} L${r1(x - w * 0.3)} ${r1(y - h - 30 * s)} L${r1(x + w * 0.3)} ${r1(y - h - 30 * s)} L${r1(x + w / 2 + 8 * s)} ${r1(y - h + 2)}Z" fill="${roof}"/>`
-    + `<rect x="${r1(x - w * 0.34)}" y="${r1(y - h * 0.72)}" width="${r1(12 * s)}" height="${r1(12 * s)}" fill="#3b6fb6" stroke="#fff" stroke-width="${r1(2 * s)}"/>`
-    + `<rect x="${r1(x + w * 0.1)}" y="${r1(y - h * 0.72)}" width="${r1(12 * s)}" height="${r1(12 * s)}" fill="#3b6fb6" stroke="#fff" stroke-width="${r1(2 * s)}"/>`
-    + `<rect x="${r1(x + w * 0.36 - 10 * s)}" y="${r1(y - h * 0.62)}" width="${r1(10 * s)}" height="${r1(h * 0.62)}" fill="#8a5a3b"/>`
-    + `</g>`;
-}
-
 /** A child standing with feet at (x, y), about 100 tall at scale 1. */
 function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shirt: string, hair: string, skin?: string, legs?: string, pose?: 'wave' | 'up' | 'catch' | 'kick' | 'sit', girl?: boolean, s?: number, flip?: boolean}} */ o) {
   const s = o.s ?? 1;
@@ -170,6 +147,30 @@ function haystack(/** @type {number} */ x, /** @type {number} */ y, /** @type {n
     + `<path d="M${r1(x - w)} ${r1(y)} Q${r1(x - w * 1.1)} ${r1(y - h * 0.7)} ${r1(x)} ${r1(y - h)} Q${r1(x + w * 1.1)} ${r1(y - h * 0.7)} ${r1(x + w)} ${r1(y)}Z" fill="#e9c35b"/>`
     + `<path d="M${r1(x - w * 0.6)} ${r1(y - h * 0.15)} Q${r1(x - w * 0.5)} ${r1(y - h * 0.6)} ${r1(x - w * 0.1)} ${r1(y - h * 0.85)} M${r1(x)} ${r1(y - h * 0.1)} Q${r1(x + w * 0.1)} ${r1(y - h * 0.55)} ${r1(x + w * 0.3)} ${r1(y - h * 0.8)} M${r1(x + w * 0.6)} ${r1(y - h * 0.15)} Q${r1(x + w * 0.65)} ${r1(y - h * 0.45)} ${r1(x + w * 0.55)} ${r1(y - h * 0.55)}" stroke="#c99a35" stroke-width="${r1(3 * s)}" fill="none" stroke-linecap="round"/>`
     + `<path d="M${r1(x - w * 0.95)} ${r1(y - h * 0.3)} Q${r1(x)} ${r1(y - h * 0.4)} ${r1(x + w * 0.95)} ${r1(y - h * 0.3)}" stroke="#c99a35" stroke-width="${r1(3 * s)}" fill="none"/>`
+    + `</g>`;
+}
+
+/** A butterfly flying at (x, y). */
+function butterfly(/** @type {number} */ x, /** @type {number} */ y, /** @type {string} */ color) {
+  return `<g>`
+    + `<ellipse cx="${x - 11}" cy="${y - 8}" rx="12" ry="15" transform="rotate(-25 ${x - 11} ${y - 8})" fill="${color}"/>`
+    + `<ellipse cx="${x + 11}" cy="${y - 8}" rx="12" ry="15" transform="rotate(25 ${x + 11} ${y - 8})" fill="${color}"/>`
+    + `<ellipse cx="${x - 8}" cy="${y + 9}" rx="8" ry="9" fill="${color}" opacity=".85"/><ellipse cx="${x + 8}" cy="${y + 9}" rx="8" ry="9" fill="${color}" opacity=".85"/>`
+    + `<circle cx="${x - 12}" cy="${y - 10}" r="4" fill="#fff" opacity=".7"/><circle cx="${x + 12}" cy="${y - 10}" r="4" fill="#fff" opacity=".7"/>`
+    + `<rect x="${x - 2.5}" y="${y - 16}" width="5" height="32" rx="2.5" fill="#2b2f38"/>`
+    + `<path d="M${x - 1} ${y - 15} q-6 -10 -10 -12 M${x + 1} ${y - 15} q6 -10 10 -12" stroke="#2b2f38" stroke-width="1.8" fill="none"/>`
+    + `</g>`;
+}
+
+/** A slice of watermelon lying on the grass, its middle at (x, y). */
+function watermelon(/** @type {number} */ x, /** @type {number} */ y) {
+  let seeds = '';
+  for (const [dx, dy] of [[-28, -12], [-12, -26], [8, -28], [26, -14], [-2, -12], [14, -18]]) seeds += `<ellipse cx="${x + dx}" cy="${y + dy}" rx="2.5" ry="4" fill="#2b2f38"/>`;
+  return `<g>`
+    + `<path d="M${x - 56} ${y} A56 56 0 0 1 ${x + 56} ${y}Z" fill="#3f8f34"/>`
+    + `<path d="M${x - 50} ${y} A50 50 0 0 1 ${x + 50} ${y}Z" fill="#dff3b8"/>`
+    + `<path d="M${x - 44} ${y} A44 44 0 0 1 ${x + 44} ${y}Z" fill="#ef4b4b"/>`
+    + seeds
     + `</g>`;
 }
 
@@ -428,16 +429,17 @@ const THINGS = {
  * The scenery behind the journeys' cards (2000 × 700, x from -200 to 1800),
  * so the meadow is not empty: the cards stand in the middle, a few things
  * at the sides. The picture is as tall as the cards, so it is cut from the
- * top: everything stands low, on y 600–720.
+ * top: everything stands low, between y 580 and 700.
  * @type {Record<string, (p: Palette) => string>}
  */
 const GROUND = {
   summer: p => {
     const rnd = seeded(41);
     let out = flowers(rnd, 30, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 480, 210);
-    // at the left a house with its tree, at the right a haystack with two sunflowers
-    out += tree(-120, 660, 150, p) + house(10, 670, 1.5, '#b5452b', '#fdf8ee');
-    out += haystack(1450, 670, 1.1) + sunflower(1580, 720, 190, -6) + sunflower(1625, 720, 160, 6);
+    // at the left sunflowers with butterflies, at the right a haystack and a slice of watermelon
+    out += sunflower(-60, 712, 130, -5) + sunflower(-20, 712, 112, 4) + sunflower(20, 712, 136, 7);
+    out += butterfly(120, 618, '#ff8a3d') + butterfly(-150, 600, '#42a5f5');
+    out += haystack(1480, 692, 0.8) + watermelon(1630, 690) + butterfly(1720, 610, '#ec407a');
     return out;
   },
 };
