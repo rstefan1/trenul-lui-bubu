@@ -43,6 +43,8 @@ export class WorldView {
     this.train = new TrainRenderer(stage, TRAINS[journey.trainId]);
     this.snow = new Snowfall(stage, REDUCED_MOTION ? 100 : 300);
     this.cameraY = 0;
+    /** The camera rises at least this much (a mission that wants a valley seen early sets it). */
+    this.minLift = 0;
     /** How far the view is panned forward (the whole world moves left), and where it is heading. */
     this.pan = 0;
     this.panTarget = 0;
@@ -211,7 +213,7 @@ export class WorldView {
     const j = this.journey;
     if (TRAINS[j.trainId] !== this.train.spec) this.train.setSpec(TRAINS[j.trainId]);
     this.train.update(dt, j.speed, j.distance);
-    const target = this.features.cameraLift(j.distance, this.train.length);
+    const target = Math.max(this.minLift, this.features.cameraLift(j.distance, this.train.length));
     this.cameraY = approach(this.cameraY, target, 1.6, dt);
     this.pan = approach(this.pan, this.panTarget, 1.6, dt);
     this.zoom = approach(this.zoom, this.zoomTarget, 2.2, dt);

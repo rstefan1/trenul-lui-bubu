@@ -234,14 +234,19 @@ export class TrackFeatures {
 
 /**
  * Ground profile across a valley: the ground line outside, `depth` lower in
- * the middle, with smooth slopes.
+ * the middle, with smooth slopes. Under a viaduct the slopes are steep and
+ * short, so that every arch is seen whole (children count them).
  * @param {number} u      0..1 across the span
  * @param {number} depth
+ * @param {number} [slope=0.28]  width of each slope, as a share of the span
  */
-function valleyGround(u, depth) {
-  const k = smoothstep(0, 0.28, u) * (1 - smoothstep(0.72, 1, u));
+function valleyGround(u, depth, slope = 0.28) {
+  const k = smoothstep(0, slope, u) * (1 - smoothstep(1 - slope, 1, u));
   return NEAR_GROUND_Y + depth * k;
 }
+
+/** Width of the slopes under a viaduct (share of its length). */
+const VIADUCT_SLOPE = 0.12;
 
 /**
  * The valley under a viaduct or a bridge, with the structure carrying the
@@ -280,12 +285,13 @@ function drawValley(c, v, f, kind) {
   else drawAbutments(c, x0, x1, depth);
 
   // 3. the near slopes and the valley floor
+  const slope = kind === 'viaduct' ? VIADUCT_SLOPE : undefined;
   c.fillStyle = ground;
   c.beginPath();
   c.moveTo(x0 - 1, v.bottom);
   for (let i = 0; i <= 40; i++) {
     const u = i / 40;
-    c.lineTo(x0 + u * w, valleyGround(u, depth));
+    c.lineTo(x0 + u * w, valleyGround(u, depth, slope));
   }
   c.lineTo(x1 + 1, v.bottom);
   c.closePath();
@@ -313,8 +319,8 @@ function drawValley(c, v, f, kind) {
     drawTruss(c, x0, x1, false);
   }
 
-  // 5. firs on the near slopes
-  for (const side of [0, 1]) {
+  // 5. firs on the near slopes (not under a viaduct: they would hide its arches)
+  for (const side of kind === 'viaduct' ? [] : [0, 1]) {
     for (let i = 0; i < 4; i++) {
       const u = side ? between(rng, 0.74, 0.95) : between(rng, 0.05, 0.26);
       const x = x0 + u * w;
@@ -333,13 +339,21 @@ function drawValley(c, v, f, kind) {
 }
 
 /**
- * How many arches a viaduct of a given length has (missions ask children to
- * count them).
- * @param {number} length
- * @returns {number}
+ * Where the arches of a viaduct are: a solid wall at both ends (where the
+ * valley's slopes are), and between them a row of whole arches that can be
+ * counted (missions ask children to count them).
+ * @param {number} x0  start of the viaduct
+ * @param {number} x1  end
+ * @returns {{left: number, span: number, count: number, pier: number, deckTop: number}}
+ *   left: where the first arch begins; span: width of one arch with its pier
  */
-export function archCount(length) {
-  return Math.max(3, Math.round(length / 120));
+export function archLayout(x0, x1) {
+  const w = x1 - x0;
+  // the arches begin where the slope has come down to the valley floor: none is half hidden by it
+  const wall = w * VIADUCT_SLOPE;
+  const count = Math.max(3, Math.round((w - 2 * wall) / 120));
+  const span = (w - 2 * wall) / count;
+  return { left: x0 + wall, span, count, pier: Math.min(26, span * 0.24), deckTop: TRACK_Y + 6 };
 }
 
 /**
@@ -352,19 +366,16 @@ export function archCount(length) {
  * @param {number} cover
  */
 function drawArches(c, x0, x1, depth, cover) {
-  const deckTop = TRACK_Y + 6;
   const w = x1 - x0;
-  const spans = archCount(w);
-  const span = w / spans;
-  const pier = Math.min(26, span * 0.24);
+  const { left: first, span, count: spans, pier, deckTop } = archLayout(x0, x1);
   const bottom = NEAR_GROUND_Y + depth + 30;
 
   c.fillStyle = '#c2ab8e';
   c.beginPath();
   c.rect(x0, deckTop, w, bottom - deckTop);
   for (let i = 0; i < spans; i++) {
-    const left = x0 + i * span + pier / 2;
-    const right = x0 + (i + 1) * span - pier / 2;
+    const left = first + i * span + pier / 2;
+    const right = first + (i + 1) * span - pier / 2;
     const r = (right - left) / 2;
     const spring = deckTop + 34 + r;
     c.moveTo(left, bottom + 10);
@@ -376,8 +387,8 @@ function drawArches(c, x0, x1, depth, cover) {
   c.fill('evenodd');
   // shading of the piers and a cornice under the track
   c.fillStyle = 'rgba(0,0,0,0.12)';
-  for (let i = 0; i < spans; i++) {
-    const px = x0 + i * span;
+  for (let i = 0; i <= spans; i++) {
+    const px = first + i * span;
     c.fillRect(px, deckTop + 34, pier / 2, bottom - deckTop);
   }
   c.fillStyle = '#a8927a';

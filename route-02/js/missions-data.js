@@ -64,7 +64,7 @@ export const FREIGHT_MISSIONS = {
       config: {
         id: 'arches-ilva',
         title: 'Inspectorul de viaducte',
-        text: 'Trecem din nou peste viaductele de la Crăciun, acum pe lumină! Numără arcadele fiecărui viaduct și alege numărul corect.',
+        text: 'Trecem din nou peste viaductele de la Crăciun, acum pe lumină! O arcadă e un gol rotunjit sus, ca o poartă, între doi stâlpi ai viaductului. Numără arcadele fiecărui viaduct și alege numărul corect.',
       },
     },
     // Ilva Mică → Salva: a freight train passes the other way
