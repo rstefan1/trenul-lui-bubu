@@ -53,7 +53,7 @@ body {
   filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .35));
 }
 /* back to the village of lumea-lui-bubu: above the name on narrow screens,
-   in the top right corner on wide ones */
+   in the top left corner on wide ones */
 .home-back {
   position: relative;
   z-index: 2;
@@ -98,11 +98,11 @@ body {
   paint-order: stroke fill;
 }
 
-/* wide screens: the name goes to the left, out of the way of the sun */
+/* wide screens: the back button in the top left corner, the name beside it */
 @media (min-aspect-ratio: 4/3) {
   .home-head { justify-content: flex-start; padding-left: max(3vw, env(safe-area-inset-left)); }
-  .home-back { position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); margin: 0; }
-  .home-back + .home-head { padding-top: max(10px, env(safe-area-inset-top)); }
+  .home-back { position: absolute; top: max(14px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); margin: 0; }
+  .home-back + .home-head { padding-top: max(10px, env(safe-area-inset-top)); padding-left: max(200px, 3vw); }
   /* the landscape is a low strip there: a smaller name, so it stays above the engine */
   .home-head { padding-top: max(10px, env(safe-area-inset-top)); }
   .home-bubu { width: clamp(56px, 6vw, 84px); }
