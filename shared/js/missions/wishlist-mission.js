@@ -5,14 +5,14 @@
  * The child gives them the right thing from the wagons.
  *
  * The goods are buttons grouped by wagon, as they travelled; a wrong one is a
- * gentle mistake with a hint, and after a mistake (or a few seconds) the
- * right one pulses. At the end the children see the sealed crate and
+ * gentle mistake (the button shakes). There are no hints: what the children
+ * need is easy to guess. At the end the children see the sealed crate and
  * invite Bubu to stay for New Year's Eve (the crate is not opened: that is
  * for the next journey).
  *
  * Configuration (besides id/title/text):
  *   wagons     [{label, goods: [{id, icon, label}]}] — what each wagon brought
- *   children   [{emoji, says, wants, hint}] — in order; `wants` is a good's id
+ *   children   [{emoji, says, wants}] — in order; `wants` is a good's id
  *   gift       {needs, emoji, says, wants} — asked for only when the flag `needs` is set
  *   endText    what is said at the end (the crate and the invitation)
  *   endButton  the label of the last button
@@ -24,15 +24,12 @@ import { Mission, starsForMistakes } from './mission.js';
 
 /**
  * @typedef {{id: string, icon: string, label: string}} Good
- * @typedef {{emoji: string, says: string, wants: string, hint: string}} Child
+ * @typedef {{emoji: string, says: string, wants: string}} Child
  * @typedef {import('./mission.js').MissionConfig & {
  *   wagons: Array<{label: string, goods: Good[]}>, children: Child[],
  *   gift?: Child & {needs: string, good: Good}, endText: string, endButton: string,
  * }} WishlistConfig
  */
-
-/** Seconds without a choice before the right good pulses. */
-const HINT_AFTER = 6;
 
 export class WishlistMission extends Mission {
   /**
@@ -47,9 +44,7 @@ export class WishlistMission extends Mission {
     this.children = gift ? [...config.children, gift] : config.children.slice();
     this.current = 0;
     this.mistakes = 0;
-    this.wrongHere = 0;
     this.time = 0;
-    this.idleSince = 0;
     this.doneAt = -1;
     /** True while a child thanks Bubu and the next one comes (choices wait). */
     this.busy = false;
@@ -97,8 +92,6 @@ export class WishlistMission extends Mission {
     this.ui.says.textContent = `„${c.says}”`;
     this.ui.count.textContent = `${this.current + 1} / ${this.children.length}`;
     this.ui.reply.textContent = 'Ce îi dăm?';
-    this.wrongHere = 0;
-    this.idleSince = this.time;
   }
 
   /**
@@ -108,21 +101,18 @@ export class WishlistMission extends Mission {
    */
   give(good, button) {
     if (this.busy || this.doneAt >= 0 || this.current >= this.children.length) return;
-    this.idleSince = this.time;
     const c = this.children[this.current];
     if (good.id !== c.wants) {
       this.mistakes += 1;
-      this.wrongHere += 1;
       this.oops();
       button.classList.remove('is-wrong');
       void button.offsetWidth;   // restart the shake animation
       button.classList.add('is-wrong');
-      this.ui.reply.textContent = c.hint;
+      this.ui.reply.textContent = 'Nu asta! Mai ascultă ce spune.';
       return;
     }
     this.sound('collect');
     this.ui.reply.textContent = `${good.icon} Mulțumesc, Bubu!`;
-    this.buttons.get(c.wants)?.classList.remove('is-hint');
     this.current += 1;
     this.busy = true;
     setTimeout(() => {
@@ -151,11 +141,6 @@ export class WishlistMission extends Mission {
   /** @param {number} dt */
   update(dt) {
     this.time += dt;
-    const c = this.children[this.current];
-    if (c && this.doneAt < 0) {
-      const hint = this.wrongHere > 0 || this.time - this.idleSince > HINT_AFTER;
-      this.buttons.get(c.wants)?.classList.toggle('is-hint', hint);
-    }
     if (this.doneAt >= 0 && this.time - this.doneAt > 0.8) {
       this.complete(starsForMistakes(this.mistakes, 2, 0), this.mistakes === 0
         ? 'Perfect! Fiecare copil a primit exact ce îi trebuia.'
