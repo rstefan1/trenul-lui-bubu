@@ -10,6 +10,9 @@
  *   2. Then the child touches the wheels that sounded dull, and Bubu
  *      changes them. Touching a good wheel now is a gentle mistake.
  *
+ * Bubu gets off her train and goes from wheel to wheel with her long
+ * hammer; when all is done she climbs back in.
+ *
  * Configuration (besides id/title/text):
  *   cracked   indexes of the cracked wheels (counted over all coaches, from the front)
  *   fact      shown at the end
@@ -17,7 +20,7 @@
 
 import { drawTouchNote } from '../gfx/hints.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
-import { drawHammer } from './line-stop-mission.js';
+import { BubuWorker } from './bubu-worker.js';
 import { Mission, starsForMistakes } from './mission.js';
 
 /**
@@ -46,11 +49,20 @@ export class WheelTapMission extends Mission {
     this.mistakes = 0;
     this.time = 0;
     this.doneT = 0;
-    /** @type {{x: number, y: number, t: number}} the last stroke of the hammer */
-    this.stroke = { x: 0, y: 0, t: -9 };
     /** @type {Array<{x: number, y: number, text: string, good: boolean, t: number}>} words rising from the struck wheels */
     this.words = [];
     this.particles = new Particles();
+    /** Bubu on foot, with her hammer. */
+    this.worker = new BubuWorker(ctx);
+  }
+
+  /**
+   * World x of a wheel (along the line).
+   * @private
+   * @param {TappedWheel} w
+   */
+  worldX(w) {
+    return this.ctx.journey.distance + w.x;
   }
 
   start() {
@@ -68,6 +80,9 @@ export class WheelTapMission extends Mission {
       }
     }
     this.ctx.hud.setCounter('🔨', 0, this.wheels.length);
+    // Bubu gets off, by the first wheel
+    const first = this.wheels[0];
+    if (first) this.worker.getOff(this.worldX(first) - 40);
   }
 
   /**
@@ -94,7 +109,9 @@ export class WheelTapMission extends Mission {
     }
     if (!best) return;
     const c = this.at(best);
-    this.stroke = { x: c.x, y: c.y, t: this.time };
+    // Bubu walks to the wheel and strikes it
+    this.worker.goTo(this.worldX(best) - 40);
+    this.worker.work('hammer');
     best.t = 0;
     if (this.step === 'test') {
       if (best.tested) return;
@@ -127,6 +144,7 @@ export class WheelTapMission extends Mission {
     this.ctx.hud.setCounter('🛞', changed, this.config.cracked.length);
     if (changed >= this.config.cracked.length) {
       this.step = 'done';
+      this.worker.comeBack();
       this.ctx.hud.announce('Roțile sunt bune!', this.config.fact, 'Misiune', 4);
     }
   }
@@ -135,10 +153,12 @@ export class WheelTapMission extends Mission {
   update(dt) {
     this.time += dt;
     this.particles.update(dt);
+    this.worker.update(dt);
     for (const w of this.wheels) w.t += dt;
     for (const word of this.words) word.t += dt;
     this.words = this.words.filter(w => w.t < 1.2);
-    if (this.step === 'done') {
+    // (the train waits for Bubu to climb back in)
+    if (this.step === 'done' && this.worker.aboard) {
       this.doneT += dt;
       if (this.doneT > 2.5 && this.phase !== 'finished') {
         this.complete(starsForMistakes(this.mistakes, 1, 0), this.mistakes === 0
@@ -183,9 +203,8 @@ export class WheelTapMission extends Mission {
         c.stroke();
       }
     }
-    // the hammer, just after a stroke
-    const since = this.time - this.stroke.t;
-    if (since < 0.5) drawHammer(c, this.stroke.x + 26, this.stroke.y - 42, since < 0.15 ? 0.5 : -0.3);
+    // Bubu with her hammer
+    this.worker.draw(c);
     // the words rising from the wheels
     c.textAlign = 'center';
     c.textBaseline = 'middle';
@@ -209,5 +228,6 @@ export class WheelTapMission extends Mission {
 
   dispose() {
     this.ctx.hud.hideCounter();
+    if (!this.worker.aboard) this.ctx.world.train.setBubuVisible(true);
   }
 }
