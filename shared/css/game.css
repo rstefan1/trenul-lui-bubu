@@ -1027,6 +1027,275 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   .brake-btn { min-width: 0; padding: 8px 18px; font-size: 20px; border-width: 4px; }
 }
 
+/* ---------- The children's letter and the locomotive check (Putna, freight train) ---------- */
+.letter {
+  width: min(620px, 100%);
+  margin: 4px 0;
+  padding: 10px 20px 12px;
+  text-align: left;
+  background: repeating-linear-gradient(#fffdf6 0 29px, #dfe8f7 29px 30px);
+  border: 3px solid #e6dcc4;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .1);
+  transform: rotate(-.6deg);
+}
+.letter-from { margin: 0 0 4px; font-size: 14px; font-weight: 800; color: var(--station-blue); letter-spacing: .04em; }
+.letter-line { margin: 0 0 4px; font-size: clamp(15px, 2.3vmin, 19px); line-height: 1.3; }
+.letter-needs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin: 6px 0;
+  padding: 0;
+  list-style: none;
+}
+.letter-needs li {
+  padding: 2px 12px;
+  background: #fff;
+  border: 2px solid #ecd7a6;
+  border-radius: 999px;
+  font-size: clamp(15px, 2.2vmin, 18px);
+  font-weight: 800;
+}
+.letter-sign { margin: 4px 0 0; text-align: right; font-weight: 800; font-style: italic; color: #6b5a3a; }
+.waybill { border-color: #8aa4d6; background: linear-gradient(#f4f8ff, #e6eefc); }
+.waybill .ticket-head { border-bottom-color: #c5d4f0; }
+.checklist { border-color: #8aa4d6; background: linear-gradient(#f4f8ff, #e6eefc); }
+.check-list { margin: 4px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 1px; }
+.check-row { display: flex; align-items: flex-start; gap: 6px; font-size: clamp(15px, 2.4vmin, 19px); font-weight: 700; color: #6b7a99; }
+.check-row.is-current { color: var(--ink); }
+.check-label { display: block; line-height: 1.15; }
+/* where to look: only for the part to find now */
+.check-where { display: none; font-size: .78em; font-weight: 700; color: var(--station-blue); }
+.check-row.is-current .check-where { display: block; }
+.check-row.is-done { color: var(--green-dark); text-decoration: line-through; text-decoration-thickness: 2px; }
+.check-box {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 3px;
+  border: 3px solid currentColor;
+  border-radius: 5px;
+  background: #fff;
+}
+.check-row.is-current .check-box { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255, 207, 63, .4); }
+.check-row.is-done .check-box { background: var(--green); border-color: var(--green); }
+@media (max-height: 520px) and (orientation: landscape) {
+  .letter { padding: 6px 14px 8px; }
+  .letter-line { font-size: 14px; margin-bottom: 2px; }
+  .letter-needs li { font-size: 14px; padding: 0 10px; }
+  .check-row { font-size: 14px; }
+  .check-box { width: 14px; height: 14px; border-width: 2px; }
+}
+
+/* ---------- The sled workshop (Câmpulung) ---------- */
+.sled-work { display: flex; gap: 14px; justify-content: center; width: 100%; }
+.sled-card {
+  flex: 1;
+  max-width: 300px;
+  margin: 0;
+  padding: 6px 10px 4px;
+  background: #fff;
+  border: 3px solid #ecd7a6;
+  border-radius: 16px;
+}
+.sled-card--bench { border-color: #8aa4d6; }
+.sled-card svg { display: block; width: 100%; height: auto; }
+.sled-card figcaption { font-size: 14px; font-weight: 800; color: #6b5a3a; text-align: center; }
+.sled-ghost { animation: sled-ghost 1.2s ease-in-out infinite; }
+@keyframes sled-ghost { 50% { opacity: .2; } }
+.sled-parts { width: 100%; }
+.luggage-item.is-hint { animation: brake-pulse 1s ease-in-out infinite; border-color: var(--gold); }
+@media (prefers-reduced-motion: reduce) {
+  .sled-ghost, .luggage-item.is-hint { animation: none; }
+  .luggage-item.is-hint { outline: 4px solid var(--gold); }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  .sled-card { max-width: 200px; padding: 2px 6px; }
+  .sled-card figcaption { font-size: 12px; }
+}
+
+/* the sand button (the climb to Mestecăniș): the colour of sand */
+.brake-btn.sand-btn { background: radial-gradient(circle at 35% 30%, #ffe08a, #e0a830 60%, #a8741a); box-shadow: 0 8px 0 #7a5410, 0 14px 30px rgba(0, 0, 0, .35); }
+
+/* ---------- The wagon's scales (Vatra Dornei) ---------- */
+.balance-dial {
+  position: relative;
+  width: 200px;
+  height: 100px;
+  border-radius: 100px 100px 0 0;
+  background: conic-gradient(from -90deg at 50% 100%, #ff8a80 0 60deg, #3ee07a 60deg 120deg, #ff8a80 120deg 180deg, transparent 180deg);
+  border: 4px solid #1b2440;
+  border-bottom: 0;
+}
+.balance-mark { position: absolute; left: 50%; top: 0; width: 3px; height: 18px; background: #1b2440; transform: translateX(-50%); }
+.balance-needle {
+  position: absolute;
+  left: calc(50% - 3px);
+  bottom: 0;
+  width: 6px;
+  height: 86px;
+  background: #1b2440;
+  border-radius: 3px;
+  transform-origin: 50% 100%;
+  transition: transform .5s var(--spring);
+}
+.balance-needle.is-level { background: var(--green-dark); }
+.balance-wagon {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  width: min(460px, 100%);
+  min-height: 64px;
+  padding: 0 10px 6px;
+  border-bottom: 12px solid #8d6e63;
+  border-radius: 0 0 6px 6px;
+}
+.balance-side { flex: 1; display: flex; flex-wrap: wrap-reverse; gap: 3px; justify-content: center; align-content: flex-start; }
+.balance-middle { width: 70px; }
+.balance-pack, .balance-packs span {
+  width: 26px;
+  height: 20px;
+  border-radius: 5px;
+  background: linear-gradient(#bfe2fb, #5aa9e6);
+  border: 2px solid #1f6fb5;
+}
+.balance-controls { display: flex; align-items: center; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.balance-stack { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 120px; font-size: 18px; }
+.balance-packs { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; max-width: 120px; }
+.balance-crate {
+  display: grid;
+  place-items: center;
+  width: 70px;
+  height: 54px;
+  border-radius: 8px;
+  background: #7a3b2e;
+  color: #ffd23f;
+  font-size: 32px;
+  font-weight: 800;
+}
+.big-btn.is-hint { animation: brake-pulse 1s ease-in-out infinite; }
+
+/* ---------- Logs that fit (Ilva Mică) ---------- */
+.logs-wagon { width: min(620px, 100%); }
+.logs-ruler {
+  display: flex;
+  height: 54px;
+  background: repeating-linear-gradient(90deg, #f4ead9 0 calc(100% / 12 - 2px), #d9c8a8 calc(100% / 12 - 2px) calc(100% / 12));
+  border: 3px solid #8d6e63;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.logs-segment {
+  height: 100%;
+  border: 0;
+  border-right: 3px solid #5d3a1a;
+  border-radius: 24px;
+  color: #fff;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.logs-ticks { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #6b5a3a; padding: 0 2px; }
+.logs-pile { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.logs-log { min-width: 0; width: calc(var(--len) * 34px + 40px); }
+.logs-wood {
+  display: block;
+  width: calc(var(--len) * 34px);
+  height: 22px;
+  border-radius: 11px;
+  background: linear-gradient(#b07a45, #7d4f25);
+  box-shadow: inset -12px 0 0 #e6c08a;
+}
+
+/* ---------- The black jug (Săcel) ---------- */
+.pot-card svg { max-height: 150px; }
+.pot-card.is-spinning svg { animation: pot-spin .35s ease-in-out; }
+@keyframes pot-spin { 50% { transform: scaleX(.85); } }
+.pot-step { display: flex; justify-content: center; min-height: 64px; }
+.pot-choices { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.pot-choice { width: 120px; padding: 4px; }
+.pot-choice svg { width: 100%; height: auto; }
+
+/* ---------- The children's list (Vișeu de Jos) ---------- */
+.wish-bubble {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(640px, 100%);
+  padding: 8px 16px;
+  background: #fff;
+  border: 3px solid #ecd7a6;
+  border-radius: 20px;
+}
+.wish-child { font-size: 48px; line-height: 1; }
+.wish-says { flex: 1; margin: 0; font-size: clamp(17px, 2.6vmin, 22px); font-weight: 800; color: var(--ink); text-align: left; }
+.wish-count { font-size: 14px; font-weight: 800; color: #8a7350; }
+.wish-wagons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%; }
+.wish-wagon { padding: 6px 8px 8px; background: #f4ead9; border-bottom: 8px solid #8d6e63; border-radius: 12px; }
+.wish-wagon__label { margin: 0 0 4px; font-size: 13px; font-weight: 800; color: #6b5a3a; }
+.wish-goods { display: flex; gap: 6px; }
+.wish-goods .luggage-item { min-width: 104px; }
+
+/* ---------- Counting the arches (viaducts) ---------- */
+.arches-controls { align-items: center; }
+.arches-question { max-width: 9em; color: #fff; font-size: clamp(16px, 2.4vmin, 20px); font-weight: 800; line-height: 1.15; }
+.arches-controls .signal-btn { font-size: clamp(26px, 4vmin, 34px); min-width: clamp(70px, 10vmin, 96px); }
+.arches-controls .signal-btn:disabled { opacity: .4; }
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .balance-dial { width: 140px; height: 70px; }
+  .balance-needle { height: 60px; }
+  .logs-ruler { height: 40px; }
+  .logs-log { width: calc(var(--len) * 24px + 30px); }
+  .logs-wood { width: calc(var(--len) * 24px); height: 16px; }
+  .pot-card svg { max-height: 100px; }
+  .pot-choice { width: 86px; }
+  .wish-child { font-size: 34px; }
+  .wish-goods .luggage-item { min-width: 84px; }
+}
+
+/* ---------- The driver's buttons (signals on the line) ---------- */
+.signal-controls {
+  position: fixed;
+  left: max(18px, env(safe-area-inset-left));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 18;
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background: var(--glass);
+  border: var(--glass-line);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-s);
+  animation: pop-in .4s var(--spring);
+}
+.signal-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: clamp(96px, 14vmin, 130px);
+  padding: 8px 12px 10px;
+  border: 4px solid #fff;
+  border-radius: 20px;
+  background: linear-gradient(#3a5fa8, #24427f);
+  color: #fff;
+  font-size: clamp(17px, 2.8vmin, 23px);
+  font-weight: 800;
+  box-shadow: 0 6px 0 #142a55;
+  touch-action: manipulation;
+}
+.signal-btn__icon { font-size: 1.5em; line-height: 1.1; }
+.signal-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #142a55; }
+.signal-controls.is-urgent { animation: signal-pulse 1s ease-in-out infinite; }
+@keyframes signal-pulse { 50% { box-shadow: var(--shadow-s), 0 0 0 8px rgba(255, 214, 90, .6); } }
+@media (prefers-reduced-motion: reduce) { .signal-controls.is-urgent { animation: none; outline: 5px solid var(--gold); } }
+@media (max-height: 520px) and (orientation: landscape) {
+  .signal-controls { gap: 6px; padding: 6px; }
+  .signal-btn { min-width: 0; padding: 4px 10px 6px; font-size: 15px; border-width: 3px; }
+}
+
 /* ---------- Memory game (Câmpulung spoons) ---------- */
 .memory-panel { width: min(620px, 100%); }
 .memory-grid {
