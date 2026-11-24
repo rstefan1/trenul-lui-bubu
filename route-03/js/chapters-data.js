@@ -12,7 +12,7 @@ export const FOREST_CHAPTERS = [
     title: 'Valea Vaserului',
     from: 'viseu-de-sus',
     to: 'novat',
-    teaser: 'Biletele copiilor, focul locomotivei și podul stricat de viitură.',
+    teaser: 'Biletele copiilor, focul locomotivei, podul stricat de viitură și semnalele înzăpezite.',
   },
   {
     id: 'spre-paltin',

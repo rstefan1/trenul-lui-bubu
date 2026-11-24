@@ -49,11 +49,11 @@ export const FOREST_MISSIONS = {
         text: 'Locomotiva mocăniței merge cu lemne! Ține acul ceasului de abur în zona verde: când coboară, apasă „Pune lemne!”. Dar nu prea multe, că iese fum negru!',
       },
     },
-    // Valea Scradei → Novăț: the wooden bridge broken by the flood
+    // Valea Scradei → Novăț: the wooden bridge broken by the flood…
     {
       segment: 1,
       from: 0.01,
-      to: 0.92,
+      to: 0.4,
       type: 'bridge-repair',
       config: {
         id: 'bridge-novat',
@@ -61,6 +61,20 @@ export const FOREST_MISSIONS = {
         text: 'Viitura din toamnă a smuls scânduri din podul de lemn de peste pârâu. Trenul se oprește înainte de pod: pune scânduri noi în găuri și bate-le cuiele.',
         holes: 4,
         fact: 'Viiturile au stricat de mai multe ori linia mocăniței, dar de fiecare dată oamenii au reparat-o.',
+      },
+    },
+    // …and, further on, signals covered with snow
+    {
+      segment: 1,
+      from: 0.4,
+      to: 0.92,
+      type: 'snowy-signal',
+      config: {
+        id: 'signals-novat',
+        title: 'Semnalele înzăpezite',
+        text: 'Zăpada a acoperit felinarele semnalelor de lângă linie, iar mecanicii nu le mai văd. Trenul se oprește singur: freacă zăpada de pe fiecare semnal.',
+        signals: 2,
+        fact: 'Semnalele le spun mecanicilor dacă linia e liberă: roșu înseamnă „Oprește!”, verde înseamnă „Poți merge!”.',
       },
     },
     // Novăț → Glîmboaca: stones on the line, and a cracked sleeper
