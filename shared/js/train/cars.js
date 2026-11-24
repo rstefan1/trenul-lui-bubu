@@ -629,7 +629,8 @@ function platform(c, car, pos) {
 
 /** Where the parts of the steam locomotive are, for a length L (car coordinates). */
 const steamLayout = (/** @type {number} */ L) => ({
-  wheels: [L * 0.38, L * 0.54, L * 0.7, L * 0.86],
+  // four coupled wheels spread under the whole locomotive, the cab included
+  wheels: [L * 0.16, L * 0.39, L * 0.62, L * 0.85],
   /** the wood box on the running board, right in front of the cab */
   bunker: /** @type {Rect} */ ([92, -106, 50, 64]),
   /** the cab, at the back (Bubu feeds the fire from it) */
