@@ -560,7 +560,7 @@ export function landscape(season) {
           <stop offset="0" stop-color="${p.sky[0]}"/><stop offset=".62" stop-color="${p.sky[1]}"/>
         </linearGradient>
         <linearGradient id="land-meadow" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="${p.meadow}"/><stop offset="1" stop-color="${p.meadowDark}"/>
+          <stop offset="0" stop-color="${p.meadow}"/><stop offset=".75" stop-color="${p.meadowDark}"/>
         </linearGradient>
       </defs>
       <rect x="${X0}" width="${X1 - X0}" height="${H}" fill="url(#land-sky)"/>
