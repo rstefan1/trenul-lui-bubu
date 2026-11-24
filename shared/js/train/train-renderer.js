@@ -144,7 +144,7 @@ export class TrainRenderer {
     // the tree wagon goes right behind a locomotive (a long train: there it is on
     // screen); a short railcar train, which stands further left, pulls it at the end
     const loco = spec.cars[0].kind === 'electricLoco';
-    const cars = !this.treeWagon ? spec.cars : loco ? [spec.cars[0], TREE_WAGON, ...spec.cars.slice(1)] : [...spec.cars, TREE_WAGON];
+    const cars = !this.treeWagon ? [...spec.cars] : loco ? [spec.cars[0], TREE_WAGON, ...spec.cars.slice(1)] : [...spec.cars, TREE_WAGON];
     // the pushing locomotive: the same as the leading one, turned round, at the back
     if (this.pusher && spec.cars[0].kind === 'dieselLoco') cars.push({ ...spec.cars[0], pusher: true });
     cars.forEach((car) => {
