@@ -337,6 +337,10 @@ body {
 @media (min-width: 641px) {
   .scroll-hint { left: auto; right: 24px; transform: none; }
 }
+/* sideways phones: small, in the bottom left corner, away from the ticket's button */
+@media (max-height: 520px) and (orientation: landscape) {
+  .scroll-hint { left: 16px; right: auto; bottom: 10px; min-height: 40px; padding: 4px 14px 6px; font-size: 15px; }
+}
 
 /* ---------- Footer ---------- */
 .home-foot { margin: 12px 16px 8px; text-align: center; font-size: 15px; opacity: .85; }
