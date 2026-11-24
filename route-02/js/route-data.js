@@ -1,14 +1,14 @@
 /**
  * @file The freight journey: Putna → Vișeu de Jos, 28 December, by day.
  *
- * Eight stops, half as many as on the Christmas journey. The train follows
+ * Nine stops, fewer than on the Christmas journey. The train follows
  * the real line: from Putna through Rădăuți and Dornești to Suceava Nord,
  * up the Moldova valley to Câmpulung Moldovenesc, under the Mestecăniș pass
  * to Vatra Dornei, over the viaducts of the Ilva valley to Ilva Mică and
  * Salva, then on the mountain line to Vișeu de Jos, over the great viaducts
- * of Dealu Ștefăniței and down into Maramureș through Săcel. It passes
- * through the other stations (Rădăuți, Dornești, Gura Humorului, Lunca
- * Ilvei, Romuli, Dealu Ștefăniței…) without stopping.
+ * to the top at Dealu Ștefăniței, over its great viaducts and down into
+ * Maramureș through Săcel. It passes through the other stations (Rădăuți,
+ * Dornești, Gura Humorului, Lunca Ilvei, Romuli…) without stopping.
  *
  * Bubu leaves Putna at sunrise and reaches Vișeu de Jos just before sunset,
  * still in daylight (the day sky of shared/js/world/lighting.js).
@@ -28,6 +28,7 @@ export const FREIGHT_ROUTE = {
     { id: 'vatra-dornei', name: 'Vatra Dornei', arrive: '28 12:05', depart: '28 12:35', size: 'small' },
     { id: 'ilva-mica', name: 'Ilva Mică', arrive: '28 14:00', depart: '28 14:10', size: 'small' },
     { id: 'salva', name: 'Salva', arrive: '28 14:35', depart: '28 14:45', size: 'small' },
+    { id: 'dealu-stefanitei', name: 'Dealu Ștefăniței', arrive: '28 15:15', depart: '28 15:20', size: 'small' },
     { id: 'sacel', name: 'Săcel', arrive: '28 15:45', depart: '28 15:50', size: 'small' },
     { id: 'viseu-de-jos', name: 'Vișeu de Jos', short: 'Vișeu', arrive: '28 16:15', size: 'small' },
   ],
@@ -94,16 +95,26 @@ export const FREIGHT_ROUTE = {
       cover: [[0, 1]],
       train: 'freight',
     },
-    // Salva → Săcel: the mountain line climbs past Romuli to Dealu Ștefăniței (a short
-    // tunnel at the top), then goes down over its great viaducts in the golden light
+    // Salva → Dealu Ștefăniței: the mountain line climbs past Romuli through the
+    // forest (firs felled by the blizzard lie on the track) and through the
+    // long tunnel at the top, just before the station
     {
-      duration: 24,
-      biomes: [[0, 'city'], [0.06, 'hills'], [0.12, 'forest'], [0.9, 'hills']],
+      duration: 28,
+      biomes: [[0, 'city'], [0.06, 'hills'], [0.14, 'forest'], [0.92, 'city']],
+      features: [{ type: 'tunnel', at: 0.71, length: 2400 }],
+      snowfall: [[0, 0], [0.4, 0.15], [0.7, 0.1], [1, 0]],
+      cover: [[0, 1]],
+      train: 'freight',
+    },
+    // Dealu Ștefăniței → Săcel: down over the great viaducts in the golden light,
+    // with stretches of forest between them (each one is a sight of its own)
+    {
+      duration: 30,
+      biomes: [[0, 'city'], [0.06, 'forest'], [0.9, 'hills']],
       features: [
-        { type: 'tunnel', at: 0.11, length: 500 },
-        { type: 'viaduct', at: 0.2, length: 1300, depth: 560 },
-        { type: 'viaduct', at: 0.42, length: 1500, depth: 620 },
-        { type: 'viaduct', at: 0.66, length: 1200, depth: 540 },
+        { type: 'viaduct', at: 0.1, length: 1300, depth: 560 },
+        { type: 'viaduct', at: 0.4, length: 1500, depth: 620 },
+        { type: 'viaduct', at: 0.7, length: 1200, depth: 540 },
       ],
       snowfall: [[0, 0]],
       cover: [[0, 1]],

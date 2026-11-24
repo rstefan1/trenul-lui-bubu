@@ -9,16 +9,16 @@
 export const FREIGHT_CHAPTERS = [
   {
     id: 'bucovina',
-    title: 'Bucovina, cu platformele goale',
+    title: 'Bucovina',
     from: 'putna',
-    to: 'vatra-dornei',
-    teaser: 'Răsăritul la Putna, Bubu mecanic de locomotivă și urcușul spre Mestecăniș.',
+    to: 'ilva-mica',
+    teaser: 'Bubu mecanic de locomotivă, urcușul spre Mestecăniș și viaductele pe lumină.',
   },
   {
     id: 'maramures',
-    title: 'Peste munți, spre Maramureș',
-    from: 'vatra-dornei',
+    title: 'Maramureș',
+    from: 'ilva-mica',
     to: 'viseu-de-jos',
-    teaser: 'Viaductele pe lumină și marile viaducte de la Dealu Ștefăniței.',
+    teaser: 'Pădurile de la Dealu Ștefăniței, marile viaducte și sosirea la Vișeu.',
   },
 ];

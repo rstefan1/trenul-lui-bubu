@@ -81,23 +81,35 @@ export const FREIGHT_MISSIONS = {
         finds: 3,
       },
     },
-    // Salva → Săcel: up to Dealu Ștefăniței and down over the great viaducts
+    // Salva → Dealu Ștefăniței: up through the forest, where the blizzard felled firs
     {
       segment: 5,
+      from: 0.01,
+      to: 0.69,
+      type: 'saw',
+      config: {
+        id: 'saw-stefanita',
+        title: 'Copacii doborâți de viscol',
+        text: 'Claxonează de două ori: așa îi spui mecanicului de pe a doua locomotivă că pornim! Pe urcuș, viscolul a doborât brazi peste linie: taie-i cu fierăstrăul.',
+        trees: 3,
+        fact: 'Pădurarii curăță pădurea după viscol. Lemnul copacilor căzuți nu se pierde: din el se fac scânduri și lemne de foc.',
+      },
+    },
+    // Dealu Ștefăniței → Săcel: down over the great viaducts
+    {
+      segment: 6,
       from: 0.01,
       to: 0.92,
       type: 'descent',
       config: {
         id: 'descent-stefanita',
-        title: 'Peste Dealu Ștefăniței',
-        text: 'Urcușul e foarte greu. Claxonează de două ori: așa îi spui locomotivei din spate să împingă!',
-        descentText: 'Coborâm peste marile viaducte, iar trenul încărcat prinde viteză! Ține apăsat „Frânează” ca acul să stea în zona verde.',
-        topAt: 0.13,
+        title: 'Peste marile viaducte',
+        text: 'Coborâm peste marile viaducte de la Dealu Ștefăniței, iar trenul încărcat prinde viteză! Ține apăsat „Frânează” ca acul să stea în zona verde.',
       },
     },
     // Săcel → Vișeu de Jos: the children of Maramureș wave at the train
     {
-      segment: 6,
+      segment: 7,
       from: 0.12,
       to: 0.88,
       type: 'whistle',
@@ -148,6 +160,28 @@ export const FREIGHT_MISSIONS = {
         text: 'Urcușul spre Dealu Ștefăniței e greu pentru un tren încărcat, așa că o a doua locomotivă ne așteaptă pe linie. Apropie trenul și apasă „Frânează” când ajungi la semnul verde.',
         flag: 'second-loco',
         fact: 'Pe rampele mari, trenurile grele sunt trase de două locomotive.',
+      },
+    },
+    'dealu-stefanitei': {
+      ambience: 'forest',
+      type: 'tracks',
+      config: {
+        id: 'tracks-stefanita',
+        title: 'Urmele din zăpadă',
+        text: 'Am ajuns sus, în pădurea de la Dealu Ștefăniței. În zăpada proaspătă de lângă gară se văd urme de animale. Ce animal a lăsat fiecare urmă?',
+        animals: [
+          { id: 'bear', icon: '🐻', label: 'Urs' },
+          { id: 'deer', icon: '🦌', label: 'Cerb' },
+          { id: 'fox', icon: '🦊', label: 'Vulpe' },
+          { id: 'hare', icon: '🐇', label: 'Iepure' },
+          { id: 'boar', icon: '🐗', label: 'Mistreț' },
+        ],
+        tracks: [
+          { animal: 'bear', hint: 'Urma e foarte mare și lată, cu cinci degete în față. E a unui animal mare și greu!', fact: 'Ursul calcă pe toată talpa, ca omul. Iarna doarme mult în bârlog.' },
+          { animal: 'hare', hint: 'Uită-te la forma de „Y”: două urme lungi în față, două mici în spate. Cine sare așa?', fact: 'Iepurele sare: pune labele lungi din spate înaintea celor din față. De aceea urmele lui arată ca un „Y”.' },
+          { animal: 'deer', hint: 'Urma are două jumătăți: e o copită despicată. Și e fără puncte în spate.', fact: 'Cerbul are copite despicate în două. Toamna își cheamă perechea cu un muget puternic.' },
+          { animal: 'fox', hint: 'Urme mici, cu patru degete, una în fața celeilalte, pe o linie dreaptă.', fact: 'Vulpea pune labele una în fața celeilalte, așa că urmele ei fac o linie dreaptă prin zăpadă.' },
+        ],
       },
     },
     sacel: {

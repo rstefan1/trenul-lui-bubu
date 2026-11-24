@@ -1242,6 +1242,15 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .wish-goods { display: flex; gap: 6px; }
 .wish-goods .luggage-item { min-width: 104px; }
 
+/* ---------- Tracks in the snow (Dealu Ștefăniței) ---------- */
+.tracks-row { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tracks-snow { margin: 0; width: min(300px, 70vw); border: 4px solid #fff; border-radius: 20px; box-shadow: 0 4px 0 rgba(0, 0, 0, .12); }
+.tracks-snow svg { display: block; width: 100%; height: auto; }
+.tracks-animals { width: 100%; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-height: 520px) and (orientation: landscape) {
+  .tracks-snow { width: 170px; }
+}
+
 /* ---------- Counting the arches (viaducts) ---------- */
 .arches-controls { align-items: center; }
 /* high up on the right, in the sky: at the bottom it would hide the arches to count */

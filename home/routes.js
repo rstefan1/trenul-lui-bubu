@@ -51,7 +51,7 @@ export const ROUTES = [
     when: '28 decembrie',
     blurb: 'Bubu e mecanic de locomotivă și duce peste munți tot ce le trebuie copiilor din tabăra de la Vișeu.',
     chapters: 2,
-    stations: 8,
+    stations: 9,
     saveKey: 'trenul-lui-bubu/route-02',
     season: 'winter',
     day: true,

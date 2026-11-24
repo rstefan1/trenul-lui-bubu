@@ -39,6 +39,8 @@ import { CraneMission } from '../../shared/js/missions/crane-mission.js';
 import { DriverCheckMission } from '../../shared/js/missions/driver-check-mission.js';
 import { MissionDirector } from '../../shared/js/missions/director.js';
 import { SandMission } from '../../shared/js/missions/sand-mission.js';
+import { SawMission } from '../../shared/js/missions/saw-mission.js';
+import { TracksMission } from '../../shared/js/missions/tracks-mission.js';
 import { SignalsMission } from '../../shared/js/missions/signals-mission.js';
 import { SledWorkshopMission } from '../../shared/js/missions/sled-workshop-mission.js';
 import { StrapsMission } from '../../shared/js/missions/straps-mission.js';
@@ -75,6 +77,8 @@ const MISSION_TYPES = {
   wishlist: WishlistMission,
   'driver-check': DriverCheckMission,
   sand: SandMission,
+  saw: SawMission,
+  tracks: TracksMission,
   signals: SignalsMission,
   'sled-workshop': SledWorkshopMission,
   straps: StrapsMission,
