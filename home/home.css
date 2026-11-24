@@ -13,9 +13,6 @@ html { min-height: 100%; }
 :root[data-season="summer"] {
   --ground: #6cb851;
   --ground-ink: #fff;
-  --flower-1: #e53935;
-  --flower-2: #ffffff;
-  --flower-3: #ffcf3f;
 }
 
 body {
@@ -24,13 +21,8 @@ body {
   padding: 0 0 max(16px, env(safe-area-inset-bottom));
   font-family: var(--font);
   color: var(--ground-ink, var(--snow));
-  /* the meadow of the landscape goes on under the journeys, with a few
-     flowers (painted once; tiles of different sizes, so they do not line up) */
-  background:
-    radial-gradient(circle at 18% 22%, var(--flower-1, transparent) 0 3px, transparent 4px) 0 0 / 290px 230px,
-    radial-gradient(circle at 64% 58%, var(--flower-2, transparent) 0 3px, transparent 4px) 0 0 / 370px 310px,
-    radial-gradient(circle at 40% 86%, var(--flower-3, transparent) 0 3px, transparent 4px) 0 0 / 330px 410px,
-    var(--ground, var(--night));
+  /* the meadow of the landscape goes on under the journeys */
+  background: var(--ground, var(--night));
 }
 
 /* ---------- The landscape, with the name of the game on its sky ---------- */
