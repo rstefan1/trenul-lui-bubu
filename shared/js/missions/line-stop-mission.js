@@ -34,6 +34,9 @@ import { Mission } from './mission.js';
  * @property {number} spacing      the distance between two places
  * @property {number} [stopBefore=140]  the train stops with its front this far before a place
  * @property {number} [room=120]   space kept on screen beyond the right end of a place
+ * @property {boolean} [holdView=false]  once the view has panned to a place, it stays there
+ *   (does not slide back towards the train as the train comes closer), until the
+ *   mission stops framing that place (see focusPlace)
  */
 
 /** The view pans towards a place from this far before the train stops at it. */
@@ -56,6 +59,10 @@ export class LineStopMission extends Mission {
     this.endT = 0;
     /** @type {TrainPace | null} */
     this.pace = null;
+    /** The place the view frames now, and how far it is panned for it (holdView). */
+    /** @type {LinePlace | null} */
+    this.framed = null;
+    this.framedPan = 0;
   }
 
   /** @param {{duration?: number, window?: {from: number, to: number}}} hints */
@@ -127,11 +134,21 @@ export class LineStopMission extends Mission {
     const w = this.ctx.world;
     const p = this.next;
     // the view pans forward so the whole place ahead is on screen
-    const near = p && p.worldX - this.options.stopBefore - j.distance < FOCUS_AHEAD;
-    const right = p ? p.worldX + p.width + this.options.room - j.distance + w.baseAnchorX : 0;
+    const f = this.focusPlace();
+    const near = f && f.worldX - this.options.stopBefore - j.distance < FOCUS_AHEAD;
+    const right = f ? f.worldX + f.width + this.options.room - j.distance + w.baseAnchorX : 0;
     // (never so far that the locomotive leaves the screen)
     const most = Math.max(0, w.baseAnchorX - this.ctx.stage.viewLeft - KEEP_LOCO);
-    w.panTarget = near ? Math.min(most, Math.max(0, right - this.ctx.stage.viewRight)) : 0;
+    const want = near ? Math.min(most, Math.max(0, right - this.ctx.stage.viewRight)) : 0;
+    if (!this.options.holdView || !near) {
+      this.framed = null;
+      w.panTarget = want;
+    } else {
+      // the view stays where it went for this place, while the train comes closer
+      this.framedPan = this.framed === f ? Math.max(this.framedPan, want) : want;
+      this.framed = f;
+      w.panTarget = this.framedPan;
+    }
     if (this.pace) {
       if (p) {
         const gap = p.worldX - this.options.stopBefore - j.distance;
@@ -156,6 +173,16 @@ export class LineStopMission extends Mission {
    */
   get canEnd() {
     return true;
+  }
+
+  /**
+   * The place the view keeps on screen: the next one (a subclass may keep a
+   * place it has just done framed a little longer).
+   * @protected
+   * @returns {LinePlace | null}
+   */
+  focusPlace() {
+    return this.next;
   }
 
   /**

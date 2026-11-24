@@ -39,7 +39,8 @@ export class AnimalsOnLineMission extends LineStopMission {
    * @param {AnimalsConfig} config
    */
   constructor(ctx, config) {
-    super(ctx, config, { speed: 320, firstAhead: 2600, spacing: 2900, stopBefore: 260, room: 200 });
+    // the view stays on an animal from the moment it is seen until it has run away
+    super(ctx, config, { speed: 320, firstAhead: 2600, spacing: 2900, stopBefore: 260, room: 200, holdView: true });
     this.config = config;
     this.quick = 0;
     /** @type {HTMLButtonElement | null} */
@@ -69,6 +70,11 @@ export class AnimalsOnLineMission extends LineStopMission {
   /** @param {(i: number) => number} at */
   makePlaces(at) {
     return this.config.animals.map((a, i) => this.place(at(i), ANIMAL_W, { animal: a, side: i % 2 ? 1 : -1 }));
+  }
+
+  /** The animal running away (kept on screen until it is gone), or else the next one. */
+  focusPlace() {
+    return this.places.find(p => p.done && this.time - p.doneAt < RUN + 0.3) ?? this.next;
   }
 
   /** The animal on screen still standing on the line, if any. */
