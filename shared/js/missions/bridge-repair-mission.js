@@ -9,7 +9,9 @@
  *   2. touches every new plank to nail it: two strokes of the hammer each
  *      ("poc!"), and the nails sink in.
  *
- * Then the train crosses slowly. A note shows what to touch at every step.
+ * Bubu gets off her train and does the work herself: she walks onto the
+ * bridge, lays every plank and hammers its nails, then climbs back and the
+ * train crosses slowly. A note shows what to touch at every step.
  * A bridge mended within a few seconds of the stop gets three stars.
  *
  * Configuration (besides id/title/text):
@@ -21,7 +23,8 @@ import { drawTouchNote } from '../gfx/hints.js';
 import { Particles } from '../gfx/particles.js';
 import { fillRoundRect } from '../gfx/shapes.js';
 import { TRACK_Y } from '../world/track.js';
-import { LineStopMission, drawHammer } from './line-stop-mission.js';
+import { BubuWorker } from './bubu-worker.js';
+import { LineStopMission } from './line-stop-mission.js';
 
 /**
  * @typedef {import('./mission.js').MissionConfig & {holes: number, fact: string}} BridgeConfig
@@ -36,6 +39,8 @@ import { LineStopMission, drawHammer } from './line-stop-mission.js';
 /** Length of the bridge and of one plank of its deck (stage units). */
 const BRIDGE = 440;
 const PLANK = 34;
+/** Where Bubu's feet are when she stands on the deck of the bridge. */
+const DECK_FEET = TRACK_Y + 10;
 /** Strokes of the hammer a plank needs. */
 const NAILS = 2;
 /** The bridge mended within this many seconds of the stop earns three stars, within the second two. */
@@ -53,8 +58,7 @@ export class BridgeRepairMission extends LineStopMission {
     super(ctx, config, { speed: 280, firstAhead: 2600, spacing: 0, stopBefore: 120, room: 160, holdView: true });
     this.config = config;
     this.particles = new Particles();
-    /** Where the last hammer stroke landed, and when. */
-    this.stroke = { x: 0, y: 0, t: -1 };
+    this.worker = new BubuWorker(ctx);
   }
 
   /** @param {(i: number) => number} at */
@@ -78,6 +82,8 @@ export class BridgeRepairMission extends LineStopMission {
 
   onReached() {
     this.ctx.hud.setCounter('🔨', 0, this.config.holes);
+    // Bubu gets off and waits at the start of the bridge
+    this.worker?.getOff(this.bridge.worldX - 50);
   }
 
   /** @param {import('../core/input.js').PointerInfo} p */
@@ -100,13 +106,15 @@ export class BridgeRepairMission extends LineStopMission {
     }
     if (!best) return;
     const x = x0 + best.x;
+    // Bubu steps onto the bridge, next to the plank, and works there
+    this.worker?.goTo(b.worldX + best.x - 34, DECK_FEET);
+    this.worker?.work(best.state === 'hole' ? 'push' : 'hammer');
     if (best.state === 'hole') {
       best.state = 'flying';
       best.t = 0;
       this.sound('whoosh', x);
     } else {
       best.nails += 1;
-      this.stroke = { x, y: y + 6, t: this.time };
       this.sound('thud', x);
       this.particles.burst(x, y + 6, SPLINTERS, 6, 120);
       if (best.nails >= NAILS) {
@@ -262,13 +270,8 @@ export class BridgeRepairMission extends LineStopMission {
       const y = TRACK_Y - this.ctx.world.cameraY;
       const hole = b.planks.find(k => k.state === 'hole');
       const loose = b.planks.find(k => k.state === 'loose');
-      if (loose) {
-        const swing = this.time - this.stroke.t < 0.25 ? 0.2 : -0.5 + Math.sin(this.time * 5) * 0.15;
-        drawHammer(c, x0 + loose.x + 26, y - 30, swing);
-        drawTouchNote(c, this.ctx.stage, x0 + loose.x, y - 46, 'Bate cuiele! 🔨');
-      } else if (hole) {
-        drawTouchNote(c, this.ctx.stage, x0 + hole.x, y - 16, 'Pune o scândură!');
-      }
+      if (loose) drawTouchNote(c, this.ctx.stage, x0 + loose.x, y - 96, 'Bate cuiele! 🔨');
+      else if (hole) drawTouchNote(c, this.ctx.stage, x0 + hole.x, y - 96, 'Pune o scândură!');
     }
     this.particles.draw(c);
   }
