@@ -208,17 +208,6 @@ function flowers(/** @type {() => number} */ rnd, /** @type {number} */ count, /
   return out;
 }
 
-/** A kite in the sky at (x, y), with its tail. */
-function kite(/** @type {number} */ x, /** @type {number} */ y) {
-  return `<g>`
-    + `<path d="M${x} ${y + 52} q-18 26 4 46 q20 20 -4 48" stroke="#e53935" stroke-width="3" fill="none"/>`
-    + `<path d="M${x - 10} ${y + 80} l20 6 M${x - 8} ${y + 112} l20 4" stroke="#ffcf3f" stroke-width="7" stroke-linecap="round"/>`
-    + `<path d="M${x} ${y - 46} L${x + 34} ${y} L${x} ${y + 52} L${x - 34} ${y}Z" fill="#e53935"/>`
-    + `<path d="M${x} ${y - 46} L${x + 34} ${y} L${x} ${y}Z M${x} ${y} L${x - 34} ${y} L${x} ${y + 52}Z" fill="#ffcf3f"/>`
-    + `<path d="M${x} ${y - 46} V${y + 52} M${x - 34} ${y} H${x + 34}" stroke="#7a5235" stroke-width="2"/>`
-    + `</g>`;
-}
-
 /* ---------------------------------------------------------------------------
  * The railway and the train
  * ------------------------------------------------------------------------ */
@@ -405,7 +394,7 @@ function train() {
  * @typedef {object} SeasonThings
  * @property {(p: Palette) => string} sky         in the sky, behind the mountains (clouds ...)
  * @property {(p: Palette) => string} fields      between the village and the railway
- * @property {(p: Palette) => string} foreground  in front of everything (children, flowers, a kite ...)
+ * @property {(p: Palette) => string} foreground  in front of everything (children, flowers ...)
  */
 
 /** @type {Record<string, SeasonThings>} */
@@ -421,17 +410,15 @@ const THINGS = {
     },
     foreground: () => {
       const rnd = seeded(11);
-      let out = flowers(rnd, 50, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 850, 120, LX0, LX1);
-      // a boy with a kite, at the right (its string goes up past the station)
-      out += kite(1400, 450) + `<path d="M1404 858 Q1380 700 1400 502" stroke="#fff" stroke-width="2" fill="none"/>`;
-      out += child(1382, 975, { shirt: '#26a69a', hair: '#c0612b', pose: 'up', s: 1.1 });
-      // a girl waving at the train
-      out += child(700, 960, { shirt: '#ec407a', hair: '#5b3a26', pose: 'wave', girl: true, s: 1.05 });
-      // a boy kicking a ball
-      out += child(900, 965, { shirt: '#ff7043', hair: '#2b2f38', pose: 'kick', s: 1.05 });
-      out += `<circle cx="985" cy="925" r="17" fill="#fff" stroke="#2b2f38" stroke-width="3"/><path d="M973 917 q12 6 24 0 M978 937 q8 -10 16 -2" stroke="#e53935" stroke-width="4" fill="none" stroke-linecap="round"/>`;
-      // a big haystack and two tall sunflowers at the right
-      out += sunflower(1160, H + 10, 165, -6) + sunflower(1200, H + 10, 135, 6);
+      let out = flowers(rnd, 50, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 852, 90, LX0, LX1);
+      // children right under the track, waving at the train
+      out += child(430, 932, { shirt: '#26a69a', hair: '#c0612b', pose: 'up', s: 0.88 });
+      out += child(560, 934, { shirt: '#ec407a', hair: '#5b3a26', pose: 'wave', girl: true, s: 0.88 });
+      out += child(700, 932, { shirt: '#ffcf3f', hair: '#2b2f38', pose: 'wave', s: 0.88, flip: true });
+      out += child(860, 934, { shirt: '#7e57c2', hair: '#f2c14e', pose: 'catch', girl: true, s: 0.88 });
+      out += `<circle cx="860" cy="${r1(934 - 120 * 0.88)}" r="13" fill="#fff" stroke="#2b2f38" stroke-width="2.5"/><path d="M851 ${r1(934 - 126 * 0.88)} q9 5 18 0" stroke="#e53935" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+      out += child(1010, 932, { shirt: '#ff7043', hair: '#3b2617', pose: 'wave', s: 0.88 });
+      out += child(1150, 934, { shirt: '#42a5f5', hair: '#5b3a26', pose: 'up', girl: true, s: 0.88, flip: true });
       return out;
     },
   },
@@ -496,7 +483,7 @@ export function landscape(season) {
   }
 
   return `
-    <svg viewBox="${LX0} 0 ${LX1 - LX0} ${H - 30}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+    <svg viewBox="${LX0} 0 ${LX1 - LX0} ${H - 50}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id="land-sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="${p.sky[0]}"/><stop offset=".62" stop-color="${p.sky[1]}"/>
