@@ -26,7 +26,7 @@ body {
   background: var(--ground, var(--night));
 }
 
-/* ---------- The landscape, with the name of the game on its sky ---------- */
+/* ---------- The landscape, with the name of the game on a station board ---------- */
 .home-hero {
   position: relative;
   /* tall enough that the train and the children are big, low enough that
@@ -42,18 +42,11 @@ body {
 .home-head {
   position: relative;
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: clamp(8px, 2.4vw, 20px);
-  padding: max(14px, env(safe-area-inset-top)) 16px 0;
+  padding: 12px 16px 0;
 }
-.home-bubu {
-  width: clamp(64px, 14vw, 120px);
-  height: auto;
-  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .35));
-}
-/* back to the village of lumea-lui-bubu: above the name on narrow screens,
-   in the top left corner on wide ones */
+/* back to the village of lumea-lui-bubu, at the top left: above the board
+   on narrow screens, in the corner on wide ones */
 .home-back {
   position: relative;
   z-index: 2;
@@ -73,41 +66,56 @@ body {
 }
 .home-back:hover, .home-back:focus-visible { background: #fff; }
 .home-back:focus-visible { outline: 4px solid var(--gold); outline-offset: 2px; }
-.home-back + .home-head { padding-top: 6px; }
 
-/* the name of the game, straight on the sky (no box around it) */
-.home-sign { text-align: left; }
-/* white letters with a dark blue outline, so they read on any sky */
+/* the name of the game on a railway station's name board: blue, a white
+   edge, white letters, standing on two posts; Bubu stands beside it */
+.home-sign {
+  position: relative;
+  isolation: isolate;
+  padding: clamp(6px, 1vw, 10px) clamp(22px, 3vw, 34px) clamp(8px, 1.2vw, 12px);
+  border: 4px solid #fff;
+  border-radius: 10px;
+  background: linear-gradient(#2a5fb4, var(--station-blue));
+  box-shadow: 0 6px 14px rgba(0, 0, 0, .3);
+  text-align: center;
+}
+.home-sign::before, .home-sign::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 100%;
+  width: 8px;
+  height: clamp(22px, 4vw, 40px);
+  background: linear-gradient(90deg, #5b616c, #8a919c 50%, #5b616c);
+}
+.home-sign::before { left: 22%; }
+.home-sign::after { right: 22%; }
 .home-title {
   margin: 0;
-  font-size: clamp(34px, 7vw, 62px);
+  font-size: clamp(28px, 6vw, 46px);
   font-weight: 800;
-  line-height: 1;
+  line-height: 1.05;
   color: #fff;
-  -webkit-text-stroke: .14em var(--night-2);
-  paint-order: stroke fill;
-  text-shadow: 0 4px 0 var(--night);
+  letter-spacing: .02em;
 }
-.home-subtitle {
-  margin: 4px 0 0;
-  font-size: clamp(18px, 3vw, 25px);
-  font-weight: 800;
-  line-height: 1.1;
-  color: var(--gold);
-  -webkit-text-stroke: .16em var(--night-2);
-  paint-order: stroke fill;
+.home-subtitle { margin: 0; font-size: clamp(15px, 2.6vw, 20px); font-weight: 700; line-height: 1.15; color: var(--gold); }
+.home-bubu {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  width: clamp(52px, 8vw, 78px);
+  height: auto;
+  transform: translateY(-50%) rotate(8deg);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .35));
 }
 
-/* wide screens: the back button in the top left corner, the name beside it */
+/* wide screens: the back button in the top left corner, the board at the
+   right, over the mountains (the train is at the left) */
 @media (min-aspect-ratio: 4/3) {
-  .home-head { justify-content: flex-start; padding-left: max(3vw, env(safe-area-inset-left)); }
   .home-back { position: absolute; top: max(14px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); margin: 0; }
-  .home-back + .home-head { padding-top: max(10px, env(safe-area-inset-top)); padding-left: max(200px, 3vw); }
-  /* the landscape is a low strip there: a smaller name, so it stays above the engine */
-  .home-head { padding-top: max(10px, env(safe-area-inset-top)); }
-  .home-bubu { width: clamp(56px, 6vw, 84px); }
-  .home-title { font-size: clamp(30px, 3.4vw, 50px); }
-  .home-subtitle { font-size: clamp(16px, 1.5vw, 21px); }
+  .home-head { justify-content: flex-end; padding: max(22px, env(safe-area-inset-top)) calc(8vw + 70px) 0 16px; }
+  .home-title { font-size: clamp(26px, 3vw, 44px); }
+  .home-subtitle { font-size: clamp(14px, 1.4vw, 19px); }
 }
 
 /* ---------- Season filter (only with journeys of several seasons) ---------- */
@@ -348,8 +356,8 @@ body {
 /* sideways phones: the landscape fills the screen, with a low sign */
 @media (max-height: 520px) and (orientation: landscape) {
   .home-hero { height: 64svh; }
-  .home-head { padding-top: max(8px, env(safe-area-inset-top)); }
-  .home-bubu { width: 56px; }
-  .home-title { font-size: 30px; }
-  .home-subtitle { font-size: 16px; margin-top: 2px; }
+  .home-head { padding-top: max(16px, env(safe-area-inset-top)); }
+  .home-bubu { width: 48px; }
+  .home-title { font-size: 26px; }
+  .home-subtitle { font-size: 14px; }
 }
