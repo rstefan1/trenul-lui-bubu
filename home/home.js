@@ -173,14 +173,32 @@ list.replaceChildren(...[...ROUTES].sort((a, b) => a.number - b.number).map(rout
 const filter = seasonFilter(list);
 if (filter) list.before(filter);
 
-// the sign under the landscape: how many journeys there are, and that they are below
-const more = /** @type {HTMLAnchorElement} */ (document.getElementById('more'));
-more.append(
-  el('span', { class: 'home-more-count' }, [ROUTES.length === 1 ? '1 călătorie' : `${ROUTES.length} călătorii`]),
-  el('span', {}, ['Alege mai jos']),
-  el('span', { class: 'home-more-arrow', 'aria-hidden': 'true' }, ['⬇']),
-);
-more.hidden = ROUTES.length === 0;
+
+/*
+ * The "Vezi toate călătoriile ↓" button at the bottom of the screen (like
+ * the one of lumea-lui-bubu): shown only while the page is at the top and a
+ * journey's card is not fully seen; a tap jumps to that card. Nothing moves:
+ * it simply shows or hides, and the page jumps without sliding.
+ */
+const hint = /** @type {HTMLButtonElement} */ (document.getElementById('scroll-hint'));
+/** the first card whose bottom (with its button) is below the screen */
+const firstHidden = () => [...list.querySelectorAll('.route-card')]
+  .find(card => !(/** @type {HTMLElement} */ (card.closest('.route-item'))).hidden && card.getBoundingClientRect().bottom > window.innerHeight - 8);
+const updateHint = () => { hint.hidden = window.scrollY > 40 || !firstHidden(); };
+hint.addEventListener('click', () => {
+  const card = firstHidden();
+  if (card) window.scrollTo({ top: card.getBoundingClientRect().top + window.scrollY - 12, behavior: 'instant' });
+});
+let waiting = false;
+const later = () => {
+  if (waiting) return;
+  waiting = true;
+  requestAnimationFrame(() => { waiting = false; updateHint(); });
+};
+addEventListener('scroll', later, { passive: true });
+addEventListener('resize', later);
+addEventListener('load', updateHint);   // after the fonts and the pictures, the sizes are final
+updateHint();
 
 const scenery = /** @type {HTMLElement} */ (document.getElementById('scene'));
 // the SVGs are built from fixed values (no text from outside goes into them)

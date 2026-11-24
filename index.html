@@ -32,8 +32,6 @@
   <main class="home-main">
     <!-- the scenery behind the cards (home/home.js) -->
     <div class="home-ground" id="ground"></div>
-    <!-- how many journeys there are, and that they are below (home/home.js) -->
-    <a class="home-more" id="more" href="#routes" hidden></a>
     <!-- the journeys are listed by home/home.js (from home/routes.js) -->
     <ol class="route-list" id="routes" aria-label="Călătoriile">
       <li><a class="route-card route-card--plain" href="route-01/">Ruta 1 · Drumul de Crăciun (Timișoara → Putna)</a></li>
@@ -47,6 +45,9 @@
     <p>Progresul se salvează doar în acest browser.</p>
     <p class="home-author">prof. ing. Robert Ștefan</p>
   </footer>
+
+  <!-- shows that there are journeys below the screen (home/home.js) -->
+  <button class="scroll-hint" id="scroll-hint" type="button" hidden>Vezi toate călătoriile <span aria-hidden="true">↓</span></button>
 
   <noscript><p class="home-foot">Pentru joc trebuie activat JavaScript în browser.</p></noscript>
   <script type="module" src="home/home.js"></script>
