@@ -151,16 +151,8 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   transition: transform .12s;
 }
 .hud-btn:active { transform: translateY(3px) scale(.96); }
-/* the leave button of the HUD says what it does (only its house on phones) */
-.hud-btn--exit {
-  width: auto;
-  display: flex;
-  gap: 6px;
-  padding: 0 18px 0 14px;
-  border-radius: 999px;
-  font-size: 24px;
-}
-.hud-btn__text { font-size: 19px; font-weight: 800; }
+/* the back button, first at the top left: leaves the journey */
+.back-btn { font-size: 30px; font-weight: 800; padding-bottom: 4px; }
 
 /* ---------- Station sign ---------- */
 .station-banner {
@@ -333,8 +325,7 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   .clock-date { font-size: 10px; white-space: normal; text-align: center; max-width: 10em; line-height: 1.15; }
   .stars-card { order: 1; }
   .help-btn { order: 2; }
-  #btnExit { order: 4; margin-left: auto; }
-  #btnSound { order: 5; }
+  #btnSound { order: 5; margin-left: auto; }
   #btnFullscreen { order: 6; }
   .route-card { order: 7; flex-basis: 100%; padding: 8px 16px 2px; }
   .mission-counter { order: 8; margin-right: auto; }
@@ -353,14 +344,11 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 }
 @media (max-width: 640px) and (orientation: portrait), (max-height: 520px) and (orientation: landscape) {
   .hud-btn { width: 44px; height: 44px; font-size: 20px; }
-  .hud-btn--exit { width: 44px; padding: 0; border-radius: 50%; }
-  .hud-btn--exit .hud-btn__text { display: none; }
 }
 /* the smallest phones: everything of the first row still on one line */
 @media (max-width: 380px) and (orientation: portrait) {
   .hud { gap: 4px; }
   .hud-btn { width: 40px; height: 40px; font-size: 18px; }
-  .hud-btn--exit { width: 40px; }
   .clock-card { min-width: 0; padding-left: 6px; padding-right: 6px; }
   .clock-time { font-size: 22px; }
   .stars-card { padding: 2px 8px; }
