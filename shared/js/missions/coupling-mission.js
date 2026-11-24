@@ -44,6 +44,12 @@ const BRAKE = 260;
  *  and how far before and after it a press still counts (card units). */
 const MARK_BEFORE = 150;
 const MARK_AFTER = 60;
+/**
+ * How far the buffers stick out of the two locomotives' ends together (car
+ * units): the locomotives meet buffer to buffer, so the waiting one stands
+ * this much beyond the point where Bubu's stops.
+ */
+const BUFFERS = 24;
 
 export class CouplingMission extends Mission {
   /**
@@ -151,7 +157,7 @@ export class CouplingMission extends Mission {
     this.stateT = 0;
     this.speed = 0;
     this.sound('thud');
-    const p = this.toStage(this.wagonBack, -50);
+    const p = this.toStage(this.wagonBack + (BUFFERS / 2) * SCALE, -50);
     this.particles.burst(p.x, p.y, SPARKS, 22, 220);
     this.ctx.state.setFlag(this.config.flag);
     this.ctx.hud.announce('Cuplat!', this.config.fact, 'Misiune', 4);
@@ -208,7 +214,7 @@ export class CouplingMission extends Mission {
     const k = SCALE * card.k;
     const wagon = FREIGHT_TRAIN.cars[4];
     const loco = { ...FREIGHT_TRAIN.cars[0], colors: { ...FREIGHT_TRAIN.cars[0].colors, body: this.ctx.state.locoColor ?? FREIGHT_TRAIN.cars[0].colors.body } };
-    this.drawCar(c, wagon, this.toStage(this.wagonBack, 0), k, false);
+    this.drawCar(c, wagon, this.toStage(this.wagonBack + BUFFERS * SCALE, 0), k, false);
     this.drawCar(c, loco, this.toStage(this.locoFront - loco.length * SCALE, 0), k, true);
     c.restore();
     if (this.state === 'rolling' && this.braking === 'none' && this.locoFront > this.markX - MARK_BEFORE - 200) {
