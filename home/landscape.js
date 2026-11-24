@@ -174,6 +174,18 @@ function passenger(/** @type {number} */ x, /** @type {number} */ y, /** @type {
     + `</g>`;
 }
 
+/** A haystack (căpiță) with its base at (x, y). */
+function haystack(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s) {
+  const w = 52 * s;
+  const h = 100 * s;
+  return `<g>`
+    + `<path d="M${r1(x)} ${r1(y - h - 16 * s)} V${r1(y - h + 10 * s)}" stroke="#7a5235" stroke-width="${r1(4 * s)}" stroke-linecap="round"/>`
+    + `<path d="M${r1(x - w)} ${r1(y)} Q${r1(x - w * 1.1)} ${r1(y - h * 0.7)} ${r1(x)} ${r1(y - h)} Q${r1(x + w * 1.1)} ${r1(y - h * 0.7)} ${r1(x + w)} ${r1(y)}Z" fill="#e9c35b"/>`
+    + `<path d="M${r1(x - w * 0.6)} ${r1(y - h * 0.15)} Q${r1(x - w * 0.5)} ${r1(y - h * 0.6)} ${r1(x - w * 0.1)} ${r1(y - h * 0.85)} M${r1(x)} ${r1(y - h * 0.1)} Q${r1(x + w * 0.1)} ${r1(y - h * 0.55)} ${r1(x + w * 0.3)} ${r1(y - h * 0.8)} M${r1(x + w * 0.6)} ${r1(y - h * 0.15)} Q${r1(x + w * 0.65)} ${r1(y - h * 0.45)} ${r1(x + w * 0.55)} ${r1(y - h * 0.55)}" stroke="#c99a35" stroke-width="${r1(3 * s)}" fill="none" stroke-linecap="round"/>`
+    + `<path d="M${r1(x - w * 0.95)} ${r1(y - h * 0.3)} Q${r1(x)} ${r1(y - h * 0.4)} ${r1(x + w * 0.95)} ${r1(y - h * 0.3)}" stroke="#c99a35" stroke-width="${r1(3 * s)}" fill="none"/>`
+    + `</g>`;
+}
+
 /** A sunflower whose stem starts at (x, y). */
 function sunflower(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ h, tilt = 0) {
   const hx = x + tilt;
@@ -373,25 +385,18 @@ const THINGS = {
         + bird(560, 330, 1.2) + bird(610, 350, 0.9);
     },
     fields: () => {
-      // wheat (gold, with its rows) and a mown field
+      // meadows and a mown field, with haystacks on it
       const strips = [
         { x0: 0, x1: 330, fill: '#9bd36f' },
-        { x0: 330, x1: 560, fill: '#f0c64a', rows: '#d9a72f' },
-        { x0: 560, x1: 760, fill: '#c9dc74' },
-        { x0: 760, x1: 1000, fill: '#f0c64a', rows: '#d9a72f' },
-        { x0: 1000, x1: 1600, fill: '#9bd36f' },
+        { x0: 330, x1: 600, fill: '#c9dc74' },
+        { x0: 600, x1: 1600, fill: '#9bd36f' },
       ];
       const top = (/** @type {number} */ x) => villageTop(x) + 40;
       let out = '';
       for (const s of strips) {
         out += `<path d="M${s.x0} ${RAIL} L${s.x0} ${r1(top(s.x0))} L${s.x1} ${r1(top(s.x1))} L${s.x1} ${RAIL}Z" fill="${s.fill}"/>`;
-        if (s.rows) {
-          for (let y = 0; y < 6; y++) {
-            const yy = r1(top(s.x0) + 14 + y * 18);
-            out += `<path d="M${s.x0 + 6} ${yy} L${s.x1 - 6} ${r1(yy + top(s.x1) - top(s.x0))}" stroke="${s.rows}" stroke-width="3"/>`;
-          }
-        }
       }
+      out += haystack(390, 752, 0.5) + haystack(480, 760, 0.45);
       return out;
     },
     foreground: () => {
@@ -405,7 +410,8 @@ const THINGS = {
       // a boy kicking a ball
       out += child(900, 965, { shirt: '#ff7043', hair: '#2b2f38', pose: 'kick', s: 1.05 });
       out += `<circle cx="985" cy="925" r="17" fill="#fff" stroke="#2b2f38" stroke-width="3"/><path d="M973 917 q12 6 24 0 M978 937 q8 -10 16 -2" stroke="#e53935" stroke-width="4" fill="none" stroke-linecap="round"/>`;
-      // two tall sunflowers at the right
+      // a big haystack and two tall sunflowers at the right
+      out += haystack(1250, 935, 1.05);
       out += sunflower(1110, H + 10, 180, -6) + sunflower(1150, H + 10, 150, 6);
       return out;
     },
