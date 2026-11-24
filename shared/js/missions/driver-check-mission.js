@@ -70,8 +70,10 @@ import { Mission, starsForMistakes } from './mission.js';
 
 /** Seconds of Bubu's hop into the cab. */
 const HOP_TIME = 0.9;
-/** Room around a part that still counts as touching it (stage units). */
+/** Room around a part that still counts as touching it (stage units)… */
 const TOUCH_MARGIN = 12;
+/** …and at least this much on the screen (CSS pixels), so a finger finds even a small lamp on a phone. */
+const FINGER_MARGIN = 26;
 /** Bubu's size while she walks around the locomotive. */
 const BUBU_SIZE = 104;
 
@@ -270,7 +272,8 @@ export class DriverCheckMission extends Mission {
   }
 
   /**
-   * The part under a point of the stage, if any.
+   * The part of the checklist under a point of the stage (or nearest to it,
+   * within a finger's reach), if any.
    * @private
    * @param {number} x
    * @param {number} y
@@ -280,12 +283,17 @@ export class DriverCheckMission extends Mission {
     /** @type {CheckPart | null} */
     let best = null;
     let bestD = Infinity;
+    // the room around the parts, from screen pixels to stage units (through the camera's zoom)
+    const margin = Math.max(TOUCH_MARGIN, FINGER_MARGIN / (this.ctx.stage.scale * this.ctx.world.zoomTransform.k));
+    // only the parts on the checklist (a tap near the sandbox finds the headlight next to it)
+    const listed = new Set(this.config.checks.map(c => c.part));
     for (const [name, rects] of Object.entries(this.partsOnStage())) {
+      if (!listed.has(/** @type {CheckPart} */ (name))) continue;
       for (const [rx, ry, rw, rh] of rects) {
         const dx = Math.max(rx - x, 0, x - (rx + rw));
         const dy = Math.max(ry - y, 0, y - (ry + rh));
         const d = Math.hypot(dx, dy);
-        if (d <= TOUCH_MARGIN && d < bestD) {
+        if (d <= margin && d < bestD) {
           best = /** @type {CheckPart} */ (name);
           bestD = d;
         }
