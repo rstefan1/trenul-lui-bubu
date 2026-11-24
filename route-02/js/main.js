@@ -31,7 +31,6 @@ import { ArchesMission } from '../../shared/js/missions/arches-mission.js';
 import { BalanceMission } from '../../shared/js/missions/balance-mission.js';
 import { CouplingMission } from '../../shared/js/missions/coupling-mission.js';
 import { DescentMission } from '../../shared/js/missions/descent-mission.js';
-import { DiscoverMission } from '../../shared/js/missions/discover-mission.js';
 import { LogsMission } from '../../shared/js/missions/logs-mission.js';
 import { PassingTrainMission } from '../../shared/js/missions/passing-train-mission.js';
 import { PotteryMission } from '../../shared/js/missions/pottery-mission.js';
@@ -43,6 +42,7 @@ import { SandMission } from '../../shared/js/missions/sand-mission.js';
 import { SignalsMission } from '../../shared/js/missions/signals-mission.js';
 import { SledWorkshopMission } from '../../shared/js/missions/sled-workshop-mission.js';
 import { StrapsMission } from '../../shared/js/missions/straps-mission.js';
+import { WhistleMission } from '../../shared/js/missions/whistle-mission.js';
 import { loadBubu } from '../../shared/js/train/bubu.js';
 import { ChapterScreens } from '../../shared/js/ui/chapter-screens.js';
 import { Hud } from '../../shared/js/ui/hud.js';
@@ -69,7 +69,6 @@ const MISSION_TYPES = {
   coupling: CouplingMission,
   crane: CraneMission,
   descent: DescentMission,
-  discover: DiscoverMission,
   logs: LogsMission,
   'passing-train': PassingTrainMission,
   pottery: PotteryMission,
@@ -79,6 +78,7 @@ const MISSION_TYPES = {
   signals: SignalsMission,
   'sled-workshop': SledWorkshopMission,
   straps: StrapsMission,
+  whistle: WhistleMission,
 };
 
 /**
