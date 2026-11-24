@@ -325,7 +325,7 @@ export const WINTER_MISSIONS = {
         id: 'switches-dej',
         title: 'Macazurile din Dej',
         text: 'Vagonul cu daruri trebuie să ajungă pe linia cerută. Atinge cercurile albastre ca să muți macazurile, apoi pornește trenul.',
-        levels: [2, 3],
+        levels: [2, 3, 3],
         doneText: 'Toate vagoanele cu daruri au ajuns pe liniile bune!',
         fact: 'Macazul este o bucată de șină care se mută și alege drumul trenului. Funcționează ca „dacă… atunci…” dintr-un program.',
       },
