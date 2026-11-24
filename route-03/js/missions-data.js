@@ -27,7 +27,6 @@ export const CHILDREN = [
   { look: 2, coach: 3, seat: 0 },
   { look: 3, coach: 1, seat: 8 },
   { look: 4, coach: 2, seat: 5 },
-  { look: 5, coach: 3, seat: 2 },
 ];
 
 /** Set when the children are on the train (after their tickets were checked). */
@@ -135,7 +134,7 @@ export const FOREST_MISSIONS = {
         title: 'Controlorul de bilete',
         text: 'Azi, Bubu lucrează la mocănița din Vișeu de Sus, una dintre ultimele căi ferate forestiere cu abur din Europa. Copiii vin cu biletele: verifică-le și arată-le vagonul.',
         route: { from: 'Vișeu de Sus', to: 'Paltin', toIcon: '🌲', day: 31, otherPlace: '🏙️ Vișeu de Jos' },
-        children: CHILDREN.map((c, i) => ({ look: c.look, coach: c.coach, ticket: /** @type {const} */ (['good', 'day', 'good', 'drawing', 'place', 'good'])[i] })),
+        children: CHILDREN.map((c, i) => ({ look: c.look, coach: c.coach, ticket: /** @type {const} */ (['good', 'day', 'good', 'drawing', 'place'])[i] })),
         seats: [[6, 8], [3, 5], [0, 2]],
         flag: BOARDED_FLAG,
       },
