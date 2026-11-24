@@ -41,16 +41,18 @@ export function setupFullscreen(button) {
 }
 
 /**
- * Wires the HUD's "leave" button: it opens a small window that asks whether
- * to leave the journey and go back to the list of journeys (what was done
- * up to the last station stays saved). While the window is open the game
- * waits, like during a mission's briefing.
- * @param {HTMLButtonElement} button   the HUD button
- * @param {HTMLElement} dialog         the window (its link leaves the journey)
- * @param {HTMLButtonElement} stay     the button that closes the window
- * @param {{paused: boolean}} game     what pauses the game (the mission HUD)
+ * Wires the HUD's "leave" button: it opens a small window that asks where to
+ * go: back to the journey's chapters (the page opens again, on its menu) or
+ * to the list of journeys (its link); what was done up to the last station
+ * stays saved. While the window is open the game waits, like during a
+ * mission's briefing.
+ * @param {HTMLButtonElement} button    the HUD button
+ * @param {HTMLElement} dialog          the window
+ * @param {HTMLButtonElement} chapters  the button that goes back to the chapters
+ * @param {HTMLButtonElement} stay      the button that closes the window
+ * @param {{paused: boolean}} game      what pauses the game (the mission HUD)
  */
-export function setupExitButton(button, dialog, stay, game) {
+export function setupExitButton(button, dialog, chapters, stay, game) {
   let wasPaused = false;
   const close = () => {
     if (dialog.hidden) return;
@@ -67,5 +69,7 @@ export function setupExitButton(button, dialog, stay, game) {
     stay.focus({ preventScroll: true });
   });
   stay.addEventListener('click', close);
+  // the same page without the testing parameters: it opens on the menu
+  chapters.addEventListener('click', () => { location.href = location.pathname; });
   dialog.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 }

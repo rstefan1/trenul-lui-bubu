@@ -236,7 +236,10 @@ input.on('move', (/** @type {import('../../shared/js/core/input.js').PointerInfo
 input.on('up', (/** @type {import('../../shared/js/core/input.js').PointerInfo} */ p) => director.pointerUp(p));
 
 setupFullscreen(/** @type {HTMLButtonElement} */ (byId('btnFullscreen')));
-setupExitButton(/** @type {HTMLButtonElement} */ (byId('btnExit')), byId('exitDialog'), /** @type {HTMLButtonElement} */ (byId('btnExitStay')), missionHud);
+setupExitButton(
+  /** @type {HTMLButtonElement} */ (byId('btnExit')), byId('exitDialog'),
+  /** @type {HTMLButtonElement} */ (byId('btnExitChapters')), /** @type {HTMLButtonElement} */ (byId('btnExitStay')), missionHud,
+);
 keepScreenAwake();
 
 loadBubu('../shared/assets/bubu.webp');

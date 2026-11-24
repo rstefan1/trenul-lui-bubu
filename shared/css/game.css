@@ -151,6 +151,16 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
   transition: transform .12s;
 }
 .hud-btn:active { transform: translateY(3px) scale(.96); }
+/* the leave button of the HUD says what it does (only its house on phones) */
+.hud-btn--exit {
+  width: auto;
+  display: flex;
+  gap: 6px;
+  padding: 0 18px 0 14px;
+  border-radius: 999px;
+  font-size: 24px;
+}
+.hud-btn__text { font-size: 19px; font-weight: 800; }
 
 /* ---------- Station sign ---------- */
 .station-banner {
@@ -343,11 +353,14 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 }
 @media (max-width: 640px) and (orientation: portrait), (max-height: 520px) and (orientation: landscape) {
   .hud-btn { width: 44px; height: 44px; font-size: 20px; }
+  .hud-btn--exit { width: 44px; padding: 0; border-radius: 50%; }
+  .hud-btn--exit .hud-btn__text { display: none; }
 }
 /* the smallest phones: everything of the first row still on one line */
 @media (max-width: 380px) and (orientation: portrait) {
   .hud { gap: 4px; }
   .hud-btn { width: 40px; height: 40px; font-size: 18px; }
+  .hud-btn--exit { width: 40px; }
   .clock-card { min-width: 0; padding-left: 6px; padding-right: 6px; }
   .clock-time { font-size: 22px; }
   .stars-card { padding: 2px 8px; }
@@ -1117,6 +1130,11 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 /* leaving the journey: the same window as a briefing, with two choices */
 .exit-dialog__buttons { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .exit-dialog__leave { display: inline-block; font-size: clamp(20px, 3.4vmin, 28px); text-decoration: none; animation: none; }
+.exit-dialog__chapters {
+  background: radial-gradient(circle at 35% 30%, #6f9be0, var(--station-blue) 60%, #163b78);
+  box-shadow: 0 8px 0 #102c5c, 0 14px 30px rgba(0, 0, 0, .3);
+}
+.exit-dialog__chapters:active { box-shadow: 0 2px 0 #102c5c; }
 /* sideways phones: Bubu beside the title, so the whole card fits without scrolling */
 @media (max-height: 520px) and (orientation: landscape) {
   .briefing { padding: 8px; }

@@ -44,7 +44,7 @@
       <span class="stars-icon" aria-hidden="true">★</span>
       <span class="stars-count" id="hudStars" aria-label="Stele">0</span>
     </div>
-    <button class="hud-btn" id="btnExit" type="button" title="Toate călătoriile" aria-label="Ieși la toate călătoriile">🏠</button>
+    <button class="hud-btn hud-btn--exit" id="btnExit" type="button" title="Ieși din călătorie"><span aria-hidden="true">🏠</span><span class="hud-btn__text">Ieșire</span></button>
     <button class="hud-btn" id="btnSound" type="button" title="Fără sunet" aria-label="Fără sunet">🔊</button>
     <button class="hud-btn" id="btnFullscreen" type="button" title="Ecran complet" aria-label="Ecran complet">⛶</button>
   </header>
@@ -65,14 +65,15 @@
       <p class="briefing__note">Jocul așteaptă până apeși butonul.</p>
     </div>
   </div>
-  <!-- leaving the journey (the 🏠 button of the HUD): back to the list of journeys -->
+  <!-- leaving the journey (the "Ieșire" button of the HUD): back to the chapters or to the list of journeys -->
   <div class="briefing exit-dialog" id="exitDialog" role="dialog" aria-modal="true" aria-labelledby="exitTitle" hidden>
     <div class="briefing__card">
       <img class="briefing__bubu" src="../shared/assets/bubu.webp" alt="" width="96" height="96">
       <h2 class="mission-title" id="exitTitle">Ieși din călătorie?</h2>
       <p class="briefing__text">Ce ai făcut până la ultima gară rămâne salvat. Poți continua altă dată.</p>
       <div class="exit-dialog__buttons">
-        <a class="big-btn exit-dialog__leave" href="../">🏠 Da, la toate călătoriile</a>
+        <button class="big-btn exit-dialog__leave exit-dialog__chapters" id="btnExitChapters" type="button">📖 La capitolele călătoriei</button>
+        <a class="big-btn exit-dialog__leave" href="../">🏠 La toate călătoriile</a>
         <button class="link-btn" id="btnExitStay" type="button">Nu, rămân în tren</button>
       </div>
     </div>
