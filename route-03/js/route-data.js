@@ -49,10 +49,15 @@ export const FOREST_ROUTE = {
       cover: [[0, 1]],
       train: 'forest',
     },
-    // Novăț → Glîmboaca: stones fallen from the mountain, and a cracked sleeper
+    // Novăț → Glîmboaca: stones fallen from the mountain and a cracked sleeper; then,
+    // with the line mended, a tunnel through the rock and a tall viaduct over a side valley
     {
       duration: 30,
       biomes: [[0, 'forest'], [0.4, 'hills'], [0.6, 'forest']],
+      features: [
+        { type: 'tunnel', at: 0.48, length: 1500 },
+        { type: 'viaduct', at: 0.68, length: 900, depth: 420 },
+      ],
       snowfall: [[0, 0]],
       cover: [[0, 1]],
       train: 'forest',

@@ -127,6 +127,9 @@ setupSoundButton(audio, /** @type {HTMLButtonElement} */ (byId('btnSound')));
 // every effect is measured once, so they can all be heard equally well
 audio.on('unlock', () => setTimeout(() => balanceSounds(audio), 1500));
 const railSound = new RailSound(audio, 'train', 'brakes');
+/** The train whistles this far before a tunnel (stage units); the tunnel it last whistled for. */
+const HORN_AHEAD = 700;
+let hornedFor = -1;
 const windSound = new WindSound(audio);
 // every button clicks softly
 document.addEventListener('click', e => {
@@ -145,7 +148,11 @@ const overlays = [...document.querySelectorAll('.overlay')];
  */
 function placeNow() {
   if (overlays.some(o => !o.hidden)) return null;
-  if (journey.state === 'running') return travelPlace(route.biomeAt(journey.distance));
+  if (journey.state === 'running') {
+    // inside a tunnel only the train is heard
+    if (world.features.placeAt(journey.distance) === 'tunnel') return null;
+    return travelPlace(route.biomeAt(journey.distance));
+  }
   const station = route.stations[journey.stationIndex];
   const key = station && FOREST_MISSIONS.stations[station.id]?.ambience;
   // at night (Paltin, waiting for midnight) the birds are asleep
@@ -173,6 +180,8 @@ const director = new MissionDirector(
 
 journey.on('arrive', (/** @type {import('../../shared/js/journey/route.js').Station} */ station) => {
   hud.showStation(station.name);
+  // a mission on the way may have left the view panned forward: back to the train
+  world.panTarget = 0;
   setTimeout(() => chimeSound(audio), 1500);
 });
 
@@ -217,6 +226,8 @@ function drawChildren(ctx) {
     const look = LOOK_AT_SEAT.get(p.seat);
     const w = windows[p.seat];
     if (!look || !w) continue;
+    // inside a tunnel the children are hidden by the mountain
+    if (p.leaving < 0 && world.features.placeAt(journey.distance + w.x) === 'tunnel') continue;
     const c = world.trainToStage(w);
     const x = c.x + dx;
     const y = c.y + dy;
@@ -247,7 +258,9 @@ function drawChildren(ctx) {
 /** The smoke of the locomotive: from the top of its chimney, while it is on screen. */
 function updateSteam(/** @type {number} */ dt) {
   const r = world.train.locoParts.chimney?.[0];
-  const top = r ? world.trainToStage({ x: r[0] + r[2] / 2, y: r[1] + 8 }) : null;
+  // no smoke shows while the chimney is inside a tunnel
+  const inside = r && world.features.placeAt(journey.distance + r[0] + r[2] / 2) === 'tunnel';
+  const top = r && !inside ? world.trainToStage({ x: r[0] + r[2] / 2, y: r[1] + 8 }) : null;
   steam.shade = 1 - 0.6 * world.light.night;
   steam.update(dt, top, journey.speed);
 }
@@ -291,6 +304,7 @@ const loop = new GameLoop(dt => {
 
 /** How much the place echoes: a station a little, the open valley almost not at all. */
 function roomNow() {
+  if (world.features.placeAt(journey.distance) === 'tunnel') return 0.45;
   return journey.state !== 'running' ? 0.18 : 0.06;
 }
 
@@ -310,6 +324,14 @@ function updateSound() {
       place: world.features.placeAt(journey.distance),
     }),
     () => windSound.update(world.snow.intensity, missionHud.paused),
+    () => {
+      // a whistle before every tunnel
+      const tunnel = world.features.nextTunnel(journey.distance);
+      if (journey.state === 'running' && tunnel - journey.distance < HORN_AHEAD && tunnel !== hornedFor) {
+        hornedFor = tunnel;
+        audio.play('whistle', 0.6);
+      }
+    },
     () => music.update(...musicNow()),
     () => ambience.update(placeNow()),
     () => audio.setSpace(roomNow()),
