@@ -25,7 +25,7 @@ import { showOverlay } from './screens.js';
  * @property {boolean} canReset
  *
  * @typedef {{kind: 'continue'} | {kind: 'chapter', chapter: import('../game/chapters.js').Chapter}
- *   | {kind: 'intro'} | {kind: 'reset'}} MenuChoice
+ *   | {kind: 'reset'}} MenuChoice
  */
 
 /**
@@ -66,13 +66,11 @@ export class ChapterScreens {
         overlay.classList.remove('is-visible');
         setTimeout(() => { overlay.hidden = true; }, 350);
         primary.onclick = null;
-        byId('btnWhoIsBubu').onclick = null;
         reset.onclick = null;
         resolve(choice);
       };
       list.replaceChildren(...model.cards.map(card => this.card(card, choose)));
       primary.onclick = () => choose({ kind: 'continue' });
-      byId('btnWhoIsBubu').onclick = () => choose({ kind: 'intro' });
       reset.onclick = () => {
         // the browser's own confirmation dialog: simple, and understood by every child
         if (window.confirm('Sigur vrei să începi de la capăt? Se vor șterge stelele și tot drumul făcut.')) {

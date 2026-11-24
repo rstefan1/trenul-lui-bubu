@@ -90,10 +90,7 @@ export class Campaign {
       traveler: this.state.travelerName ? `Bine ai revenit, ${this.state.travelerName}!` : '',
       canReset: started,
     });
-    if (choice.kind === 'intro') {
-      await this.screens.intro();
-      await this.menu();
-    } else if (choice.kind === 'reset') {
+    if (choice.kind === 'reset') {
       this.store.clear();
       this.save = { ...this.store.load(), introSeen: true };
       this.store.save(this.save);
