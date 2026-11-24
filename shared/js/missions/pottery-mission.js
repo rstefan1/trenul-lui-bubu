@@ -67,6 +67,8 @@ function potSvg(shape, look) {
 }
 
 const CLAY = '#c9875a';
+/** Seconds the black jug stays in the panel before the fact is told. */
+const ADMIRE_SECONDS = 2.2;
 
 export class PotteryMission extends Mission {
   /**
@@ -82,6 +84,8 @@ export class PotteryMission extends Mission {
     this.pattern = '';
     this.time = 0;
     this.doneAt = -1;
+    /** The fact has been told (after the jug comes out of the kiln). */
+    this.told = false;
     /** @type {Record<string, HTMLElement>} */
     this.ui = {};
   }
@@ -189,7 +193,6 @@ export class PotteryMission extends Mission {
       this.ui.says.textContent = 'Ulciorul a ieșit negru și lucios. E darul nostru pentru copii!';
       this.ui.step.replaceChildren();
       this.ctx.state.setFlag(this.config.flag);
-      this.ctx.hud.announce('Ulciorul negru', this.config.fact, 'Misiune', 4);
       this.doneAt = this.time;
     });
     this.ui.step.replaceChildren(fire);
@@ -198,7 +201,14 @@ export class PotteryMission extends Mission {
   /** @param {number} dt */
   update(dt) {
     this.time += dt;
-    if (this.doneAt >= 0 && this.time - this.doneAt > 3) {
+    // a moment to admire the black jug, then the panel closes and the fact is
+    // told on its own, never over the panel
+    if (this.doneAt >= 0 && !this.told && this.time - this.doneAt > ADMIRE_SECONDS) {
+      this.told = true;
+      showPanel(this.ctx.panel, null);
+      this.ctx.hud.announce('Ulciorul negru', this.config.fact, 'Misiune', 4);
+    }
+    if (this.doneAt >= 0 && this.time - this.doneAt > ADMIRE_SECONDS + 3) {
       this.complete(starsForMistakes(this.mistakes, 1, 0), this.mistakes === 0
         ? 'Perfect! Un ulcior negru, ca la Săcel.'
         : 'Bravo! Ulciorul negru e gata.');
