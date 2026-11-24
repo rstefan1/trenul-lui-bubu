@@ -74,6 +74,8 @@ const HOP_TIME = 0.9;
 const TOUCH_MARGIN = 12;
 /** …and at least this much on the screen (CSS pixels), so a finger finds even a small lamp on a phone. */
 const FINGER_MARGIN = 26;
+/** Height of a hint note with its tip (stage units, before it is enlarged on phones). */
+const NOTE_HEIGHT = 58;
 /** Bubu's size while she walks around the locomotive. */
 const BUBU_SIZE = 104;
 
@@ -232,8 +234,10 @@ export class DriverCheckMission extends Mission {
     const right = w.trainToStage({ x: loco.left + loco.spec.length, y: 0 }).x;
     const left = w.trainToStage({ x: wagon.left, y: 0 }).x;
     const rail = w.trainToStage({ x: 0, y: 0 }).y;
-    // room above for the notes, below for Bubu, and on the left for the checklist
-    w.zoomOn({ left: left - 40, right: right + 220, top: rail - 300, bottom: rail + 110 });
+    // room above for the facts told at the top of the screen (they must not hide
+    // the horn on the roof) and for the notes, below for Bubu, and on the left
+    // for the checklist
+    w.zoomOn({ left: left - 40, right: right + 220, top: rail - 440, bottom: rail + 110 });
   }
 
   /** @private Bubu walks to the part to find now and waits next to it. */
@@ -430,11 +434,30 @@ export class DriverCheckMission extends Mission {
           c.stroke();
         }
         c.restore();
-        // the note above the (first) glowing spot
-        const [x, y, w] = rects[0] ?? [0, 0, 0];
-        if (rects.length) drawTouchNote(c, this.ctx.stage, x + w / 2, y - 14 - pulse * 6, check.hint);
+        // the note above the (first) glowing spot, or under it when a card at the
+        // top of the screen covers the room above (the horn, on the roof)
+        const [x, y, w, h] = rects[0] ?? [0, 0, 0, 0];
+        if (!rects.length) return;
+        if (this.underCard(y - 14 - NOTE_HEIGHT * this.ctx.stage.ui)) {
+          drawTouchNote(c, this.ctx.stage, x + w / 2, y + h + 14 + pulse * 6, check.hint, true);
+        } else {
+          drawTouchNote(c, this.ctx.stage, x + w / 2, y - 14 - pulse * 6, check.hint);
+        }
       }
     });
+  }
+
+  /**
+   * Is a height of the stage (as drawn, through the camera's zoom) hidden by
+   * the card at the top of the screen?
+   * @private
+   * @param {number} y
+   */
+  underCard(y) {
+    const bottom = this.ctx.hud.cardBottom;
+    if (!bottom) return false;
+    const { k, oy } = this.ctx.world.zoomTransform;
+    return y * k + oy < this.ctx.stage.toStage(0, bottom).y + 10;
   }
 
   /** @private Stage x of the back of the locomotive. */

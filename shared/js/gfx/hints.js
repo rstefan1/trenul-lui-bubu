@@ -16,19 +16,22 @@ import { zoomed } from './ui-style.js';
  * @param {number} x
  * @param {number} y      the tip of the note
  * @param {string} text   what to do there
+ * @param {boolean} [below=false]  the label hangs under the point, its tip upwards
+ *        (when the room above is taken, e.g. by a card at the top of the screen)
  */
-export function drawTouchNote(c, stage, x, y, text) {
+export function drawTouchNote(c, stage, x, y, text, below = false) {
   zoomed(c, stage.ui, x, y, () => {
     c.font = '800 21px "Baloo 2", system-ui, sans-serif';
     const w = Math.max(150, c.measureText(text).width + 30);
     const h = 44;
     const bx = clamp(x - w / 2, stage.viewLeft + 10, stage.viewRight - 10 - w);
-    const by = y - 14 - h;
+    const by = below ? y + 14 : y - 14 - h;
+    const base = below ? by + 1 : by + h - 1;
     fillRoundRect(c, bx, by, w, h, 14, '#ffcf3f');
     c.fillStyle = '#ffcf3f';
     c.beginPath();
-    c.moveTo(x - 10, by + h - 1);
-    c.lineTo(x + 10, by + h - 1);
+    c.moveTo(x - 10, base);
+    c.lineTo(x + 10, base);
     c.lineTo(x, y);
     c.closePath();
     c.fill();
