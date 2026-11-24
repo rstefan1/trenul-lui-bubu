@@ -476,7 +476,8 @@ function fence(/** @type {number} */ x0, /** @type {number} */ x1, /** @type {nu
 /**
  * The scenery behind the journeys' cards (2000 × 700, x from -200 to 1800),
  * so the meadow is not empty: the cards stand in the middle, the village
- * and the children are at the sides.
+ * and the children are at the sides. On wide screens the top and the bottom
+ * are cut, so everything stands between y 150 and 560.
  * @type {Record<string, (p: Palette) => string>}
  */
 const GROUND = {
@@ -484,16 +485,16 @@ const GROUND = {
     const rnd = seeded(41);
     let out = flowers(rnd, 120, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 20, 660);
     // at the left: a house with its fence and tree, the well, a girl
-    out += tree(-90, 330, 170, p) + house(70, 340, 1.7, '#b5452b', '#fdf8ee') + fence(-170, 250, 380) + tree(250, 300, 120, p);
-    out += well(330, 470);
+    out += tree(-160, 330, 170, p) + house(-30, 340, 1.7, '#b5452b', '#fdf8ee') + fence(-200, 110, 380) + tree(130, 300, 120, p);
+    out += well(150, 480);
     // a girl with a balloon
-    out += `<path d="M${r1(150 + 22 * 1.15)} ${r1(600 - 108 * 1.15)} Q190 420 205 380" stroke="#4a4f5a" stroke-width="1.6" fill="none"/>`
-      + `<ellipse cx="205" cy="352" rx="24" ry="29" fill="#e53935"/><path d="M200 380 l5 -6 l5 6Z" fill="#c62828"/><ellipse cx="197" cy="342" rx="6" ry="9" fill="#fff" opacity=".35"/>`
-      + child(150, 600, { shirt: '#7e57c2', hair: '#f2c14e', pose: 'up', girl: true, s: 1.15 });
+    out += `<path d="M${r1(40 + 22 * 1.15)} ${r1(545 - 108 * 1.15)} Q80 380 95 330" stroke="#4a4f5a" stroke-width="1.6" fill="none"/>`
+      + `<ellipse cx="95" cy="302" rx="24" ry="29" fill="#e53935"/><path d="M90 330 l5 -6 l5 6Z" fill="#c62828"/><ellipse cx="87" cy="292" rx="6" ry="9" fill="#fff" opacity=".35"/>`
+      + child(40, 545, { shirt: '#7e57c2', hair: '#f2c14e', pose: 'up', girl: true, s: 1.15 });
     // at the right: a haystack, sunflowers, a boy waving and a tree
-    out += tree(1720, 320, 160, p) + haystack(1330, 400, 1.2);
-    out += sunflower(1460, 600, 190, -6) + sunflower(1505, 600, 160, 4) + sunflower(1550, 600, 200, 8);
-    out += child(1660, 620, { shirt: '#43a047', hair: '#5b3a26', pose: 'wave', s: 1.15, flip: true });
+    out += tree(1770, 320, 160, p) + haystack(1430, 420, 1.2);
+    out += sunflower(1550, 600, 200, -6) + sunflower(1595, 600, 170, 4) + sunflower(1640, 600, 210, 8);
+    out += child(1730, 545, { shirt: '#43a047', hair: '#5b3a26', pose: 'wave', s: 1.15, flip: true });
     return out;
   },
 };

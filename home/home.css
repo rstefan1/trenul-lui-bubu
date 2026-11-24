@@ -142,13 +142,13 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 12px;
+  bottom: 8px;
   height: 34px;
   background:
-    radial-gradient(circle at 14% 50%, #e3e7ec 0 3px, #2b3038 3.5px 5px, #b8261f 5.5px 11px, #2b3038 11.5px 15px, transparent 15.5px),
-    radial-gradient(circle at 30% 50%, #e3e7ec 0 3px, #2b3038 3.5px 5px, #b8261f 5.5px 11px, #2b3038 11.5px 15px, transparent 15.5px),
-    radial-gradient(circle at 70% 50%, #e3e7ec 0 3px, #2b3038 3.5px 5px, #b8261f 5.5px 11px, #2b3038 11.5px 15px, transparent 15.5px),
-    radial-gradient(circle at 86% 50%, #e3e7ec 0 3px, #2b3038 3.5px 5px, #b8261f 5.5px 11px, #2b3038 11.5px 15px, transparent 15.5px);
+    radial-gradient(circle at 14% 50%, #c8ced8 0 4px, #59606b 4.5px 10px, #2b3038 10.5px 15px, transparent 15.5px),
+    radial-gradient(circle at 30% 50%, #c8ced8 0 4px, #59606b 4.5px 10px, #2b3038 10.5px 15px, transparent 15.5px),
+    radial-gradient(circle at 70% 50%, #c8ced8 0 4px, #59606b 4.5px 10px, #2b3038 10.5px 15px, transparent 15.5px),
+    radial-gradient(circle at 86% 50%, #c8ced8 0 4px, #59606b 4.5px 10px, #2b3038 10.5px 15px, transparent 15.5px);
 }
 .route-item::after {
   content: "";
@@ -164,35 +164,55 @@ body {
 }
 .route-item[hidden] { display: none; }
 
-/* a journey's card: a warm paper ticket with a thick white edge, its
-   picture framed inside, its name and its two stations joined like on a
-   railway map, and one big button */
+/* a journey's card is a passenger car, like the ones drawn in the
+   landscape: a grey roof, a green body with a gold line, the picture as its
+   big window and the words on a cream board; it stands on its wheels */
 .route-card {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 4px);
-  overflow: hidden;
-  background: linear-gradient(#fffdf7, #fff4dc);
+  height: calc(100% - 18px);
+  margin-top: 14px;
+  padding: 10px 10px 12px;
+  background: linear-gradient(#3f9c66, #2e7d4f 55%, #22603c);
   color: var(--ink);
-  border: 4px solid #fff;
-  border-radius: 28px;
-  box-shadow: 0 7px 0 rgba(30, 70, 25, .3), 0 16px 30px rgba(20, 50, 20, .22);
+  border-radius: 14px 14px 10px 10px;
+  box-shadow: inset 0 -8px 0 #1b4a30, 0 12px 22px rgba(20, 50, 20, .25);
   text-decoration: none;
 }
-.route-card:hover, .route-card:focus-visible { transform: translateY(-4px); }
-.route-card:active { transform: translateY(2px); }
-.route-card:hover .route-go, .route-card:focus-visible .route-go { filter: brightness(1.08); }
-.route-card:focus-visible { outline: 5px solid var(--gold); outline-offset: 3px; }
-.route-card--plain { padding: 20px; font-size: 20px; font-weight: 700; }
+/* the roof */
+.route-card::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  top: -14px;
+  height: 22px;
+  border-radius: 16px 16px 5px 5px;
+  background: linear-gradient(#6b7480, #3a4049);
+}
+/* the gold line along the body */
+.route-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  height: 3px;
+  background: #f0c75e;
+}
+.route-card:hover .route-go, .route-card:focus-visible .route-go { filter: brightness(1.07); }
+.route-card:focus-visible { outline: 5px solid var(--gold); outline-offset: 6px; }
+.route-card--plain { padding: 20px; font-size: 20px; font-weight: 700; color: #fff; }
 
+/* the big window: the picture of the journey, in a dark green frame */
 .route-pic {
   position: relative;
-  margin: 8px 8px 0;
   aspect-ratio: 2 / 1;
   overflow: hidden;
-  border-radius: 21px;
+  border: 4px solid #1b4a30;
+  border-radius: 12px;
   background: var(--night-2);
 }
 .route-pic svg { display: block; width: 100%; height: 100%; }
@@ -227,13 +247,20 @@ body {
   box-shadow: 0 3px 0 rgba(0, 0, 0, .18);
 }
 
+/* the cream board with the words, in a gold frame */
 .route-body {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 10px 16px 16px;
+  margin: 10px 0 14px;
+  padding: 10px 14px 14px;
+  border: 3px solid #f0c75e;
+  border-radius: 12px;
+  background: #fff8e6;
   text-align: center;
 }
 .route-title { margin: 0; font-size: clamp(23px, 2.8vw, 27px); font-weight: 800; line-height: 1.05; color: var(--red); }
@@ -287,13 +314,22 @@ body {
   align-self: stretch;
   margin-top: auto;
   padding: 7px 16px 9px;
-  border-radius: 18px;
-  background: linear-gradient(#55cf82, var(--green) 55%, var(--green-dark));
-  color: #fff;
+  border-radius: 16px;
+  background: linear-gradient(#ffe684, var(--gold) 55%, #eaa900);
+  color: var(--ink);
   font-size: 20px;
   font-weight: 800;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, .2);
-  box-shadow: 0 5px 0 #155a30, inset 0 2px 0 rgba(255, 255, 255, .35);
+  box-shadow: 0 5px 0 #a87400, inset 0 2px 0 rgba(255, 255, 255, .5);
+}
+
+/* wider screens: the car lies long, like a real one: the window at the
+   left, the board at the right; the journeys make a train, one car under
+   the other */
+@media (min-width: 720px) {
+  .route-list { grid-template-columns: minmax(0, 660px); }
+  .route-card { flex-direction: row; align-items: stretch; gap: 12px; padding: 12px 12px 14px; }
+  .route-pic { flex: 0 0 46%; align-self: center; aspect-ratio: 16 / 10; margin-bottom: 14px; }
+  .route-body { margin: 0 0 14px; }
 }
 
 /* hidden on the screen, read by screen readers */
