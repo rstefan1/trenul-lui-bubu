@@ -446,14 +446,20 @@ const THINGS = {
     foreground: () => {
       const rnd = seeded(11);
       let out = flowers(rnd, 50, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 852, 90, LX0, LX1);
-      // children right under the track, waving at the train
-      out += child(430, 932, { shirt: '#26a69a', hair: '#c0612b', pose: 'up', s: 0.88 });
-      out += child(560, 934, { shirt: '#ec407a', hair: '#5b3a26', pose: 'wave', girl: true, s: 0.88 });
-      out += child(700, 932, { shirt: '#ffcf3f', hair: '#2b2f38', pose: 'wave', s: 0.88, flip: true });
-      out += child(860, 934, { shirt: '#7e57c2', hair: '#f2c14e', pose: 'catch', girl: true, s: 0.88 });
-      out += `<circle cx="860" cy="${r1(934 - 120 * 0.88)}" r="13" fill="#fff" stroke="#2b2f38" stroke-width="2.5"/><path d="M851 ${r1(934 - 126 * 0.88)} q9 5 18 0" stroke="#e53935" stroke-width="3" fill="none" stroke-linecap="round"/>`;
-      out += child(1010, 932, { shirt: '#ff7043', hair: '#3b2617', pose: 'wave', s: 0.88 });
-      out += child(1150, 934, { shirt: '#42a5f5', hair: '#5b3a26', pose: 'up', girl: true, s: 0.88, flip: true });
+      // children all along the line, right under the track, waving at the train
+      const shirts = ['#26a69a', '#ec407a', '#ffcf3f', '#7e57c2', '#ff7043', '#42a5f5', '#43a047', '#e53935'];
+      const hairs = ['#c0612b', '#5b3a26', '#2b2f38', '#f2c14e', '#3b2617'];
+      const poses = /** @type {const} */ (['wave', 'up', 'wave', 'catch', 'wave', 'up', 'kick']);
+      for (let i = 0, x = LX0 + 110; x < LX1; i++, x += 230) {
+        const pose = poses[i % poses.length];
+        out += child(x, 932 + (i % 2) * 3, { shirt: shirts[i % shirts.length], hair: hairs[i % hairs.length], pose, girl: i % 2 === 1, s: 0.88, flip: i % 3 === 2 });
+        if (pose === 'catch') {
+          out += `<circle cx="${x}" cy="${r1(932 - 120 * 0.88)}" r="13" fill="#fff" stroke="#2b2f38" stroke-width="2.5"/><path d="M${x - 9} ${r1(932 - 126 * 0.88)} q9 5 18 0" stroke="#e53935" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+        }
+        if (pose === 'kick') {
+          out += `<circle cx="${x + 46}" cy="922" r="11" fill="#fff" stroke="#2b2f38" stroke-width="2.5"/>`;
+        }
+      }
       return out;
     },
   },
