@@ -7,7 +7,7 @@
  */
 
 import { el } from '../shared/js/ui/dom.js';
-import { landscape } from './landscape.js';
+import { landscape, meadow } from './landscape.js';
 import { ROUTES } from './routes.js';
 
 /**
@@ -163,5 +163,7 @@ const filter = seasonFilter(list);
 if (filter) list.before(filter);
 
 const scenery = /** @type {HTMLElement} */ (document.getElementById('scene'));
-// the SVG is built from fixed values (no text from outside goes into it)
-scenery.innerHTML = landscape(/** @type {Season} */ (document.documentElement.dataset.season || 'summer'));
+// the SVGs are built from fixed values (no text from outside goes into them)
+const season = /** @type {Season} */ (document.documentElement.dataset.season || 'summer');
+scenery.innerHTML = landscape(season);
+/** @type {HTMLElement} */ (document.getElementById('meadow')).innerHTML = meadow(season);

@@ -128,7 +128,7 @@ function church(/** @type {number} */ x, /** @type {number} */ y) {
 }
 
 /** A child standing with feet at (x, y), about 100 tall at scale 1. */
-function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shirt: string, hair: string, skin?: string, legs?: string, pose?: 'wave' | 'up' | 'catch' | 'kick' | 'sit', girl?: boolean, s?: number, flip?: boolean}} */ o) {
+function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shirt: string, hair: string, skin?: string, legs?: string, pose?: 'wave' | 'up' | 'catch' | 'kick' | 'sit' | 'rope', girl?: boolean, s?: number, flip?: boolean}} */ o) {
   const s = o.s ?? 1;
   const skin = o.skin ?? '#f6c9a0';
   const legs = o.legs ?? '#3a5ba8';
@@ -142,6 +142,7 @@ function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shi
     catch: [[-24, 96], [24, 96]],
     kick: [[-26, 70], [26, 62]],
     sit: [[-22, 40], [22, 40]],
+    rope: [[-26, 58], [26, 58]],
   }[pose];
   const feet = pose === 'kick' ? [[-8, 0], [26, 16]] : [[-9, 0], [9, 0]];
   const line = (/** @type {number[]} */ a, /** @type {number[]} */ b, /** @type {string} */ c, /** @type {number} */ w) =>
@@ -201,12 +202,12 @@ function sunflower(/** @type {number} */ x, /** @type {number} */ y, /** @type {
 }
 
 /** Small flowers spread over the meadow. */
-function flowers(/** @type {() => number} */ rnd, /** @type {number} */ count, /** @type {string[]} */ colors) {
+function flowers(/** @type {() => number} */ rnd, /** @type {number} */ count, /** @type {string[]} */ colors, top = 850, depth = 145) {
   let out = '';
   for (let i = 0; i < count; i++) {
     const x = X0 + rnd() * (X1 - X0);
-    const y = 850 + rnd() * 145;
-    const k = 0.6 + (y - 850) / 145;           // bigger in front
+    const y = top + rnd() * depth;
+    const k = 0.6 + (y - top) / depth;         // bigger in front
     const c = colors[Math.floor(rnd() * colors.length)];
     out += `<path d="M${r1(x)} ${r1(y)} v${r1(10 * k)}" stroke="#3f8f34" stroke-width="${r1(2 * k)}"/>`
       + `<circle cx="${r1(x)}" cy="${r1(y)}" r="${r1(5 * k)}" fill="${c}"/>`
@@ -499,6 +500,46 @@ const THINGS = {
     },
   },
 };
+
+/**
+ * The meadow under the journeys, continuing the landscape (2000 × 300, x
+ * from -200 to 1800, cut like the landscape: the middle is always seen).
+ * @type {Record<string, (p: Palette) => string>}
+ */
+const MEADOW = {
+  summer: p => {
+    const rnd = seeded(23);
+    const hill = (/** @type {number} */ x) => 160 + 26 * Math.sin(x / 240 + 1) + 14 * Math.sin(x / 97);
+    let out = `<path d="${ridge(hill, 300)}" fill="${p.hills[0]}"/>`;
+    // the edge of the village on the hill, at both sides
+    const roofs = ['#b5452b', '#c0612b', '#8f3a24'];
+    for (const [i, x] of [180, 320, 1290, 1430].entries()) {
+      out += tree(x - 46, hill(x - 46) + 26, 70 + rnd() * 16, p) + house(x, hill(x) + 28, 1 + rnd() * 0.15, roofs[i % roofs.length], '#fdf8ee');
+    }
+    out += tree(640, hill(640) + 30, 84, p) + tree(1040, hill(1040) + 30, 76, p);
+    // the meadow in front, the colour of the page under it
+    out += `<path d="${ridge(x => 258 + 6 * Math.sin(x / 150), 300)}" fill="${p.meadowDark}"/>`;
+    out += flowers(rnd, 40, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0'], 262, 30);
+    // a haystack, a girl skipping rope, a boy waving, sunflowers
+    out += haystack(540, 288, 0.95);
+    out += child(780, 270, { shirt: '#ffcf3f', hair: '#3b2617', pose: 'rope', girl: true, s: 1.05 })
+      + `<path d="M${r1(780 - 26 * 1.05)} ${r1(270 - 58 * 1.05)} Q780 ${r1(2 * 290 - (270 - 58 * 1.05))} ${r1(780 + 26 * 1.05)} ${r1(270 - 58 * 1.05)}" stroke="#e53935" stroke-width="3" fill="none"/>`
+      + `<ellipse cx="780" cy="290" rx="20" ry="4" fill="#2b2f38" opacity=".15"/>`;
+    out += child(990, 290, { shirt: '#42a5f5', hair: '#c0612b', pose: 'wave', s: 1.05, flip: true });
+    out += sunflower(1110, 305, 170, -6) + sunflower(1150, 305, 140, 6);
+    return out;
+  },
+};
+
+/**
+ * The meadow under the journeys, as SVG markup (fixed values only).
+ * @param {Season} season
+ */
+export function meadow(season) {
+  const p = PALETTES[season] ?? PALETTES.summer;
+  const draw = MEADOW[season] ?? MEADOW.summer;
+  return `<svg viewBox="${X0} 0 ${X1 - X0} 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">${draw(p)}</svg>`;
+}
 
 /* ---------------------------------------------------------------------------
  * The picture
