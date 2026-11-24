@@ -164,16 +164,6 @@ function child(/** @type {number} */ x, /** @type {number} */ y, /** @type {{shi
     + `</g>`;
 }
 
-/** A child's head and waving hand in a train window centred at (x, y). */
-function passenger(/** @type {number} */ x, /** @type {number} */ y, /** @type {string} */ hair, /** @type {string} */ shirt, wave = false) {
-  return `<g>`
-    + `<rect x="${x - 10}" y="${y + 4}" width="20" height="12" rx="5" fill="${shirt}"/>`
-    + `<circle cx="${x}" cy="${y - 2}" r="9" fill="#f6c9a0"/>`
-    + `<path d="M${x - 9} ${y - 2} A9 9 0 0 1 ${x + 9} ${y - 2} Q${x} ${y - 6} ${x - 9} ${y - 2}Z" fill="${hair}"/>`
-    + (wave ? `<path d="M${x + 9} ${y + 8} L${x + 20} ${y - 14}" stroke="#f6c9a0" stroke-width="6" stroke-linecap="round"/>` : '')
-    + `</g>`;
-}
-
 /** A haystack (căpiță) with its base at (x, y). */
 function haystack(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s) {
   const w = 52 * s;
@@ -278,86 +268,177 @@ function station() {
     + `</g>`;
 }
 
-/** A wheel with spokes, centred at (x, y). */
-function wheel(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ r, /** @type {string} */ color) {
-  let spokes = '';
-  for (let i = 0; i < 4; i++) {
-    const a = (i * Math.PI) / 4;
-    spokes += `M${r1(x - Math.cos(a) * r * 0.8)} ${r1(y - Math.sin(a) * r * 0.8)} L${r1(x + Math.cos(a) * r * 0.8)} ${r1(y + Math.sin(a) * r * 0.8)} `;
-  }
-  return `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}" stroke="#2b2f38" stroke-width="5"/>`
-    + `<path d="${spokes}" stroke="#2b2f38" stroke-width="3"/>`
-    + `<circle cx="${x}" cy="${y}" r="${r1(r * 0.25)}" fill="#ffcf3f" stroke="#2b2f38" stroke-width="2"/>`;
+/** The shading of the train (gradients, defined once). */
+function trainDefs() {
+  const v = (/** @type {string} */ id, /** @type {string[]} */ stops) =>
+    `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${stops.map((c, i) => `<stop offset="${r1(i / (stops.length - 1))}" stop-color="${c}"/>`).join('')}</linearGradient>`;
+  return `<defs>`
+    + v('tr-car', ['#3f9c66', '#2e7d4f', '#22603c'])
+    + v('tr-roof', ['#6b7480', '#3a4049'])
+    + v('tr-glass', ['#eef8ff', '#bfdff2'])
+    + v('tr-cab', ['#e2463f', '#c62d26', '#9c1f19'])
+    + v('tr-boiler', ['#2f8a5e', '#1f6e4a', '#164f35', '#1f6e4a'])
+    + v('tr-smokebox', ['#4a525c', '#2b3038', '#3a4049'])
+    + v('tr-brass', ['#f7dc8c', '#d4a43c', '#a87a22'])
+    + v('tr-steel', ['#e3e7ec', '#9aa3ad'])
+    + v('tr-smoke', ['#ffffff', '#dfe7ef'])
+    + `</defs>`;
 }
 
-/** A passenger car whose left end is at x. */
-function car(/** @type {number} */ x, /** @type {number} */ w, /** @type {string} */ body, /** @type {string} */ roof, /** @type {string} */ people) {
-  let windows = '';
-  const n = 3;
-  const gap = (w - n * 34) / (n + 1);
-  for (let i = 0; i < n; i++) {
-    windows += `<rect x="${r1(x + gap + i * (34 + gap))}" y="${RAIL - 124}" width="34" height="32" rx="6" fill="#d7efff"/>`;
+/** A car wheel (small, solid, with its tyre), centred at (x, y). */
+function carWheel(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ r) {
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="#2b3038"/>`
+    + `<circle cx="${x}" cy="${y}" r="${r1(r * 0.72)}" fill="#59606b"/>`
+    + `<circle cx="${x}" cy="${y}" r="${r1(r * 0.28)}" fill="#c8ced8"/>`;
+}
+
+/** A driving wheel of the engine, with fine spokes and a counterweight, centred at (x, y). */
+function driveWheel(/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ r) {
+  let spokes = '';
+  for (let i = 0; i < 12; i++) {
+    const a = (i * Math.PI) / 6;
+    spokes += `M${r1(x + Math.cos(a) * r * 0.24)} ${r1(y + Math.sin(a) * r * 0.24)} L${r1(x + Math.cos(a) * r * 0.8)} ${r1(y + Math.sin(a) * r * 0.8)} `;
   }
+  const cw = r * 0.8;
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="#2b3038"/>`
+    + `<circle cx="${x}" cy="${y}" r="${r1(r * 0.84)}" fill="#b8261f"/>`
+    + `<path d="${spokes}" stroke="#2b3038" stroke-width="2.4"/>`
+    + `<path d="M${r1(x - cw * 0.87)} ${r1(y - cw * 0.5)} A${r1(cw)} ${r1(cw)} 0 0 1 ${r1(x + cw * 0.87)} ${r1(y - cw * 0.5)} Q${x} ${r1(y - cw * 0.2)} ${r1(x - cw * 0.87)} ${r1(y - cw * 0.5)}Z" fill="#8f1c16"/>`
+    + `<circle cx="${x}" cy="${y}" r="${r1(r * 0.2)}" fill="url(#tr-steel)" stroke="#2b3038" stroke-width="1.5"/>`;
+}
+
+/** A child's head and shoulders in a train window (drawn inside the window). */
+function passenger(/** @type {number} */ w, /** @type {number} */ h, /** @type {string} */ hair, /** @type {string} */ shirt) {
+  const cx = w / 2;
+  return `<rect x="${cx - 9}" y="${h - 6}" width="18" height="10" rx="5" fill="${shirt}"/>`
+    + `<circle cx="${cx}" cy="${h - 13}" r="7" fill="#f6c9a0"/>`
+    + `<path d="M${cx - 7} ${h - 13} A7 7 0 0 1 ${cx + 7} ${h - 13} Q${cx} ${h - 16} ${cx - 7} ${h - 13}Z" fill="${hair}"/>`;
+}
+
+/**
+ * A passenger car whose left end is at x.
+ * @param {number} x
+ * @param {number} w
+ * @param {Array<[string, string] | null>} people  hair and shirt of the child in every window (null: empty)
+ */
+function car(x, w, people) {
+  const top = RAIL - 132;
+  const bottom = RAIL - 50;
+  const winW = 26;
+  const winH = 24;
+  const doorW = 14;
+  const inner = w - 2 * (doorW + 8);
+  const gap = (inner - people.length * winW) / (people.length + 1);
+  let windows = '';
+  people.forEach((who, i) => {
+    const wx = r1(x + doorW + 8 + gap + i * (winW + gap));
+    const wy = top + 14;
+    windows += `<svg x="${wx}" y="${wy}" width="${winW}" height="${winH}"><rect width="${winW}" height="${winH}" fill="url(#tr-glass)"/>${who ? passenger(winW, winH, who[0], who[1]) : ''}<path d="M0 ${winH * 0.7} L${winW * 0.7} 0 H${winW} L0 ${winH}Z" fill="#fff" opacity=".18"/></svg>`
+      + `<rect x="${wx}" y="${wy}" width="${winW}" height="${winH}" rx="3" fill="none" stroke="#1b4a30" stroke-width="2.5"/>`;
+  });
+  const door = (/** @type {number} */ dx) =>
+    `<rect x="${dx}" y="${top + 8}" width="${doorW}" height="${bottom - top - 10}" rx="2" fill="none" stroke="#1b4a30" stroke-width="1.6"/>`
+    + `<rect x="${dx + 3}" y="${top + 14}" width="${doorW - 6}" height="16" rx="2" fill="url(#tr-glass)" stroke="#1b4a30" stroke-width="1.2"/>`;
+  const bogie = (/** @type {number} */ bx) =>
+    `<rect x="${bx - 8}" y="${RAIL - 42}" width="16" height="14" fill="#2b3038"/>`
+    + carWheel(bx - 15, RAIL - 12, 12) + carWheel(bx + 15, RAIL - 12, 12)
+    + `<rect x="${bx - 28}" y="${RAIL - 30}" width="56" height="10" rx="3" fill="#3a4049"/>`
+    + `<circle cx="${bx - 15}" cy="${RAIL - 12}" r="3" fill="#c8ced8"/><circle cx="${bx + 15}" cy="${RAIL - 12}" r="3" fill="#c8ced8"/>`;
   return `<g>`
-    + `<rect x="${x + 18}" y="${RAIL - 44}" width="${w - 36}" height="16" rx="4" fill="#2b2f38"/>`
-    + `<rect x="${x}" y="${RAIL - 138}" width="${w}" height="84" rx="10" fill="${body}"/>`
-    + `<rect x="${x - 4}" y="${RAIL - 150}" width="${w + 8}" height="18" rx="9" fill="${roof}"/>`
-    + `<rect x="${x}" y="${RAIL - 80}" width="${w}" height="7" fill="#fdf1d6"/>`
+    + bogie(x + 32) + bogie(x + w - 32)
+    + `<rect x="${x + 4}" y="${bottom}" width="${w - 8}" height="10" fill="#2b3038"/>`
+    + `<rect x="${x - 6}" y="${bottom - 2}" width="8" height="6" rx="2" fill="#59606b"/><rect x="${x + w - 2}" y="${bottom - 2}" width="8" height="6" rx="2" fill="#59606b"/>`
+    + `<rect x="${x}" y="${top}" width="${w}" height="${bottom - top}" rx="5" fill="url(#tr-car)"/>`
+    + `<rect x="${x}" y="${top + 46}" width="${w}" height="3" fill="#f0c75e"/>`
+    + `<rect x="${x}" y="${top + 52}" width="${w}" height="1.5" fill="#f0c75e" opacity=".7"/>`
+    + `<rect x="${x}" y="${bottom - 6}" width="${w}" height="6" fill="#1b4a30"/>`
+    + door(x + 6) + door(x + w - 6 - doorW)
     + windows
-    + people
-    + wheel(x + 30, RAIL - 16, 16, '#4a4f5a')
-    + wheel(x + w - 30, RAIL - 16, 16, '#4a4f5a')
+    + `<path d="M${x - 3} ${top + 2} Q${x - 2} ${top - 12} ${x + 14} ${top - 13} H${x + w - 14} Q${x + w + 2} ${top - 12} ${x + w + 3} ${top + 2}Z" fill="url(#tr-roof)"/>`
+    + `<rect x="${x + w * 0.3 - 7}" y="${top - 18}" width="14" height="6" rx="2" fill="#3a4049"/><rect x="${x + w * 0.7 - 7}" y="${top - 18}" width="14" height="6" rx="2" fill="#3a4049"/>`
+    + `</g>`;
+}
+
+/** The coal tender behind the engine, its left end at x. */
+function tender(/** @type {number} */ x) {
+  const w = 66;
+  const top = RAIL - 112;
+  return `<g>`
+    + `<rect x="${x + 4}" y="${RAIL - 48}" width="${w - 8}" height="18" fill="#2b3038"/>`
+    + carWheel(x + 17, RAIL - 13, 13) + carWheel(x + w - 17, RAIL - 13, 13)
+    + `<rect x="${x + 2}" y="${RAIL - 30}" width="${w - 4}" height="10" rx="3" fill="#3a4049"/>`
+    + `<path d="M${x + 6} ${top + 2} Q${x + 16} ${top - 14} ${x + 30} ${top - 8} Q${x + 44} ${top - 18} ${x + w - 6} ${top + 2}Z" fill="#2b2f38"/>`
+    + `<rect x="${x}" y="${top}" width="${w}" height="${RAIL - 50 - top}" rx="4" fill="url(#tr-boiler)"/>`
+    + `<rect x="${x + 7}" y="${top + 10}" width="${w - 14}" height="${RAIL - 72 - top}" rx="3" fill="none" stroke="#f0c75e" stroke-width="2"/>`
+    + `<rect x="${x}" y="${RAIL - 56}" width="${w}" height="8" fill="#2b3038"/>`
     + `</g>`;
 }
 
 /** The steam engine, its cab's left side at x (it goes to the right). */
 function engine(/** @type {number} */ x) {
-  const X = (/** @type {number} */ dx) => x + dx;
-  const Y = (/** @type {number} */ dy) => RAIL - dy;
+  const X = (/** @type {number} */ dx) => r1(x + dx);
+  const Y = (/** @type {number} */ dy) => r1(RAIL - dy);
   return `<g>`
-    + `<rect x="${X(0)}" y="${Y(64)}" width="232" height="18" rx="4" fill="#2b2f38"/>`
-    + `<rect x="${X(70)}" y="${Y(120)}" width="160" height="60" rx="28" fill="#1f6e4a"/>`
-    + `<rect x="${X(112)}" y="${Y(120)}" width="8" height="60" fill="#ffcf3f"/>`
-    + `<rect x="${X(162)}" y="${Y(120)}" width="8" height="60" fill="#ffcf3f"/>`
-    + `<path d="M${X(130)} ${Y(118)} a18 18 0 0 1 36 0Z" fill="#ffcf3f"/>`
-    + `<rect x="${X(182)}" y="${Y(160)}" width="26" height="44" fill="#263238"/>`
-    + `<rect x="${X(175)}" y="${Y(170)}" width="40" height="15" rx="5" fill="#263238"/>`
-    + `<circle cx="${X(228)}" cy="${Y(90)}" r="30" fill="#263238"/>`
-    + `<circle cx="${X(234)}" cy="${Y(110)}" r="10" fill="#fff6b0" stroke="#2b2f38" stroke-width="3"/>`
-    + `<path d="M${X(230)} ${Y(64)} L${X(258)} ${Y(4)} L${X(222)} ${Y(4)}Z" fill="#d8382f" stroke="#2b2f38" stroke-width="3" stroke-linejoin="round"/>`
-    + `<rect x="${X(-4)}" y="${Y(168)}" width="92" height="120" rx="8" fill="#d8382f"/>`
-    + `<rect x="${X(-16)}" y="${Y(182)}" width="116" height="20" rx="8" fill="#8f231d"/>`
-    + `<rect x="${X(12)}" y="${Y(150)}" width="60" height="50" rx="10" fill="#d7efff"/>`
-    + `<image href="shared/assets/bubu.webp" x="${X(10)}" y="${Y(158)}" width="64" height="64" clip-path="url(#cab-window)"/>`
-    + `<rect x="${X(12)}" y="${Y(150)}" width="60" height="50" rx="10" fill="none" stroke="#fff" stroke-width="4"/>`
-    + `<rect x="${X(-4)}" y="${Y(80)}" width="92" height="8" fill="#ffcf3f"/>`
-    + `<rect x="${X(130)}" y="${Y(36)}" width="78" height="8" rx="4" fill="#9aa3ad" stroke="#2b2f38" stroke-width="2"/>`
-    + wheel(X(36), RAIL - 22, 22, '#c62828')
-    + wheel(X(134), RAIL - 32, 32, '#c62828')
-    + wheel(X(204), RAIL - 32, 32, '#c62828')
-    + `<rect x="${X(130)}" y="${Y(36)}" width="78" height="8" rx="4" fill="#9aa3ad" stroke="#2b2f38" stroke-width="2"/>`
-    + `</g>`
-    + `<defs><clipPath id="cab-window"><rect x="${X(12)}" y="${Y(150)}" width="60" height="50" rx="10"/></clipPath></defs>`;
+    // wheels and frame
+    + carWheel(X(36), RAIL - 17, 17)
+    + carWheel(X(226), RAIL - 14, 14)
+    + `<rect x="${X(10)}" y="${Y(52)}" width="232" height="14" rx="3" fill="#2b3038"/>`
+    + driveWheel(X(104), RAIL - 30, 30)
+    + driveWheel(X(170), RAIL - 30, 30)
+    // cylinder, rods
+    + `<rect x="${X(196)}" y="${Y(66)}" width="48" height="24" rx="5" fill="#3a4049"/><rect x="${X(196)}" y="${Y(62)}" width="48" height="4" fill="#6b7480"/>`
+    + `<path d="M${X(170)} ${Y(18)} L${X(208)} ${Y(52)}" stroke="url(#tr-steel)" stroke-width="6" stroke-linecap="round"/>`
+    + `<rect x="${X(100)}" y="${Y(21)}" width="74" height="6" rx="3" fill="url(#tr-steel)" stroke="#59606b" stroke-width="1"/>`
+    + `<circle cx="${X(104)}" cy="${Y(18)}" r="3.5" fill="#2b3038"/><circle cx="${X(170)}" cy="${Y(18)}" r="3.5" fill="#2b3038"/>`
+    // running board with its red valance
+    + `<rect x="${X(76)}" y="${Y(76)}" width="170" height="6" fill="#2b3038"/>`
+    + `<rect x="${X(76)}" y="${Y(70)}" width="170" height="6" fill="#b8261f"/>`
+    // boiler with brass bands and a handrail
+    + `<rect x="${X(80)}" y="${Y(138)}" width="138" height="62" fill="url(#tr-boiler)"/>`
+    + [104, 140, 178].map(d => `<rect x="${X(d)}" y="${Y(138)}" width="4" height="62" fill="url(#tr-brass)"/>`).join('')
+    + `<path d="M${X(84)} ${Y(120)} H${X(214)}" stroke="#d4a43c" stroke-width="2"/>`
+    // domes and chimney
+    + `<path d="M${X(116)} ${Y(137)} Q${X(116)} ${Y(152)} ${X(124)} ${Y(152)} Q${X(132)} ${Y(152)} ${X(132)} ${Y(137)}Z" fill="url(#tr-boiler)"/>`
+    + `<path d="M${X(148)} ${Y(137)} Q${X(148)} ${Y(162)} ${X(160)} ${Y(162)} Q${X(172)} ${Y(162)} ${X(172)} ${Y(137)}Z" fill="url(#tr-brass)"/>`
+    + `<path d="M${X(212)} ${Y(140)} L${X(214)} ${Y(170)} L${X(207)} ${Y(180)} H${X(237)} L${X(230)} ${Y(170)} L${X(232)} ${Y(140)}Z" fill="url(#tr-smokebox)"/>`
+    + `<rect x="${X(206)}" y="${Y(184)}" width="32" height="6" rx="2" fill="url(#tr-brass)"/>`
+    // smokebox, its door and the lamp
+    + `<rect x="${X(214)}" y="${Y(142)}" width="30" height="68" rx="4" fill="url(#tr-smokebox)"/>`
+    + `<ellipse cx="${X(244)}" cy="${Y(108)}" rx="5" ry="32" fill="#2b3038"/>`
+    + `<rect x="${X(236)}" y="${Y(158)}" width="14" height="14" rx="3" fill="#2b3038"/><circle cx="${X(249)}" cy="${Y(151)}" r="5" fill="#fff4b0"/>`
+    // buffer beam and pilot
+    + `<rect x="${X(240)}" y="${Y(68)}" width="12" height="18" fill="#b8261f"/><rect x="${X(252)}" y="${Y(64)}" width="8" height="8" rx="2" fill="#59606b"/>`
+    + `<path d="M${X(240)} ${Y(50)} L${X(262)} ${Y(6)} H${X(222)} L${X(232)} ${Y(50)}Z" fill="#3a4049"/>`
+    + `<path d="M${X(238)} ${Y(46)} L${X(232)} ${Y(8)} M${X(246)} ${Y(40)} L${X(244)} ${Y(8)} M${X(254)} ${Y(24)} L${X(254)} ${Y(8)}" stroke="#2b3038" stroke-width="2"/>`
+    // the cab, with Bubu at the window
+    + `<rect x="${X(0)}" y="${Y(172)}" width="84" height="118" rx="3" fill="url(#tr-cab)"/>`
+    + `<rect x="${X(8)}" y="${Y(102)}" width="68" height="34" rx="3" fill="none" stroke="#f0c75e" stroke-width="2"/>`
+    + `<svg x="${X(14)}" y="${Y(156)}" width="48" height="44"><rect width="48" height="44" fill="url(#tr-glass)"/><image href="shared/assets/bubu.webp" x="-2" y="1" width="52" height="52"/></svg>`
+    + `<rect x="${X(14)}" y="${Y(156)}" width="48" height="44" rx="4" fill="none" stroke="#7a1a15" stroke-width="3"/>`
+    + `<path d="M${X(-8)} ${Y(170)} Q${X(-6)} ${Y(186)} ${X(12)} ${Y(186)} H${X(76)} Q${X(94)} ${Y(186)} ${X(94)} ${Y(170)}Z" fill="url(#tr-roof)"/>`
+    + `<rect x="${X(0)}" y="${Y(60)}" width="84" height="6" fill="#2b3038"/>`
+    + `</g>`;
 }
 
-/** The smoke of the engine, left behind it (still, like in a photo). */
+/** The steam of the engine, left behind it (still, like in a photo). */
 function smoke(/** @type {number} */ x) {
-  const puffs = [[195, 190, 20], [168, 210, 24], [130, 224, 27], [88, 232, 24]];
-  return `<g fill="#ffffff" opacity=".92">${puffs.map(([dx, dy, r]) => `<circle cx="${x + dx}" cy="${RAIL - dy}" r="${r}"/>`).join('')}</g>`
-    + `<g fill="#e3ecf5">${puffs.map(([dx, dy, r]) => `<circle cx="${x + dx + r * 0.25}" cy="${RAIL - dy + r * 0.35}" r="${r1(r * 0.55)}"/>`).join('')}</g>`;
+  const puffs = [[222, 196, 16, 13], [204, 212, 22, 17], [176, 224, 28, 20], [140, 230, 30, 20], [104, 232, 24, 16]];
+  return `<g fill="url(#tr-smoke)" opacity=".9">${puffs.map(([dx, dy, rx, ry]) => `<ellipse cx="${x + dx}" cy="${RAIL - dy}" rx="${rx}" ry="${ry}"/>`).join('')}</g>`;
 }
 
-/** The whole train: two cars full of children and the engine with Bubu, in the middle of the picture. */
+/** The whole train: two cars full of children, the tender and the engine with Bubu, in the middle of the picture. */
 function train() {
-  const carW = 150;
-  const left = 508;
-  const enginex = left + 2 * (carW + 12) + 4;
-  const p1 = passenger(left + 30, RAIL - 108, '#5b3a26', '#ff8a3d') + passenger(left + 75, RAIL - 108, '#f2c14e', '#7e57c2', true) + passenger(left + 120, RAIL - 108, '#2b2f38', '#26a69a');
-  const p2 = passenger(left + carW + 12 + 30, RAIL - 108, '#c0612b', '#ec407a', true) + passenger(left + carW + 12 + 120, RAIL - 108, '#3b2617', '#42a5f5', true);
-  return smoke(enginex)
-    + `<path d="M${left + carW - 4} ${RAIL - 62} h20 M${left + 2 * carW + 8} ${RAIL - 62} h20" stroke="#2b2f38" stroke-width="7"/>`
-    + car(left, carW, '#2e7d4f', '#1d4f33', p1)
-    + car(left + carW + 12, carW, '#2e7d4f', '#1d4f33', p2)
+  const carW = 140;
+  const left = 486;
+  const car2 = left + carW + 10;
+  const tenderX = car2 + carW + 10;
+  const enginex = tenderX + 66 + 6;
+  return trainDefs()
+    + smoke(enginex)
+    + `<path d="M${left + carW} ${RAIL - 50} h10 M${car2 + carW} ${RAIL - 50} h10 M${tenderX + 66} ${RAIL - 50} h6" stroke="#2b3038" stroke-width="6"/>`
+    + car(left, carW, [['#5b3a26', '#ff8a3d'], ['#f2c14e', '#7e57c2'], ['#2b2f38', '#26a69a']])
+    + car(car2, carW, [['#c0612b', '#ec407a'], null, ['#3b2617', '#42a5f5']])
+    + tender(tenderX)
     + engine(enginex);
 }
 
@@ -408,8 +489,8 @@ const THINGS = {
       out += child(900, 965, { shirt: '#ff7043', hair: '#2b2f38', pose: 'kick', s: 1.05 });
       out += `<circle cx="985" cy="925" r="17" fill="#fff" stroke="#2b2f38" stroke-width="3"/><path d="M973 917 q12 6 24 0 M978 937 q8 -10 16 -2" stroke="#e53935" stroke-width="4" fill="none" stroke-linecap="round"/>`;
       // a big haystack and two tall sunflowers at the right
-      out += haystack(1250, 935, 1.05);
-      out += sunflower(1110, H + 10, 180, -6) + sunflower(1150, H + 10, 150, 6);
+      out += haystack(1330, 935, 1.05);
+      out += sunflower(1180, H + 10, 180, -6) + sunflower(1220, H + 10, 150, 6);
       return out;
     },
   },
