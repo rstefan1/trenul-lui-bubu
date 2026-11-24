@@ -8,6 +8,7 @@
  * geometry to draw the moving and glowing parts every frame.
  */
 
+import { LOADS, drawLoad } from '../gfx/cargo.js';
 import { drawFir, fillCircle, fillRoundRect, fillStar, roundRectPath } from '../gfx/shapes.js';
 import { TRACK_Y, WIRE_Y } from '../world/track.js';
 
@@ -28,7 +29,11 @@ const WIRE_H = TRACK_Y - WIRE_Y;
  * @property {{x: number, y: number} | null} headlight   only on the leading car
  * @property {{x: number, y: number} | null} taillight
  * @property {number} roofY                top edge of the body (garlands hang from it)
+ * @property {Partial<Record<LocoPart, Rect[]>>} [parts]  where the parts of a locomotive are
+ *                                         (the driver checks them before leaving)
  */
+
+/** @typedef {'headlights' | 'wheels' | 'brakes' | 'sandbox' | 'fuel' | 'horn'} LocoPart */
 
 /**
  * @callback CarPainter
@@ -410,9 +415,213 @@ function flatcar(c, car, pos) {
   return { windows: [], bubuWindow: null, wheels, headlight: null, taillight: pos.trailing ? { x: 4, y: -44 } : null, roofY: -60 };
 }
 
+/*
+ * The diesel freight locomotive: a long body with a cab at each end, two
+ * bogies of three axles, the fuel tank hanging between them, a sandbox above
+ * the front bogie, a horn on the roof and the air hose of the brakes at the
+ * back, where the wagons are coupled.
+ */
+/** Wheels of a bogie with three axles. */
+const AXLE = 38;
+/** Where the parts of the diesel locomotive are, for a length L (car coordinates). */
+const dieselLayout = (/** @type {number} */ L) => ({
+  wheels: [38, 38 + AXLE, 38 + 2 * AXLE, L - 38 - 2 * AXLE, L - 38 - AXLE, L - 38],
+  tank: /** @type {Rect} */ ([128, -36, L - 256, 28]),
+  sandbox: /** @type {Rect} */ ([L - 78, -66, 34, 26]),
+});
+
+/** @type {CarPainter} */
+function dieselLoco(c, car, pos) {
+  const L = car.length;
+  const top = -176;
+  const col = car.colors;
+  const { wheels, tank, sandbox } = dieselLayout(L);
+  // bogie frames, each over three wheels
+  for (const [a, b] of [[wheels[0], wheels[2]], [wheels[3], wheels[5]]]) {
+    fillRoundRect(c, a - 24, -WHEEL_R - 12, b - a + 48, 16, 6, '#3b4250');
+  }
+  drawBuffers(c, L, 1);
+  drawBuffers(c, 0, -1);
+
+  // the fuel tank between the bogies, with its filler cap and a level gauge
+  fillRoundRect(c, tank[0], tank[1], tank[2], tank[3], 8, '#2f3540');
+  c.fillStyle = 'rgba(255,255,255,0.12)';
+  c.fillRect(tank[0] + 6, tank[1] + 4, tank[2] - 12, 4);
+  fillRoundRect(c, tank[0] + 10, tank[1] - 5, 16, 8, 3, '#59606c');
+  fillRoundRect(c, tank[0] + tank[2] - 40, tank[1] + 9, 28, 11, 3, '#e8edf2');
+  c.fillStyle = '#2e9d57';
+  c.fillRect(tank[0] + tank[2] - 37, tank[1] + 12, 17, 5);
+
+  // body with rounded cab ends
+  c.fillStyle = col.body;
+  c.beginPath();
+  c.moveTo(0, BODY_BOTTOM);
+  c.lineTo(0, -126);
+  c.quadraticCurveTo(0, top, 26, top);
+  c.lineTo(L - 26, top);
+  c.quadraticCurveTo(L, top, L, -126);
+  c.lineTo(L, BODY_BOTTOM);
+  c.closePath();
+  c.fill();
+  c.fillStyle = 'rgba(0,0,0,0.12)';
+  c.fillRect(0, -62, L, 32);
+  c.fillStyle = '#2f3540';
+  c.fillRect(4, BODY_BOTTOM - 2, L - 8, 8);
+  c.fillStyle = col.band;
+  c.fillRect(0, -100, L, 10);
+  // yellow and black warning stripes on both ends
+  c.save();
+  c.beginPath();
+  c.rect(0, -62, 34, 22);
+  c.rect(L - 34, -62, 34, 22);
+  c.clip();
+  c.fillStyle = col.accent || '#ffd23f';
+  c.fillRect(0, -62, L, 22);
+  c.fillStyle = '#1d1d24';
+  for (let x = -30; x < L + 30; x += 18) {
+    c.beginPath();
+    c.moveTo(x, -40);
+    c.lineTo(x + 9, -40);
+    c.lineTo(x + 31, -62);
+    c.lineTo(x + 22, -62);
+    c.closePath();
+    c.fill();
+  }
+  c.restore();
+
+  // roof: the exhaust stack and two big cooling fans
+  fillRoundRect(c, 22, top - 8, L - 44, 12, 6, col.roof);
+  fillRoundRect(c, L * 0.36, top - 26, 18, 22, 3, '#3b4250');
+  c.fillStyle = '#23272f';
+  c.fillRect(L * 0.36 + 3, top - 28, 12, 4);
+  for (const fx of [L * 0.5, L * 0.62]) {
+    fillRoundRect(c, fx - 24, top - 14, 48, 10, 4, '#6c7685');
+  }
+  // the horn on the roof of the front cab, its bell facing forward
+  const hx = L - 70;
+  c.fillStyle = '#c9ced6';
+  c.fillRect(hx, top - 18, 8, 12);
+  c.beginPath();
+  c.moveTo(hx - 6, top - 22);
+  c.lineTo(hx + 22, top - 22);
+  c.lineTo(hx + 34, top - 30);
+  c.lineTo(hx + 34, top - 6);
+  c.lineTo(hx + 22, top - 14);
+  c.lineTo(hx - 6, top - 14);
+  c.closePath();
+  c.fill();
+
+  // cab windows at both ends: the front one is the driver's (Bubu's) window
+  /** @type {Rect} */
+  const cab = [L - 76, -156, 44, 46];
+  drawWindow(c, cab);
+  drawWindow(c, [30, -156, 38, 42]);
+  // windscreens on the noses
+  c.fillStyle = '#5d86b6';
+  fillRoundRect(c, L - 16, -158, 12, 40, 4, '#5d86b6');
+  fillRoundRect(c, 4, -158, 12, 40, 4, '#5d86b6');
+  // cab doors, and the radiator grilles of the engine room between the cabs
+  c.strokeStyle = 'rgba(0,0,0,0.25)';
+  c.lineWidth = 2;
+  c.strokeRect(L - 112, -158, 28, 106);
+  c.strokeRect(76, -158, 26, 106);
+  c.fillStyle = 'rgba(0,0,0,0.2)';
+  for (let x = 116; x < L - 128; x += 10) c.fillRect(x, -156, 5, 44);
+  drawLadybugEmblem(c, L * 0.5, -128, 14);
+  // handrails along the body
+  c.strokeStyle = '#d8dde4';
+  c.lineWidth = 3;
+  c.beginPath();
+  c.moveTo(40, -74);
+  c.lineTo(L - 40, -74);
+  c.stroke();
+
+  // the sandbox above the front bogie, and its pipe down to the rail
+  fillRoundRect(c, sandbox[0], sandbox[1], sandbox[2], sandbox[3], 4, '#d9b46a');
+  c.fillStyle = '#8d6e3f';
+  c.fillRect(sandbox[0], sandbox[1], sandbox[2], 5);
+  c.strokeStyle = '#59606c';
+  c.lineWidth = 4;
+  c.beginPath();
+  c.moveTo(sandbox[0] + sandbox[2] - 6, sandbox[1] + sandbox[3]);
+  c.lineTo(wheels[5] + WHEEL_R + 6, -4);
+  c.stroke();
+
+  // the air hose of the brakes, hanging at the back next to the coupler
+  c.strokeStyle = '#1d1d24';
+  c.lineWidth = 6;
+  c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(-2, -44);
+  c.quadraticCurveTo(-14, -28, -6, -16);
+  c.stroke();
+  c.fillStyle = '#c62828';
+  fillCircle(c, -6, -16, 5);
+
+  // lamps: two below, one on top of the front
+  c.fillStyle = '#fff8dc';
+  fillCircle(c, L - 8, -52, 6);
+  fillCircle(c, L - 10, -168, 5);
+  c.fillStyle = '#c62828';
+  fillCircle(c, 6, -52, 4);
+
+  return {
+    windows: [],
+    bubuWindow: cab,
+    wheels,
+    headlight: pos.leading ? { x: L - 6, y: -52 } : null,
+    taillight: pos.trailing ? { x: 4, y: -52 } : null,
+    roofY: top,
+    parts: {
+      headlights: [[L - 22, -66, 30, 28], [L - 24, -182, 28, 26]],
+      wheels: [[wheels[0] - 22, -34, wheels[2] - wheels[0] + 44, 36], [wheels[3] - 22, -34, wheels[5] - wheels[3] + 44, 36]],
+      fuel: [[tank[0] - 4, tank[1] - 10, tank[2] + 8, tank[3] + 14]],
+      sandbox: [[sandbox[0] - 8, sandbox[1] - 8, sandbox[2] + 16, sandbox[3] + 14]],
+      horn: [[hx - 14, top - 44, 58, 44]],
+      brakes: [[-26, -62, 34, 60]],
+    },
+  };
+}
+
+/** @type {CarPainter} A flat wagon for goods: a wooden deck with stakes along the sides, and its load (if any). */
+function platform(c, car, pos) {
+  const L = car.length;
+  const wheels = [L * 0.16, L * 0.16 + 46, L * 0.84 - 46, L * 0.84];
+  drawBogies(c, wheels);
+  drawBuffers(c, L, 1);
+  drawBuffers(c, 0, -1);
+  // steel frame and the wooden deck on it
+  fillRoundRect(c, 0, -46, L, 16, 3, car.colors.body);
+  c.fillStyle = car.colors.band;
+  c.fillRect(0, -58, L, 12);
+  c.strokeStyle = 'rgba(62,39,35,0.35)';
+  c.lineWidth = 2;
+  c.beginPath();
+  for (let x = 16; x < L; x += 22) {
+    c.moveTo(x, -57);
+    c.lineTo(x, -47);
+  }
+  c.stroke();
+  // the stakes that hold the load, and the number of the wagon
+  c.fillStyle = car.colors.roof;
+  for (let x = 8; x < L; x += (L - 22) / 4) c.fillRect(x, -92, 6, 36);
+  if (car.number !== undefined) {
+    c.fillStyle = '#ffffff';
+    c.font = '800 13px "Baloo 2", system-ui, sans-serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(String(car.number), L / 2, -38);
+  }
+  const load = car.cargo ? LOADS[car.cargo] : null;
+  if (load) drawLoad(c, load);
+  return { windows: [], bubuWindow: null, wheels, headlight: null, taillight: pos.trailing ? { x: 4, y: -40 } : null, roofY: -60 };
+}
+
 /** @type {Readonly<Record<import('./specs.js').CarSpec['kind'], CarPainter>>} */
 export const CAR_PAINTERS = Object.freeze({
   electricLoco,
+  dieselLoco,
+  platform,
   coach,
   railcarFront: (c, car, pos) => railcar(c, car, pos, true),
   railcarRear: (c, car, pos) => railcar(c, car, pos, false),

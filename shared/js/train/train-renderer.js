@@ -57,6 +57,9 @@ export const HANGING_BAUBLE_R = 11;
  * @property {number} headlight  0..1
  */
 
+/** The kinds of car that are locomotives (the player chooses their colour). */
+const LOCOS = new Set(['electricLoco', 'dieselLoco']);
+
 /** Seconds a passenger needs to get off and walk away. */
 const PASSENGER_LEAVE = 2.6;
 
@@ -110,6 +113,10 @@ export class TrainRenderer {
      */
     this.passengers = [];
     this.time = 0;
+    /** @type {Array<string | null>} the loads of the flat wagons of a freight train, front to back */
+    this.cargo = [];
+    /** A second locomotive pushes at the back of the train (on a steep mountain line). */
+    this.pusher = false;
     /** The train carries the flat wagon with the Christmas tree (after Vatra Dornei). */
     this.treeWagon = false;
     /** How far Bubu has appeared at her window (0 = not on the train yet). */
@@ -138,6 +145,8 @@ export class TrainRenderer {
     // screen); a short railcar train, which stands further left, pulls it at the end
     const loco = spec.cars[0].kind === 'electricLoco';
     const cars = !this.treeWagon ? spec.cars : loco ? [spec.cars[0], TREE_WAGON, ...spec.cars.slice(1)] : [...spec.cars, TREE_WAGON];
+    // the pushing locomotive: the same as the leading one, turned round, at the back
+    if (this.pusher && spec.cars[0].kind === 'dieselLoco') cars.push({ ...spec.cars[0], pusher: true });
     cars.forEach((car) => {
       const left = cursor - car.length;
       this.cars.push({ spec: car, left, geo: /** @type {any} */ (null) });
@@ -167,6 +176,26 @@ export class TrainRenderer {
     if (on === this.treeWagon) return;
     this.treeWagon = on;
     this.setSpec(this.spec);
+  }
+
+  /**
+   * Adds (or removes) the locomotive pushing at the back of a freight train.
+   * @param {boolean} on
+   */
+  setPusher(on) {
+    if (on === this.pusher) return;
+    this.pusher = on;
+    this.setSpec(this.spec);
+  }
+
+  /**
+   * Puts loads on the flat wagons of a freight train (or takes them off).
+   * @param {Array<string | null>} cargo  one per wagon, front to back (a key of LOADS, or null)
+   */
+  setCargo(cargo) {
+    if (cargo.length === this.cargo.length && cargo.every((x, i) => x === this.cargo[i])) return;
+    this.cargo = cargo.slice();
+    this.dropBody();
   }
 
   /**
@@ -332,6 +361,26 @@ export class TrainRenderer {
   }
 
   /**
+   * Where the parts of the locomotive are (the driver checks them before
+   * leaving), in train coordinates; empty if the locomotive has none to show.
+   * @returns {Partial<Record<import('./cars.js').LocoPart, import('./cars.js').Rect[]>>}
+   */
+  get locoParts() {
+    this.ensureBody();
+    for (const car of this.cars) {
+      const parts = car.geo.parts;
+      if (!parts) continue;
+      /** @type {Partial<Record<import('./cars.js').LocoPart, import('./cars.js').Rect[]>>} */
+      const out = {};
+      for (const [name, rects] of Object.entries(parts)) {
+        out[/** @type {import('./cars.js').LocoPart} */ (name)] = rects.map(([x, y, w, h]) => /** @type {import('./cars.js').Rect} */ ([car.left + x, y, w, h]));
+      }
+      return out;
+    }
+    return {};
+  }
+
+  /**
    * Which car is at a point (train coordinates), if any.
    * @param {number} x
    * @param {number} y
@@ -371,13 +420,26 @@ export class TrainRenderer {
       x: this.rearX - 20, y: TOP, width: -this.rearX + 40, height: BOTTOM - TOP, ratio,
     });
     const last = this.cars.length - 1;
+    let wagon = 0;
     this.cars.forEach((car, i) => {
-      const spec = car.spec.kind === 'electricLoco' && this.locoColor
+      let spec = LOCOS.has(car.spec.kind) && this.locoColor
         ? { ...car.spec, colors: { ...car.spec.colors, body: this.locoColor } }
         : car.spec;
+      if (car.spec.kind === 'platform') {
+        const cargo = this.cargo[wagon++];
+        if (cargo) spec = { ...spec, cargo };
+      }
       ctx.save();
       ctx.translate(car.left, 0);
-      car.geo = CAR_PAINTERS[car.spec.kind](ctx, spec, { leading: i === 0, trailing: i === last });
+      if (car.spec.pusher) {
+        // turned round (its cab looks back), without Bubu (she drives the front one)
+        ctx.translate(car.spec.length, 0);
+        ctx.scale(-1, 1);
+        const geo = CAR_PAINTERS[car.spec.kind](ctx, spec, { leading: false, trailing: false });
+        car.geo = { ...geo, bubuWindow: null, parts: undefined, headlight: null, taillight: { x: 4, y: -52 } };
+      } else {
+        car.geo = CAR_PAINTERS[car.spec.kind](ctx, spec, { leading: i === 0, trailing: i === last });
+      }
       ctx.restore();
     });
     this.body = canvas;
