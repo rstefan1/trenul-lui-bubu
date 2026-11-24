@@ -244,7 +244,7 @@ function railway() {
   for (let x = 4; x < W; x += 20) sleepers += `<rect x="${x}" y="${RAIL + 4}" width="12" height="8" rx="2"/>`;
   let poles = '';
   let wires = '';
-  const poleXs = [90, 330, 570, 1150, 1390];
+  const poleXs = [80, 300];
   for (const x of poleXs) {
     poles += `<path d="M${x} ${RAIL + 2} V${RAIL - 120} M${x - 16} ${RAIL - 110} H${x + 16}" stroke="#6b4a32" stroke-width="6" stroke-linecap="round"/>`;
   }
@@ -261,9 +261,9 @@ function railway() {
     + `<rect x="0" y="${RAIL - 4}" width="${W}" height="2.5" fill="#c8ced8"/>`;
 }
 
-/** The little station at the right, with its name board and a signal. */
+/** The little station at the right, with its name board. */
 function station() {
-  const x = 1270;
+  const x = 1440;
   const y = RAIL - 10;
   return `<g>`
     + `<rect x="${x - 150}" y="${y - 6}" width="300" height="12" fill="#b9b3a8"/>`
@@ -277,12 +277,6 @@ function station() {
     + `<rect x="${x - 76}" y="${y - 176}" width="152" height="30" rx="6" fill="#1f4f9c" stroke="#fff" stroke-width="3"/>`
     + `<path d="M${x - 50} ${y - 146} V${y - 140} M${x + 50} ${y - 146} V${y - 140}" stroke="#2b2f38" stroke-width="4"/>`
     + `<text x="${x}" y="${y - 154}" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="20" fill="#fff">BUBULEȘTI</text>`
-    + `</g>`
-    + `<g>`
-    + `<path d="M1110 ${RAIL + 2} V${RAIL - 150}" stroke="#4a4f5a" stroke-width="6"/>`
-    + `<path d="M1110 ${RAIL - 140} L1150 ${RAIL - 170}" stroke="#d8382f" stroke-width="12" stroke-linecap="round"/>`
-    + `<path d="M1124 ${RAIL - 150} L1136 ${RAIL - 159}" stroke="#fff" stroke-width="5"/>`
-    + `<circle cx="1110" cy="${RAIL - 132}" r="6" fill="#4caf50"/>`
     + `</g>`;
 }
 
@@ -350,7 +344,7 @@ function engine(/** @type {number} */ x) {
 
 /** The smoke of the engine, left behind it (still, like in a photo). */
 function smoke(/** @type {number} */ x) {
-  const puffs = [[195, 190, 22], [170, 214, 28], [130, 236, 34], [76, 252, 38], [14, 262, 40], [-50, 268, 36], [-110, 270, 30]];
+  const puffs = [[195, 190, 20], [168, 210, 24], [130, 224, 27], [88, 232, 24]];
   return `<g fill="#ffffff" opacity=".92">${puffs.map(([dx, dy, r]) => `<circle cx="${x + dx}" cy="${RAIL - dy}" r="${r}"/>`).join('')}</g>`
     + `<g fill="#e3ecf5">${puffs.map(([dx, dy, r]) => `<circle cx="${x + dx + r * 0.25}" cy="${RAIL - dy + r * 0.35}" r="${r1(r * 0.55)}"/>`).join('')}</g>`;
 }
@@ -376,9 +370,9 @@ function train() {
 /**
  * What a season adds to the landscape, layer by layer.
  * @typedef {object} SeasonThings
- * @property {(p: Palette) => string} sky         in the sky (clouds, a kite ...)
+ * @property {(p: Palette) => string} sky         in the sky, behind the mountains (clouds, birds ...)
  * @property {(p: Palette) => string} fields      between the village and the railway
- * @property {(p: Palette) => string} foreground  in front of the railway (children, flowers ...)
+ * @property {(p: Palette) => string} foreground  in front of everything (children, flowers, a kite ...)
  */
 
 /** @type {Record<string, SeasonThings>} */
@@ -389,12 +383,11 @@ const THINGS = {
         `<g fill="#fff"><ellipse cx="${x}" cy="${y}" rx="${70 * s}" ry="${24 * s}"/><circle cx="${x - 28 * s}" cy="${y - 14 * s}" r="${26 * s}"/><circle cx="${x + 18 * s}" cy="${y - 22 * s}" r="${34 * s}"/></g>`;
       const bird = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ s) =>
         `<path d="M${x - 14 * s} ${y - 6 * s} Q${x - 6 * s} ${y - 10 * s} ${x} ${y} Q${x + 6 * s} ${y - 10 * s} ${x + 14 * s} ${y - 6 * s}" stroke="#2b3a55" stroke-width="${3 * s}" fill="none" stroke-linecap="round"/>`;
-      return cloud(240, 420, 1) + cloud(620, 210, 0.8) + cloud(1380, 380, 1.1) + cloud(960, 120, 0.7) + cloud(1180, 170, 0.75)
-        + bird(560, 330, 1.2) + bird(600, 352, 0.9) + bird(640, 318, 1)
-        + kite(760, 430);
+      return cloud(240, 440, 1) + cloud(700, 200, 0.8) + cloud(1380, 360, 1.1)
+        + bird(560, 330, 1.2) + bird(610, 350, 0.9);
     },
     fields: p => {
-      // wheat (gold, with its rows), a mown field with haystacks, a sunflower field
+      // wheat (gold, with its rows) and a mown field
       const strips = [
         { x0: 0, x1: 330, fill: '#9bd36f' },
         { x0: 330, x1: 560, fill: '#f0c64a', rows: '#d9a72f' },
@@ -415,66 +408,30 @@ const THINGS = {
       }
       // a river coming down between the hills
       out += `<path d="M262 ${r1(top(262))} C250 720 236 760 214 ${RAIL} L300 ${RAIL} C290 760 282 720 276 ${r1(top(276))}Z" fill="${p.river}"/>`;
-      // haystacks on the mown field, a tractor on the wheat
-      out += haystack(600, 742, 0.45) + haystack(680, 750, 0.5) + haystack(1150, 742, 0.5) + haystack(1240, 748, 0.42);
-      out += tractor(430, 760);
-      // a sunflower field at the right
-      for (let i = 0; i < 40; i++) {
-        const x = 1330 + (i % 10) * 26 + (Math.floor(i / 10) % 2) * 13;
-        const y = 712 + Math.floor(i / 10) * 18;
-        out += `<path d="M${x} ${y} v14" stroke="#4e8f2f" stroke-width="3"/><circle cx="${x}" cy="${y}" r="8" fill="#ffc41f"/><circle cx="${x}" cy="${y}" r="3.5" fill="#6b3f1d"/>`;
-      }
+      // haystacks on the wheat field
+      out += haystack(390, 752, 0.5) + haystack(480, 760, 0.45);
       return out;
     },
     foreground: p => {
       const rnd = seeded(11);
       let out = `<path d="M150 ${RAIL + 44} C120 900 70 950 30 ${H} L330 ${H} C330 950 330 900 340 ${RAIL + 44}Z" fill="${p.river}"/>`
         + `<path d="M120 930 q30 -8 60 0 M220 975 q30 -8 60 0" stroke="#bfe9ff" stroke-width="4" fill="none" stroke-linecap="round"/>`;
-      out += flowers(rnd, 70, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0']);
-      // a boy fishing by the river
-      out += child(400, 950, { shirt: '#ffcf3f', hair: '#3b2617', pose: 'catch', s: 0.9, flip: true })
-        + `<path d="M375 868 L250 820" stroke="#7a5235" stroke-width="4" stroke-linecap="round"/><path d="M250 820 Q244 880 236 930" stroke="#4a4f5a" stroke-width="1.5" fill="none"/>`
-        + `<path d="M436 950 l-6 -30 h36 l-6 30Z" fill="#42a5f5"/><path d="M432 922 q16 -22 32 0" stroke="#4a4f5a" stroke-width="3" fill="none"/>`;
-      // a big haystack, with a girl waving at the train next to it
-      out += haystack(560, 925, 1.05);
-      out += child(645, 958, { shirt: '#ec407a', hair: '#5b3a26', pose: 'wave', girl: true, s: 1.05 });
-      // a boy with a kite (its string goes up to the kite in the sky)
-      out += `<path d="M752 845 Q700 640 760 482" stroke="#fff" stroke-width="2" fill="none"/>`;
-      out += child(730, 975, { shirt: '#26a69a', hair: '#c0612b', pose: 'up', s: 1.1 });
-      // two children playing with a ball
-      out += child(880, 965, { shirt: '#ff7043', hair: '#2b2f38', pose: 'kick', s: 1.05 });
-      out += child(1030, 960, { shirt: '#7e57c2', hair: '#f2c14e', pose: 'catch', girl: true, s: 1.05, flip: true });
-      out += `<circle cx="955" cy="900" r="17" fill="#fff" stroke="#2b2f38" stroke-width="3"/><path d="M943 892 q12 6 24 0 M948 912 q8 -10 16 -2" stroke="#e53935" stroke-width="4" fill="none" stroke-linecap="round"/>`;
-      // tall sunflowers at the sides
-      out += sunflower(1095, H + 10, 190, -8) + sunflower(1130, H + 10, 160, 6) + sunflower(1170, H + 10, 200, -4) + sunflower(480, H + 10, 130, 6);
-      // a bicycle resting in the grass
-      out += bicycle(1300, 960);
+      out += flowers(rnd, 30, ['#e53935', '#ffffff', '#ffcf3f', '#5c6bc0']);
+      // a boy with a kite (its string goes up to the kite in the sky, left of the train)
+      out += kite(330, 450) + `<path d="M457 858 Q380 700 330 502" stroke="#fff" stroke-width="2" fill="none"/>`;
+      out += child(435, 975, { shirt: '#26a69a', hair: '#c0612b', pose: 'up', s: 1.1 });
+      // a girl waving at the train
+      out += child(700, 960, { shirt: '#ec407a', hair: '#5b3a26', pose: 'wave', girl: true, s: 1.05 });
+      // a boy kicking a ball
+      out += child(900, 965, { shirt: '#ff7043', hair: '#2b2f38', pose: 'kick', s: 1.05 });
+      out += `<circle cx="985" cy="925" r="17" fill="#fff" stroke="#2b2f38" stroke-width="3"/><path d="M973 917 q12 6 24 0 M978 937 q8 -10 16 -2" stroke="#e53935" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+      // a big haystack and two tall sunflowers at the right
+      out += haystack(1250, 935, 1.05);
+      out += sunflower(1110, H + 10, 180, -6) + sunflower(1150, H + 10, 150, 6);
       return out;
     },
   },
 };
-
-/** A small red tractor with its back wheel on the ground at (x, y). */
-function tractor(/** @type {number} */ x, /** @type {number} */ y) {
-  return `<g>`
-    + `<rect x="${x - 10}" y="${y - 52}" width="34" height="30" rx="4" fill="#d8382f"/>`
-    + `<rect x="${x - 4}" y="${y - 48}" width="20" height="16" rx="3" fill="#d7efff"/>`
-    + `<rect x="${x + 20}" y="${y - 34}" width="44" height="18" rx="4" fill="#d8382f"/>`
-    + `<rect x="${x + 50}" y="${y - 46}" width="5" height="14" fill="#2b2f38"/>`
-    + `<circle cx="${x}" cy="${y - 14}" r="16" fill="#2b2f38"/><circle cx="${x}" cy="${y - 14}" r="6" fill="#ffcf3f"/>`
-    + `<circle cx="${x + 54}" cy="${y - 9}" r="10" fill="#2b2f38"/><circle cx="${x + 54}" cy="${y - 9}" r="4" fill="#ffcf3f"/>`
-    + `</g>`;
-}
-
-/** A child's bicycle lying against the grass at (x, y). */
-function bicycle(/** @type {number} */ x, /** @type {number} */ y) {
-  return `<g fill="none" stroke-linecap="round" stroke-linejoin="round">`
-    + `<circle cx="${x - 34}" cy="${y - 24}" r="22" stroke="#2b2f38" stroke-width="5"/>`
-    + `<circle cx="${x + 34}" cy="${y - 24}" r="22" stroke="#2b2f38" stroke-width="5"/>`
-    + `<path d="M${x - 34} ${y - 24} L${x - 6} ${y - 24} L${x + 16} ${y - 52} L${x - 18} ${y - 52} Z M${x + 34} ${y - 24} L${x + 16} ${y - 52} L${x + 14} ${y - 62} M${x - 6} ${y - 24} L${x - 22} ${y - 58}" stroke="#1e88e5" stroke-width="5"/>`
-    + `<path d="M${x - 30} ${y - 60} h16 M${x + 6} ${y - 64} h16" stroke="#2b2f38" stroke-width="5"/>`
-    + `</g>`;
-}
 
 /* ---------------------------------------------------------------------------
  * The picture
@@ -509,12 +466,12 @@ export function landscape(season) {
   // the village on its hill: houses, trees and the wooden church in the middle
   const roofs = ['#b5452b', '#8f3a24', '#c0612b'];
   let village = '';
-  const homes = [470, 560, 650, 720, 900, 975, 1060, 1150];
+  const homes = [500, 640, 990, 1130];
   for (const [i, x] of homes.entries()) {
     village += tree(x - 40, villageTop(x - 40) + 24, 62 + rnd() * 20, p);
     village += house(x, villageTop(x) + 26, 0.9 + rnd() * 0.25, roofs[i % roofs.length], '#fdf8ee');
   }
-  village += church(810, villageTop(810) + 22) + tree(870, villageTop(870) + 30, 76, p) + tree(1210, villageTop(1210) + 30, 80, p) + tree(390, villageTop(390) + 30, 74, p);
+  village += church(810, villageTop(810) + 22) + tree(1230, villageTop(1230) + 30, 80, p);
 
   return `
     <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
