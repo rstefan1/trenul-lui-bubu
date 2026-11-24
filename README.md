@@ -1,6 +1,6 @@
 # Trenul lui Bubu
 
-A browser game for children (5th grade): Bubu, a plush ladybug, travels by
+A browser game for children: Bubu, a plush ladybug, travels by
 train across Romania and completes missions at the stations and along the
 way. Each journey is a route of its own, with its own stations, landscapes
 and missions.
