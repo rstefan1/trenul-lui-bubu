@@ -63,6 +63,8 @@ const MIX = {
   // small feedback, heard often
   collect: -3, oops: -5, star: -2, chirp: -8, crunch: -10, brush: -12, shutter: -3,
   hop: -4, flame: -5, whoosh: -6, ding: -5, drum: -2, thud: -5,
+  // the fireworks at midnight: the rockets softly under their bursts
+  rocketLaunch: -9, rocketBurst: -2,
   // things around the train
   doorsOpen: -9, doorsClose: -9, gust: -6, plough: -4, ploughEngine: -6, couple: -2,
   // the big moments
@@ -287,6 +289,28 @@ const SOUNDS = {
   drum(ctx, out, t) {
     sweep(ctx, out, { t, from: 150, to: 55, slide: 0.25, level: 0.35, length: 0.35, attack: 0.004 });
     noisePuff(ctx, out, { t, length: 0.05, level: 0.08, type: 'bandpass', from: 1200, q: 0.8, attack: 0.001 });
+  },
+  /**
+   * A firework rocket goes up: the hiss of its burning fuel, rising, with a
+   * thin whistle climbing over it, both fading as it flies higher.
+   */
+  rocketLaunch(ctx, out, t) {
+    noisePuff(ctx, out, { t, length: 1.3, level: 0.09, type: 'bandpass', from: 1300, to: 4200, q: 1.2, attack: 0.04 });
+    sweep(ctx, out, { t: t + 0.05, from: 1100, to: 2900, slide: 1.1, level: 0.035, length: 1.2, attack: 0.15 });
+  },
+  /**
+   * A firework bursts high in the sky: a bright bang with a soft boom under
+   * it (far away, never frightening), then the sparks crackling as they
+   * fall, a scatter of tiny clicks.
+   */
+  rocketBurst(ctx, out, t) {
+    noisePuff(ctx, out, { t, length: 0.7, level: 0.3, type: 'lowpass', from: 3200, to: 260, attack: 0.002 });
+    sweep(ctx, out, { t, from: 95, to: 38, slide: 0.45, level: 0.28, length: 0.8, attack: 0.004 });
+    for (let i = 0; i < 22; i++) {
+      const at = t + 0.25 + Math.random() * 1.3;
+      const fade = 1 - (at - t) / 1.8;
+      noisePuff(ctx, out, { t: at, length: 0.018 + Math.random() * 0.02, level: (0.05 + Math.random() * 0.07) * fade, type: 'highpass', from: 2800 + Math.random() * 3500, attack: 0.001 });
+    }
   },
   /** Something heavy set down (the tree on its wagon). */
   thud(ctx, out, t) {

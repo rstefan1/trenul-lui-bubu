@@ -110,7 +110,7 @@ export class FireworksMission extends Mission {
     /** The number of the countdown last heard. */
     this.lastCount = 11;
     this.fireworks = new Fireworks({ sparks: REDUCED_MOTION ? 220 : 480 });
-    this.fireworks.onEvent = (what, x) => this.sound(what === 'launch' ? 'whoosh' : 'thud', x);
+    this.fireworks.onEvent = (what, x) => this.sound(what === 'launch' ? 'rocketLaunch' : 'rocketBurst', x);
     /** @type {HTMLButtonElement | null} */
     this.button = null;
     /** How far the clearing has appeared (0..1): only once the view has moved to it. */
