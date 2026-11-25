@@ -23,6 +23,7 @@ import { fillCircle, fillRoundRect } from '../gfx/shapes.js';
 import { zoomed } from '../gfx/ui-style.js';
 import { CAR_PAINTERS, WHEEL_R } from '../train/cars.js';
 import { FREIGHT_TRAIN } from '../train/specs.js';
+import { depotBodyColor } from '../depot/style.js';
 import { TRACK_Y } from '../world/track.js';
 import { Mission } from './mission.js';
 
@@ -238,7 +239,8 @@ export class PassingTrainMission extends Mission {
    * @param {number} rail
    */
   drawLoco(c, x, rail) {
-    const own = (this.ctx.state.locoColor ?? LOCO.colors.body).toLowerCase();
+    // Bubu's locomotive is painted as in the depot, or as chosen on the journey
+    const own = (this.ctx.state.locoColor ?? depotBodyColor(FREIGHT_TRAIN.cars[0])).toLowerCase();
     const body = LOCO_COLORS.find(col => col !== own) ?? LOCO_COLORS[0];
     c.save();
     c.translate(x + LOCO.length, rail);

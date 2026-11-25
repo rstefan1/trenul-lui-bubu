@@ -24,6 +24,8 @@ import { drawTouchNote } from '../gfx/hints.js';
 import { Particles, SPARKS } from '../gfx/particles.js';
 import { fillCircle, fillRoundRect } from '../gfx/shapes.js';
 import { CAR_PAINTERS, WHEEL_R } from '../train/cars.js';
+import { paintDecor } from '../train/loco-decor.js';
+import { paintedCar, styleOfCar } from '../depot/style.js';
 import { FREIGHT_TRAIN } from '../train/specs.js';
 import { TRACK_Y } from '../world/track.js';
 import { el } from '../ui/dom.js';
@@ -217,12 +219,15 @@ export class CouplingMission extends Mission {
     }
     const k = SCALE * card.k;
     // the second locomotive waits on the right; Bubu's comes with the first wagon behind it
-    const loco = { ...FREIGHT_TRAIN.cars[0], colors: { ...FREIGHT_TRAIN.cars[0].colors, body: this.ctx.state.locoColor ?? FREIGHT_TRAIN.cars[0].colors.body } };
+    // Bubu's locomotives, as the child decorated them in the depot (and in the colour chosen on the journey)
+    const style = styleOfCar(FREIGHT_TRAIN.cars[0]);
+    const painted = paintedCar(FREIGHT_TRAIN.cars[0], style);
+    const loco = { ...painted, colors: { ...painted.colors, body: this.ctx.state.locoColor ?? painted.colors.body } };
     const wagon = FREIGHT_TRAIN.cars[1];
     const gap = FREIGHT_TRAIN.gap * SCALE;
-    this.drawCar(c, loco, this.toStage(this.wagonBack + BUFFERS * SCALE, 0), k, false);
+    this.drawCar(c, loco, this.toStage(this.wagonBack + BUFFERS * SCALE, 0), k, false, style);
     const rear = this.locoFront - loco.length * SCALE;
-    this.drawCar(c, loco, this.toStage(rear, 0), k, true);
+    this.drawCar(c, loco, this.toStage(rear, 0), k, true, style);
     this.drawCar(c, wagon, this.toStage(rear - gap - wagon.length * SCALE, 0), k, true);
     c.restore();
     if (this.state === 'rolling' && this.braking === 'none' && this.locoFront > this.markX - MARK_BEFORE - 200) {
@@ -239,12 +244,14 @@ export class CouplingMission extends Mission {
    * @param {{x: number, y: number}} at   its rear end on the rail
    * @param {number} k   scale
    * @param {boolean} turning  the locomotive's wheels turn as it rolls
+   * @param {import('../depot/style.js').LocoStyle | null} [style]  the decorations of a locomotive from the depot
    */
-  drawCar(c, car, at, k, turning) {
+  drawCar(c, car, at, k, turning, style = null) {
     c.save();
     c.translate(at.x, at.y);
     c.scale(k, k);
     const geo = CAR_PAINTERS[car.kind](c, car, { leading: false, trailing: false });
+    paintDecor(c, car, style);
     const a = turning ? this.locoFront / WHEEL_R : 0;
     for (const wx of geo.wheels) {
       c.fillStyle = '#2b2f38';
