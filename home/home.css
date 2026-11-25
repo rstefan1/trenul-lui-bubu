@@ -221,7 +221,9 @@ body {
   filter: drop-shadow(0 3px 2px rgba(60, 40, 10, .35)) drop-shadow(0 10px 16px rgba(20, 40, 20, .3));
   /* lying a little crooked, like real tickets put on a table */
   transform: rotate(-.8deg);
-  transition: transform .22s var(--spring), filter .22s ease;
+  /* only the transform is animated: the browser moves the ticket already
+     painted, without painting it again at every frame */
+  transition: transform .22s var(--spring);
 }
 .route-item:nth-child(even) { transform: rotate(.7deg); }
 /* under the mouse (or focused): the ticket is picked up, straight, closer */
@@ -251,17 +253,20 @@ body {
     radial-gradient(circle 10px at calc(100% - var(--stub)) 100%, transparent 9.5px, #000 10px) bottom / 100% 51% no-repeat;
 }
 .route-card { position: relative; overflow: hidden; cursor: pointer; }
-/* a gleam crossing the ticket when it is picked up (glossy printed card) */
+/* a gleam crossing the ticket when it is picked up (glossy printed card);
+   it slides (transform), so the ticket is not painted again while it passes */
 .route-card::after {
   content: "";
   position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .55) 48%, transparent 60%) no-repeat;
-  background-size: 250% 100%;
-  background-position: 130% 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  background: linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, .55) 50%, transparent 80%);
+  transform: translateX(-110%);
   pointer-events: none;
 }
-.route-card:hover::after, .route-card:focus-visible::after { background-position: -30% 0; transition: background-position .7s ease; }
+.route-card:hover::after, .route-card:focus-visible::after { transform: translateX(260%); transition: transform .7s ease; }
 .route-card:hover .route-go, .route-card:focus-visible .route-go { transform: scale(1.12); box-shadow: 0 3px 0 var(--green-dark), 0 0 0 4px rgba(255, 255, 255, .7); }
 .route-card:hover .route-go::after, .route-card:focus-visible .route-go::after { content: " ▶"; }
 .route-card:focus-visible .ticket-main { outline: 4px solid var(--gold); outline-offset: -6px; }
