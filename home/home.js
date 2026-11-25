@@ -25,25 +25,66 @@ const SEASONS = /** @type {const} */ ({
   summer: { name: 'Vară', icon: '☀️' },
 });
 
-/**
- * The colours of the small picture on a ticket, for the journey's season.
- * @type {Record<Season, {sky: [string, string], light: string, hills: [string, string], trees: string}>}
+/*
+ * The small drawings on the tickets, one for every journey (SVGs of 80×80,
+ * built from fixed values only). The rail is at y = 64 in all of them.
  */
-const THUMB = {
-  winter: { sky: ['#14306e', '#4a6fc0'], light: '#fff6d8', hills: ['#dfe8f7', '#ffffff'], trees: '#1f5d3a' },
-  spring: { sky: ['#7cc4f2', '#d8f0ff'], light: '#fff3b0', hills: ['#8fcf7a', '#a9df8a'], trees: '#f29bb8' },
-  summer: { sky: ['#3d9be9', '#c4ecff'], light: '#ffe04a', hills: ['#6cb851', '#8fd16a'], trees: '#2f7a3a' },
-  autumn: { sky: ['#f2a65a', '#fde3b8'], light: '#fff1c9', hills: ['#c98f45', '#ddb060'], trees: '#d2491f' },
-};
 
-/** The sky of a winter journey made by day (the winter colours are those of the night). */
-const WINTER_DAY = { sky: /** @type {[string, string]} */ (['#4a98e8', '#d8efff']), light: '#ffe27a' };
+/** A fir tree standing on y, `h` tall, centred on x. */
+const fir = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ h) =>
+  `<path d="M${x} ${y - h} l${h * 0.36} ${h} h-${h * 0.72}Z"/>`;
 
-/** The little red engine of the picture. */
-const ENGINE = `<g transform="translate(22 44)"><rect x="0" y="2" width="16" height="16" rx="2" fill="#d8382f"/><rect x="16" y="7" width="20" height="11" rx="4" fill="#1f6e4a"/><rect x="29" y="0" width="5" height="8" fill="#263238"/><rect x="3" y="5" width="9" height="6" rx="1.5" fill="#d7efff"/><circle cx="8" cy="19" r="3.4" fill="#263238"/><circle cx="22" cy="19" r="3.4" fill="#263238"/><circle cx="31" cy="19" r="3.4" fill="#263238"/></g>`;
+/** The sky gradient of a picture (its id must be unique on the page). */
+const sky = (/** @type {string} */ id, /** @type {string} */ top, /** @type {string} */ bottom) =>
+  `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bottom}"/></linearGradient></defs>`
+  + `<rect width="80" height="80" fill="url(#${id})"/>`;
 
-/** A freight train: an orange diesel locomotive pulling two empty flat wagons. */
-const FREIGHT = `<g transform="translate(4 48)">`
+/** Small stars at fixed places. */
+const stars = (/** @type {Array<[number, number]>} */ at) =>
+  `<g fill="#fff6d8">${at.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="0.9"/>`).join('')}</g>`;
+
+/** The snowy ground with the rail. */
+const RAIL = `<rect y="62" width="80" height="18" fill="#ffffff"/><rect y="64" width="80" height="2.5" fill="#6d6258"/>`;
+
+/**
+ * Route 1, the Christmas night: the red electric locomotive under its
+ * wire, pulling a blue coach with lit windows, beside a decorated
+ * Christmas tree, under the moon.
+ */
+const CHRISTMAS = sky('pic-christmas', '#14306e', '#4a6fc0')
+  + stars([[8, 10], [20, 6], [34, 14], [46, 7], [28, 24], [6, 26]])
+  + `<circle cx="60" cy="15" r="8" fill="#fff6d8"/><circle cx="64" cy="12" r="7" fill="#1d3b80"/>`
+  + `<path d="M0 54 Q20 40 40 50 T80 46 V80 H0Z" fill="#dfe8f7"/>`
+  + RAIL
+  // the overhead wire, with a pole
+  + `<rect x="2" y="34" width="2" height="30" fill="#5b6472"/><rect y="37" width="62" height="1" fill="#2b2f38" opacity=".7"/>`
+  // the blue coach
+  + `<rect x="0" y="48" width="24" height="13" rx="2" fill="#2f5fa8"/><rect x="0" y="46.5" width="24" height="2.5" rx="1" fill="#7d8796"/>`
+  + `<rect x="3" y="51" width="5" height="4" rx="1" fill="#ffe39a"/><rect x="10" y="51" width="5" height="4" rx="1" fill="#ffe39a"/><rect x="17" y="51" width="5" height="4" rx="1" fill="#ffe39a"/>`
+  + `<circle cx="6" cy="62.5" r="2.4" fill="#263238"/><circle cx="18" cy="62.5" r="2.4" fill="#263238"/>`
+  // the red electric locomotive, with its pantograph touching the wire
+  + `<path d="M38 46 L44 38 L50 46" fill="none" stroke="#2b2f38" stroke-width="1.2"/><rect x="40" y="37.5" width="8" height="1.2" fill="#2b2f38"/>`
+  + `<rect x="26" y="46" width="32" height="15" rx="3" fill="#d8382f"/><rect x="26" y="54" width="32" height="2" fill="#fbeed2"/>`
+  + `<rect x="51" y="48.5" width="5" height="4.5" rx="1" fill="#d7efff"/><rect x="29" y="48.5" width="5" height="4.5" rx="1" fill="#d7efff"/>`
+  + `<circle cx="57.5" cy="58" r="1.4" fill="#fff3b0"/>`
+  + `<circle cx="31" cy="62.5" r="2.6" fill="#263238"/><circle cx="37" cy="62.5" r="2.6" fill="#263238"/><circle cx="47" cy="62.5" r="2.6" fill="#263238"/><circle cx="53" cy="62.5" r="2.6" fill="#263238"/>`
+  // the Christmas tree, with its star and baubles
+  + `<rect x="68.5" y="58" width="3" height="5" fill="#6d4c41"/>`
+  + `<path d="M70 32 L77 46 H63Z M70 39 L79 54 H61Z M70 46 L80 60 H60Z" fill="#1f6e4a"/>`
+  + `<path d="M70 27.5 l1.3 2.7 3 .4 -2.2 2 .6 2.9 -2.7-1.5 -2.7 1.5 .6-2.9 -2.2-2 3-.4Z" fill="#ffd23f"/>`
+  + `<circle cx="68" cy="43" r="1.5" fill="#ff5252"/><circle cx="72.5" cy="50" r="1.5" fill="#40c4ff"/><circle cx="66" cy="55" r="1.5" fill="#ffd740"/><circle cx="74.5" cy="57" r="1.5" fill="#ff5252"/>`;
+
+/**
+ * Route 2, the freight train by day: the orange diesel locomotive pulling
+ * two empty flat wagons, at the foot of high snowy mountains.
+ */
+const FREIGHT = sky('pic-freight', '#4a98e8', '#d8efff')
+  + `<circle cx="14" cy="14" r="7" fill="#ffe27a"/>`
+  + `<path d="M0 50 L16 32 L26 42 L44 18 L60 38 L68 30 L80 42 V80 H0Z" fill="#8fa3bf"/>`
+  + `<path d="M16 32 L11.5 37 L15 36 L18 38 L20.5 36.5Z M44 18 L37.5 26.5 L42 25 L45 28 L50 25.5Z M68 30 L64 34.5 L67 33.5 L70 35 L72 34Z" fill="#ffffff"/>`
+  + `<g fill="#1f5d3a">${fir(6, 62, 14)}${fir(30, 62, 11)}${fir(62, 62, 13)}${fir(74, 62, 16)}</g>`
+  + RAIL
+  + `<g transform="translate(4 48)">`
   + `<rect x="0" y="11" width="18" height="4" fill="#6d4c41"/><rect x="2" y="5" width="2" height="6" fill="#3b4250"/><rect x="14" y="5" width="2" height="6" fill="#3b4250"/>`
   + `<circle cx="4" cy="16.5" r="2.4" fill="#263238"/><circle cx="14" cy="16.5" r="2.4" fill="#263238"/>`
   + `<rect x="20" y="11" width="18" height="4" fill="#6d4c41"/><rect x="22" y="5" width="2" height="6" fill="#3b4250"/><rect x="34" y="5" width="2" height="6" fill="#3b4250"/>`
@@ -53,25 +94,51 @@ const FREIGHT = `<g transform="translate(4 48)">`
   + `<circle cx="45" cy="16.5" r="2.4" fill="#263238"/><circle cx="51" cy="16.5" r="2.4" fill="#263238"/><circle cx="61" cy="16.5" r="2.4" fill="#263238"/><circle cx="67" cy="16.5" r="2.4" fill="#263238"/>`
   + `</g>`;
 
+/** A firework: rays around a centre, with a spark at the end of each. */
+const burst = (/** @type {number} */ cx, /** @type {number} */ cy, /** @type {number} */ r, /** @type {string} */ color) => {
+  let rays = '';
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    const [c, s] = [Math.cos(a), Math.sin(a)];
+    const f = (/** @type {number} */ v) => v.toFixed(1);
+    rays += `<path d="M${f(cx + c * r * 0.35)} ${f(cy + s * r * 0.35)} L${f(cx + c * r)} ${f(cy + s * r)}"/>`
+      + `<circle cx="${f(cx + c * r * 1.18)}" cy="${f(cy + s * r * 1.18)}" r="1" stroke="none" fill="${color}"/>`;
+  }
+  return `<g stroke="${color}" stroke-width="1.3" stroke-linecap="round">${rays}</g>`;
+};
+
 /**
- * The small picture on a ticket: hills of the journey's season and its
- * train (an SVG built from fixed values only).
+ * Route 3, New Year's Eve on the Vaser valley: the little black steam
+ * locomotive of the mocănița, puffing, with a green coach, between the
+ * fir forests, under the midnight fireworks.
+ */
+const MOCANITA = sky('pic-mocanita', '#0b1638', '#2a3f7a')
+  + stars([[6, 8], [40, 4], [74, 6], [30, 30], [70, 34]])
+  + burst(20, 18, 9, '#ffd23f') + burst(56, 14, 8, '#ff6fa8') + burst(42, 32, 5.5, '#5ee0ff')
+  + `<path d="M0 34 L22 56 H0Z" fill="#163a2c"/><path d="M80 38 L58 58 H80Z" fill="#163a2c"/>`
+  + `<g fill="#1f5d3a">${fir(4, 50, 16)}${fir(12, 58, 14)}${fir(70, 58, 15)}${fir(77, 52, 17)}</g>`
+  + RAIL
+  // the green coach, children's lit windows
+  + `<rect x="6" y="50" width="26" height="11" rx="2" fill="#2e7d46"/><rect x="5" y="48" width="28" height="2.5" rx="1" fill="#4a5160"/>`
+  + `<rect x="9" y="52.5" width="5" height="4" rx="1" fill="#ffe39a"/><rect x="16.5" y="52.5" width="5" height="4" rx="1" fill="#ffe39a"/><rect x="24" y="52.5" width="5" height="4" rx="1" fill="#ffe39a"/>`
+  + `<circle cx="11" cy="62.5" r="2" fill="#263238"/><circle cx="27" cy="62.5" r="2" fill="#263238"/>`
+  // the black steam locomotive: cab, boiler with a red band, tall funnel, puffs of steam
+  + `<circle cx="66" cy="38" r="3" fill="#e6ecf5" opacity=".85"/><circle cx="61" cy="33" r="3.8" fill="#e6ecf5" opacity=".7"/><circle cx="55" cy="29" r="4.4" fill="#e6ecf5" opacity=".5"/>`
+  + `<rect x="36" y="45" width="12" height="16" rx="1.5" fill="#23252b"/><rect x="35" y="43.5" width="14" height="2.5" rx="1" fill="#16171b"/><rect x="39" y="47.5" width="6" height="5" rx="1" fill="#ffe39a"/>`
+  + `<rect x="47" y="51" width="22" height="10" rx="4" fill="#23252b"/><rect x="47" y="54.5" width="22" height="2" fill="#c62828"/>`
+  + `<rect x="63.5" y="42" width="4.5" height="10" fill="#23252b"/><rect x="62.5" y="40.5" width="6.5" height="2.5" rx="1" fill="#16171b"/>`
+  + `<circle cx="56" cy="50.5" r="2" fill="#d9a640"/><circle cx="69.5" cy="57" r="1.3" fill="#fff3b0"/>`
+  + `<circle cx="42" cy="62.5" r="2.2" fill="#263238"/><circle cx="53" cy="62.5" r="2.6" fill="#263238"/><circle cx="62" cy="62.5" r="2.6" fill="#263238"/>`;
+
+/** @type {Record<import('./routes.js').Picture, string>} */
+const PICTURES = { christmas: CHRISTMAS, freight: FREIGHT, mocanita: MOCANITA };
+
+/**
+ * The small picture on a ticket: the journey's own drawing.
  * @param {import('./routes.js').RouteInfo} route
  */
 function thumb(route) {
-  const { season, number: n } = route;
-  const p = route.day && season === 'winter' ? { ...THUMB.winter, ...WINTER_DAY } : THUMB[season];
-  const fir = (/** @type {number} */ x, /** @type {number} */ h) => `<path d="M${x} ${62 - h} l${h * 0.38} ${h} h-${h * 0.76}Z"/>`;
-  return `<svg viewBox="0 0 80 80" aria-hidden="true" focusable="false">`
-    + `<defs><linearGradient id="thumb${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p.sky[0]}"/><stop offset="1" stop-color="${p.sky[1]}"/></linearGradient></defs>`
-    + `<rect width="80" height="80" fill="url(#thumb${n})"/>`
-    + `<circle cx="60" cy="18" r="8" fill="${p.light}"/>`
-    + `<path d="M0 50 L20 30 L36 46 L52 26 L80 52 V80 H0Z" fill="${p.hills[0]}"/>`
-    + `<g fill="${p.trees}">${fir(10, 16)}${fir(68, 18)}</g>`
-    + `<rect y="62" width="80" height="18" fill="${p.hills[1]}"/>`
-    + `<rect y="64" width="80" height="2.5" fill="#6d6258"/>`
-    + (route.train === 'freight' ? FREIGHT : ENGINE)
-    + `</svg>`;
+  return `<svg viewBox="0 0 80 80" aria-hidden="true" focusable="false">${PICTURES[route.picture]}</svg>`;
 }
 
 /** What the ticket says about the journey: its stamp and its button. */

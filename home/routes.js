@@ -4,7 +4,7 @@
  * Every journey lives in a folder of its own (route-01, route-02, …) and is
  * a complete game: its stations, landscapes, missions and saved progress.
  * Adding a journey means adding its folder and one entry here; the season
- * decides its picture and colours on the home page (and the home page can
+ * decides its colours on the home page (and the home page can
  * show the journeys of one season only).
  */
 
@@ -23,8 +23,14 @@
  * @property {number} stations
  * @property {string} saveKey    where the journey keeps its progress (localStorage)
  * @property {Season} season
- * @property {boolean} [day]     the journey happens by day (its picture has a blue winter sky)
- * @property {'freight'} [train] the picture shows a freight train instead of the little engine
+ * @property {Picture} picture  the small drawing on its ticket (each journey has its own)
+ */
+
+/**
+ * The drawings of the tickets (home/home.js draws them): the Christmas night
+ * train, the freight train over the mountains by day, the mocănița under the
+ * fireworks of New Year's Eve.
+ * @typedef {'christmas' | 'freight' | 'mocanita'} Picture
  */
 
 /** @type {RouteInfo[]} */
@@ -41,6 +47,7 @@ export const ROUTES = [
     stations: 14,
     saveKey: 'trenul-lui-bubu/route-01',
     season: 'winter',
+    picture: 'christmas',
   },
   {
     number: 2,
@@ -54,8 +61,7 @@ export const ROUTES = [
     stations: 9,
     saveKey: 'trenul-lui-bubu/route-02',
     season: 'winter',
-    day: true,
-    train: 'freight',
+    picture: 'freight',
   },
   {
     number: 3,
@@ -69,5 +75,6 @@ export const ROUTES = [
     stations: 7,
     saveKey: 'trenul-lui-bubu/route-03',
     season: 'winter',
+    picture: 'mocanita',
   },
 ];
