@@ -141,6 +141,13 @@ function thumb(route) {
   return `<svg viewBox="0 0 80 80" aria-hidden="true" focusable="false">${PICTURES[route.picture]}</svg>`;
 }
 
+/**
+ * The serial number printed along the stub, like on real tickets (the
+ * journey's number gives it).
+ * @param {number} n
+ */
+const serial = n => `Seria BB Nr. ${String(241200 + n * 37).padStart(7, '0')}`;
+
 /** What the ticket says about the journey: its stamp and its button. */
 const STATUS = {
   new: { label: 'Neîncepută', stamp: 'Nouă', button: 'Pornește' },
@@ -166,6 +173,29 @@ function progressOf(key) {
 }
 
 /**
+ * "1 misiune", "5 misiuni", "20 de misiuni": the way numbers are said in Romanian.
+ * @param {number} n
+ */
+const missionsLabel = n => n === 1 ? '1 misiune' : n % 100 >= 20 || n % 100 === 0 ? `${n} de misiuni` : `${n} misiuni`;
+
+/**
+ * How many missions a journey has: read from its own list of missions (its
+ * js/missions-data.js: the missions on the way and those in stations), so
+ * the ticket always tells the truth. Null when the list cannot be read.
+ * @param {import('./routes.js').RouteInfo} route
+ * @returns {Promise<number | null>}
+ */
+async function missionCount(route) {
+  try {
+    const data = await import(`../${route.path}js/missions-data.js`);
+    const plan = Object.values(data).find(v => v && Array.isArray(v.travel) && v.stations);
+    return plan ? plan.travel.length + Object.keys(plan.stations).length : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * One journey's card: a train ticket. The main part has the journey's name,
  * its two stations, its season and its days; the stub, after the
  * perforation, has a stamp that tells whether the journey was done, and the
@@ -178,6 +208,13 @@ function routeCard(route) {
   const picture = el('div', { class: 'ticket-pic' });
   // the SVG is built here from fixed values (no text from outside goes into it)
   picture.innerHTML = thumb(route);
+  // what waits on the journey: its missions (filled in when their list is read)
+  const missions = el('p', { class: 'ticket-missions', hidden: true });
+  missionCount(route).then(n => {
+    if (!n) return;
+    missions.textContent = `🎯 ${missionsLabel(n)} de făcut`;
+    missions.hidden = false;
+  });
   return el('li', { class: `route-item season--${route.season} is-${p.status}`, 'data-season': route.season }, [
     el('a', { class: 'route-card', href: route.path }, [
       el('div', { class: 'ticket-main' }, [
@@ -194,10 +231,12 @@ function routeCard(route) {
               el('span', {}, [route.to]),
             ]),
             el('p', { class: 'ticket-meta' }, [`${season.icon} ${season.name} · ${route.when}`]),
+            missions,
           ]),
         ]),
       ]),
       el('div', { class: 'ticket-stub' }, [
+        el('span', { class: 'ticket-serial', 'aria-hidden': 'true' }, [serial(route.number)]),
         el('span', { class: 'ticket-stamp' }, [el('span', { class: 'sr-only' }, ['Călătoria: ']), STATUS[p.status].stamp]),
         p.stars > 0 && el('span', { class: 'route-stars' }, [`★ ${p.stars}`]),
         el('span', { class: 'route-go' }, [STATUS[p.status].button]),
@@ -249,7 +288,7 @@ if (filter) list.before(filter);
  */
 const hint = /** @type {HTMLButtonElement} */ (document.getElementById('scroll-hint'));
 /** the first card whose bottom (with its button) is below the screen */
-const firstHidden = () => [...list.querySelectorAll('.route-card')]
+const firstHidden = () => [...document.querySelectorAll('.home-main .route-card')]
   .find(card => !(/** @type {HTMLElement} */ (card.closest('.route-item'))).hidden && card.getBoundingClientRect().bottom > window.innerHeight - 8);
 const updateHint = () => { hint.hidden = window.scrollY > 40 || !firstHidden(); };
 hint.addEventListener('click', () => {
