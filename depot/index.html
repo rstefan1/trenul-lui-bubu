@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Trenul lui Bubu – Depoul</title>
+  <meta name="description" content="Depoul lui Bubu: copiii își aleg o locomotivă și o decorează, apoi o văd pe drum în călătorii.">
+  <meta name="theme-color" content="#5a2f22">
+  <link rel="icon" href="../shared/assets/favicon.ico" sizes="48x48">
+  <link rel="icon" href="../shared/assets/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Fredoka:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/css/tokens.css">
+  <!-- the wooden sign and the back button are the ones of the home page -->
+  <link rel="stylesheet" href="../home/home.css">
+  <link rel="stylesheet" href="depot.css">
+</head>
+<body class="depot">
+  <header class="depot-head">
+    <a class="home-back" id="back" href="../"><span aria-hidden="true">←</span> <span id="backLabel">Toate călătoriile</span></a>
+    <div class="home-head">
+      <div class="home-sign">
+        <h1 class="home-title">Depoul lui Bubu</h1>
+        <p class="home-subtitle" id="subtitle">Alege o locomotivă!</p>
+        <img class="home-bubu" src="../shared/assets/bubu.webp" alt="" width="120" height="120">
+      </div>
+    </div>
+  </header>
+
+  <main class="depot-main">
+    <!-- the locomotives, each in its bay of the depot (depot/depot.js) -->
+    <ol class="bays" id="bays" aria-label="Locomotivele din depou"></ol>
+    <!-- the chosen locomotive, in the workshop (depot/depot.js) -->
+    <section class="workshop" id="workshop" aria-labelledby="workshopTitle" hidden></section>
+  </main>
+
+  <noscript><p class="depot-note">Pentru depou trebuie activat JavaScript în browser.</p></noscript>
+  <script type="module" src="depot.js"></script>
+</body>
+</html>

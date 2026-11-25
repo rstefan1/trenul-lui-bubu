@@ -403,6 +403,17 @@ body {
   font-weight: 800;
 }
 
+/* the ticket to the depot, under the journeys: the same ticket, printed in
+   green, with a palette for a stamp */
+.depot-item { max-width: 380px; margin: var(--list-gap, 20px) auto 0; --list-gap: clamp(14px, 2.4vw, 24px); }
+.depot-card .ticket-head { background: var(--fibres), var(--grain), linear-gradient(90deg, #1d5a3a, #2a7049); }
+.depot-card .route-title { color: var(--green-dark); }
+.depot-card .ticket-stub { background: var(--fibres), var(--grain), linear-gradient(rgba(46, 157, 87, .16), rgba(46, 157, 87, .16)), var(--card); --stamp: var(--green-dark); }
+.depot-card .ticket-stamp { font-size: 28px; border-style: solid; background: rgba(255, 255, 255, .6); }
+.depot-card .route-go { background: var(--station-blue); box-shadow: 0 3px 0 #143769; }
+.depot-card:hover .route-go, .depot-card:focus-visible .route-go { box-shadow: 0 3px 0 #143769, 0 0 0 4px rgba(255, 255, 255, .7); }
+.depot-item { transform: rotate(.6deg); }
+
 /* hidden on the screen, read by screen readers */
 .sr-only {
   position: absolute;

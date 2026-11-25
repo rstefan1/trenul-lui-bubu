@@ -142,8 +142,26 @@ function thumb(route) {
 }
 
 /**
+ * The drawing of the depot's ticket: the brick depot with its arched door,
+ * a locomotive peeking out, and a painter's palette.
+ */
+const DEPOT = sky('pic-depot', '#7cc4f2', '#d8f0ff')
+  + `<path d="M6 30 L40 14 L74 30 V64 H6Z" fill="#a5543a"/><path d="M2 32 L40 12 L78 32 L74 34 L40 17 L6 34Z" fill="#5e3a1c"/>`
+  + `<g fill="#8a4430">${[38, 44, 50, 56].map(y => `<rect x="8" y="${y}" width="64" height="1"/>`).join('')}</g>`
+  + `<path d="M18 64 V42 a14 14 0 0 1 28 0 V64Z" fill="#2c3550"/><path d="M18 64 V42 a14 14 0 0 1 28 0 V64" fill="none" stroke="#fbeed2" stroke-width="2"/>`
+  + `<circle cx="40" cy="25" r="4.5" fill="#fbeed2"/><circle cx="40" cy="25" r="2.6" fill="#1f4f9c"/>`
+  // the locomotive peeking out of the door, decorated with a bow
+  + `<rect x="21" y="44" width="22" height="18" rx="4" fill="#d8382f"/><rect x="21" y="53" width="22" height="2.5" fill="#fbeed2"/>`
+  + `<rect x="25" y="47" width="14" height="5" rx="1.5" fill="#d7efff"/><circle cx="32" cy="58.5" r="2" fill="#fff3b0"/>`
+  + `<path d="M32 44 l-5 -3 v6Z M32 44 l5 -3 v6Z" fill="#ff6fa8"/><circle cx="32" cy="44" r="1.6" fill="#e04585"/>`
+  + `<rect y="62" width="80" height="18" fill="#9aa4b1"/><rect y="64" width="80" height="2.5" fill="#6d6258"/>`
+  // the palette, with its blobs of paint
+  + `<path d="M56 50 c8 -6 20 -2 20 6 c0 6 -6 4 -7 8 c-1 4 -9 4 -13 0 c-3 -4 -4 -10 0 -14Z" fill="#f6e6c2" stroke="#8a7448" stroke-width="1"/>`
+  + `<circle cx="61" cy="53" r="2" fill="#e53935"/><circle cx="67" cy="51" r="2" fill="#ffd23f"/><circle cx="72" cy="55" r="2" fill="#2e9d57"/><circle cx="62" cy="59" r="2" fill="#40c4ff"/>`;
+
+/**
  * The serial number printed along the stub, like on real tickets (the
- * journey's number gives it).
+ * depot's ticket is number 0).
  * @param {number} n
  */
 const serial = n => `Seria BB Nr. ${String(241200 + n * 37).padStart(7, '0')}`;
@@ -246,6 +264,37 @@ function routeCard(route) {
 }
 
 /**
+ * The ticket to Bubu's depot, after the journeys (whatever season is
+ * shown): there the child picks a locomotive and decorates it.
+ */
+function depotCard() {
+  const picture = el('div', { class: 'ticket-pic' });
+  // the SVG is built here from fixed values (no text from outside goes into it)
+  picture.innerHTML = `<svg viewBox="0 0 80 80" aria-hidden="true" focusable="false">${DEPOT}</svg>`;
+  return el('div', { class: 'route-item depot-item' }, [
+    el('a', { class: 'route-card depot-card', href: 'depot/' }, [
+      el('div', { class: 'ticket-main' }, [
+        el('p', { class: 'ticket-head' }, [el('span', {}, ['🔧 Bilet spre depou']), el('span', {}, ['Atelier'])]),
+        el('div', { class: 'ticket-row' }, [
+          picture,
+          el('div', { class: 'ticket-words' }, [
+            el('h2', { class: 'route-title' }, ['Depoul lui Bubu']),
+            el('p', { class: 'route-way' }, ['Decorează-ți locomotiva!']),
+            el('p', { class: 'ticket-meta' }, ['🎨 Culori, fundițe, globuri, lumini']),
+            el('p', { class: 'ticket-missions' }, ['🚂 Locomotive de decorat']),
+          ]),
+        ]),
+      ]),
+      el('div', { class: 'ticket-stub' }, [
+        el('span', { class: 'ticket-serial', 'aria-hidden': 'true' }, [serial(0)]),
+        el('span', { class: 'ticket-stamp', 'aria-hidden': 'true' }, ['🎨']),
+        el('span', { class: 'route-go' }, ['Intră']),
+      ]),
+    ]),
+  ]);
+}
+
+/**
  * The season buttons above the list (only when there are journeys of more
  * than one season). The choice is remembered for the next visit.
  * @param {HTMLElement} list
@@ -278,6 +327,7 @@ const list = /** @type {HTMLElement} */ (document.getElementById('routes'));
 list.replaceChildren(...[...ROUTES].sort((a, b) => a.number - b.number).map(routeCard));
 const filter = seasonFilter(list);
 if (filter) list.before(filter);
+list.after(depotCard());
 
 
 /*
@@ -287,7 +337,7 @@ if (filter) list.before(filter);
  * it simply shows or hides, and the page jumps without sliding.
  */
 const hint = /** @type {HTMLButtonElement} */ (document.getElementById('scroll-hint'));
-/** the first card whose bottom (with its button) is below the screen */
+/** the first card (a journey or the depot) whose bottom, with its button, is below the screen */
 const firstHidden = () => [...document.querySelectorAll('.home-main .route-card')]
   .find(card => !(/** @type {HTMLElement} */ (card.closest('.route-item'))).hidden && card.getBoundingClientRect().bottom > window.innerHeight - 8);
 const updateHint = () => { hint.hidden = window.scrollY > 40 || !firstHidden(); };
