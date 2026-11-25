@@ -273,7 +273,7 @@ function decorate(loco) {
         el('div', { class: 'tools', role: 'tablist', 'aria-label': 'Ce decorezi' }, tabs),
         panel,
         saved,
-        el('div', { class: 'workshop-actions' }, [reset, el('a', { class: 'workshop-other', href: '#' }, ['🚂 Altă locomotivă'])]),
+        el('div', { class: 'workshop-actions' }, [reset, el('a', { class: 'workshop-other', href: '#' }, ['✔ Salvează modificările'])]),
       ]),
     ]),
   );
