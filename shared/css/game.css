@@ -1265,6 +1265,12 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .arches-question { max-width: 9em; color: #fff; font-size: clamp(16px, 2.4vmin, 20px); font-weight: 800; line-height: 1.15; }
 .arches-controls .signal-btn { font-size: clamp(26px, 4vmin, 34px); min-width: clamp(70px, 10vmin, 96px); }
 .arches-controls .signal-btn:disabled { opacity: .4; }
+/* upright phones: the question on a row of its own, above the answers (side by side
+   they are wider than the screen) */
+@media (max-width: 640px) and (orientation: portrait) {
+  .signal-controls.arches-controls { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); flex-wrap: wrap; justify-content: center; }
+  .arches-question { flex-basis: 100%; max-width: none; text-align: center; }
+}
 
 @media (max-height: 520px) and (orientation: landscape) {
   .balance-dial { width: 140px; height: 70px; }
