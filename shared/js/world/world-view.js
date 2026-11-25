@@ -87,6 +87,26 @@ export class WorldView {
   }
 
   /**
+   * Pans the view, only as much as needed, so that a stretch of the train
+   * (in train coordinates: 0 is its front, the coaches are at negative x)
+   * is all on screen, e.g. the coaches on a narrow phone held upright, where
+   * the last ones are usually beyond the left edge; null goes back to the
+   * usual place. A stretch wider than the screen is centred.
+   * @param {{left: number, right: number} | null} span
+   */
+  showSpan(span) {
+    if (!span) {
+      this.panTarget = 0;
+      return;
+    }
+    const stage = this.stage;
+    const lo = stage.viewLeft - span.left;
+    const hi = stage.viewRight - span.right;
+    const base = this.baseAnchorX;
+    this.panTarget = base - (lo > hi ? (lo + hi) / 2 : clamp(base, lo, hi));
+  }
+
+  /**
    * Moves the camera in, smoothly, so that a region of the stage fills the
    * middle of the screen (a mission that wants something seen close up, like
    * the parts of the locomotive); null moves it back out.

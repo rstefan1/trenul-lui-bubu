@@ -29,8 +29,14 @@ import { Mission, starsForMistakes } from './mission.js';
  *          x in train coordinates; t: seconds since it was last struck
  */
 
-/** How close to a wheel a touch must be (stage units). */
+/** How close to a wheel a touch must be (stage units, on large screens). */
 const REACH = 34;
+/** ... and at least this close on screen (CSS pixels): a child's finger on a phone. */
+const FINGER = 36;
+/** Room kept on screen around the wheels: Bubu with her hammer on the left, and the edges. */
+const ROOM = { left: 110, right: 50 };
+/** Two wheels side by side must be at least this far apart on screen (CSS pixels). */
+const WHEEL_GAP = 46;
 /** The kinds of car whose wheels are checked. */
 const COACHES = new Set(['forestCoach', 'coach']);
 
@@ -54,6 +60,10 @@ export class WheelTapMission extends Mission {
     this.particles = new Particles();
     /** Bubu on foot, with her hammer. */
     this.worker = new BubuWorker(ctx);
+    /** The stretch of the train shown when it does not all fit (train coordinates). */
+    /** @type {{left: number, right: number} | null} */
+    this.shown = null;
+    this.minGap = 60;
   }
 
   /**
@@ -79,6 +89,9 @@ export class WheelTapMission extends Mission {
         i += 1;
       }
     }
+    const xs = this.wheels.map(w => w.x).sort((a, b) => a - b);
+    /** The closest two wheels (the two of a bogie), in stage units. */
+    this.minGap = Math.min(...xs.slice(1).map((x, i) => x - xs[i]));
     this.ctx.hud.setCounter('🔨', 0, this.wheels.length);
     // Bubu gets off, by the first wheel
     const first = this.wheels[0];
@@ -94,11 +107,66 @@ export class WheelTapMission extends Mission {
     return this.ctx.world.trainToStage({ x: w.x, y: -15 });
   }
 
+  /**
+   * Shows the wheels big enough to touch (every frame: the window may change
+   * size). The camera moves in on the coaches as far as the screen allows
+   * (phones held sideways). Where all the wheels would then still be too
+   * small (phones held upright), it shows one stretch of the train at a
+   * time, the one with the next wheel to strike, and slides along as the
+   * child works from the front to the back.
+   * @private
+   */
+  frameWheels() {
+    const world = this.ctx.world;
+    const stage = this.ctx.stage;
+    // once all is done, back to the usual view: Bubu walks back to her locomotive
+    if (!this.wheels.length || this.step === 'done') {
+      world.showSpan(null);
+      world.zoomOn(null);
+      this.shown = null;
+      return;
+    }
+    const xs = this.wheels.map(w => w.x);
+    const all = { left: Math.min(...xs) - ROOM.left, right: Math.max(...xs) + ROOM.right };
+    // the widest stretch in which two wheels side by side are still far enough apart for a finger
+    const k = Math.max(1, WHEEL_GAP / (this.minGap * stage.scale));
+    const widest = (stage.viewRight - stage.viewLeft) / k;
+    let span = all;
+    if (all.right - all.left > widest) {
+      const next = this.wheels.find(w => (this.step === 'test' ? !w.tested : w.cracked && !w.changed)) ?? this.wheels[0];
+      const keep = this.shown && next.x - ROOM.left / 2 > this.shown.left && next.x + ROOM.right / 2 < this.shown.right;
+      if (!keep) {
+        // the next wheel near the right edge, the wheels after it to its left
+        const right = Math.min(all.right, Math.max(all.left + widest, next.x + ROOM.right));
+        this.shown = { left: right - widest, right };
+      }
+      span = /** @type {{left: number, right: number}} */ (this.shown);
+    }
+    world.showSpan(span);
+    // (where that stretch will be once the view has slid)
+    const shift = world.panTarget - world.pan;
+    const a = world.trainToStage({ x: span.left, y: -15 });
+    const b = world.trainToStage({ x: span.right, y: -15 });
+    world.zoomOn({ left: a.x - shift, right: b.x - shift, top: a.y - 190, bottom: a.y + 70 });
+  }
+
+  /** How close to a wheel a touch must be (stage units). @private */
+  get reach() {
+    const k = this.ctx.stage.scale * this.ctx.world.zoomTransform.k;
+    return Math.max(REACH, FINGER / k);
+  }
+
+  /** Radius of the ring around a wheel still to strike (never touching the next one). @private */
+  get ring() {
+    return Math.min(Math.max(20, this.reach * 0.7), this.minGap / 2 - 3);
+  }
+
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerDown(p) {
     if (this.step === 'done') return;
     let best = null;
-    let dist = REACH * 2;
+    // the nearest wheel wins, so a generous reach never strikes the wrong one
+    let dist = this.reach * 1.6;
     for (const w of this.wheels) {
       const c = this.at(w);
       const d = Math.hypot(c.x - p.x, (c.y - p.y) * 0.6);
@@ -152,6 +220,7 @@ export class WheelTapMission extends Mission {
   /** @param {number} dt */
   update(dt) {
     this.time += dt;
+    this.frameWheels();
     this.particles.update(dt);
     this.worker.update(dt);
     for (const w of this.wheels) w.t += dt;
@@ -199,7 +268,8 @@ export class WheelTapMission extends Mission {
         c.strokeStyle = `rgba(255,214,90,${0.45 + 0.5 * pulse})`;
         c.lineWidth = 4;
         c.beginPath();
-        c.arc(p.x, p.y, 20 + pulse * 3, 0, Math.PI * 2);
+        // (bigger on phones, where the wheels are small on screen)
+        c.arc(p.x, p.y, this.ring + pulse * 3 * Math.min(1, this.ring / 20), 0, Math.PI * 2);
         c.stroke();
       }
     }
@@ -227,6 +297,8 @@ export class WheelTapMission extends Mission {
   }
 
   dispose() {
+    this.ctx.world.showSpan(null);
+    this.ctx.world.zoomOn(null);
     this.ctx.hud.hideCounter();
     if (!this.worker.aboard) this.ctx.world.train.setBubuVisible(true);
   }
