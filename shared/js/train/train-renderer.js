@@ -16,6 +16,10 @@
  * garland when its first bauble arrives. A string of coloured lights runs
  * along the cars under the windows; it lights up bit by bit (front to back)
  * and twinkles, brightest at night.
+ *
+ * The locomotive comes as the child decorated it in the depot (its colours,
+ * bow, baubles, lights and stickers: shared/js/depot/style.js); a colour
+ * chosen on the journey paints its body over the depot's colour.
  */
 
 import { createOffscreen, releaseCanvas } from '../core/canvas-cache.js';
@@ -25,6 +29,8 @@ import { fillCircle, glow } from '../gfx/shapes.js';
 import { drawBubuHat } from '../gfx/hats.js';
 import { drawBubu } from './bubu.js';
 import { CAR_PAINTERS, WHEEL_R } from './cars.js';
+import { decorBulbs, drawDecorLights, paintDecor } from './loco-decor.js';
+import { paintedCar, styleOfCar } from '../depot/style.js';
 import { TREE_WAGON } from './specs.js';
 
 /** Vertical extent of the painted train, relative to the rail. */
@@ -44,6 +50,8 @@ export const HANGING_BAUBLE_R = 11;
  * @property {import('./specs.js').CarSpec} spec
  * @property {number} left   train x of the rear end
  * @property {import('./cars.js').CarGeometry} geo  in car coordinates
+ * @property {import('../depot/style.js').LocoStyle | null} style  how the child decorated it (a locomotive of the depot)
+ * @property {Array<{x: number, y: number}>} [bulbs]  its string of lights from the depot, in car coordinates
  */
 
 /**
@@ -149,7 +157,7 @@ export class TrainRenderer {
     if (this.helper && spec.cars[0].kind === 'dieselLoco') cars.splice(1, 0, { ...spec.cars[0], helper: true });
     cars.forEach((car) => {
       const left = cursor - car.length;
-      this.cars.push({ spec: car, left, geo: /** @type {any} */ (null) });
+      this.cars.push({ spec: car, left, geo: /** @type {any} */ (null), style: styleOfCar(car) });
       cursor = left - spec.gap;
     });
     /** Train x of the rear end. */
@@ -423,9 +431,8 @@ export class TrainRenderer {
     const last = this.cars.length - 1;
     let wagon = 0;
     this.cars.forEach((car, i) => {
-      let spec = LOCOS.has(car.spec.kind) && this.locoColor
-        ? { ...car.spec, colors: { ...car.spec.colors, body: this.locoColor } }
-        : car.spec;
+      let spec = paintedCar(car.spec, car.style);
+      if (LOCOS.has(spec.kind) && this.locoColor) spec = { ...spec, colors: { ...spec.colors, body: this.locoColor } };
       if (car.spec.kind === 'platform') {
         const cargo = this.cargo[wagon++];
         if (cargo) spec = { ...spec, cargo };
@@ -439,6 +446,8 @@ export class TrainRenderer {
       } else {
         car.geo = CAR_PAINTERS[car.spec.kind](ctx, spec, { leading: i === 0, trailing: i === last });
       }
+      paintDecor(ctx, spec, car.style);
+      car.bulbs = decorBulbs(spec, car.style);
       ctx.restore();
     });
     this.body = canvas;
@@ -459,6 +468,9 @@ export class TrainRenderer {
     this.cars.forEach((car, index) => {
       const L = car.spec.length;
       const n = Math.max(2, Math.round((L - 30) / HOOK_SPACING) + 1);
+      car.hooks = [];
+      // a locomotive with its own baubles from the depot keeps them: the journey's go on the cars behind
+      if (car.style?.baubles) return;
       const step = (L - 30) / (n - 1);
       const y = car.geo.roofY + 6;
       car.hooks = Array.from({ length: n }, (_, i) => ({ x: car.left + 15 + i * step, y }));
@@ -498,8 +510,26 @@ export class TrainRenderer {
    * @param {TrainFrame} f
    */
   drawDecorations(c, f) {
+    this.drawDepotLights(c, f, false);
     this.drawBulbs(c, f, false);
     this.drawBaubles(c, f);
+  }
+
+  /**
+   * The string of lights the child put on the locomotive in the depot.
+   * @private
+   * @param {CanvasRenderingContext2D} c
+   * @param {TrainFrame} f
+   * @param {boolean} glowing
+   */
+  drawDepotLights(c, f, glowing) {
+    for (const car of this.cars) {
+      if (!car.bulbs?.length) continue;
+      c.save();
+      c.translate(f.frontX + car.left, f.railY);
+      drawDecorLights(c, car.bulbs, car.style, f.time, glowing);
+      c.restore();
+    }
   }
 
   /**
@@ -622,6 +652,8 @@ export class TrainRenderer {
       this.drawBulbs(c, f, true);
       c.globalAlpha = 1;
     }
+    // the depot's lights glow too (stronger at night); they set their own brightness as they twinkle
+    if (f.lights > 0.05) this.drawDepotLights(c, f, true);
     for (const car of this.cars) {
       const ox = f.frontX + car.left;
       const t = car.geo.taillight;
