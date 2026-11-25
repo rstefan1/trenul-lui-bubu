@@ -152,10 +152,38 @@ export class HeadcountMission extends Mission {
     }
   }
 
+  /**
+   * While the children climb back in and are counted, the camera shows the
+   * coaches' windows, as big as the screen allows: all of them (on a phone
+   * held upright the view slides back so the last coach is not beyond the
+   * left edge; on one held sideways it moves in), with room above them for
+   * the question (every frame: the window may change size).
+   * @private
+   */
+  frameWindows() {
+    const world = this.ctx.world;
+    const windows = world.train.passengerWindows;
+    if (!windows.length || (this.step !== 'board' && this.step !== 'count')) {
+      world.showSpan(null);
+      world.zoomOn(null);
+      return;
+    }
+    const xs = windows.map(w => w.x);
+    const ys = windows.map(w => w.y);
+    const span = { left: Math.min(...xs) - 70, right: Math.max(...xs) + 70 };
+    world.showSpan(span);
+    // (where the coaches will be once the view has slid)
+    const shift = world.panTarget - world.pan;
+    const a = world.trainToStage({ x: span.left, y: Math.min(...ys) });
+    const b = world.trainToStage({ x: span.right, y: 0 });
+    world.zoomOn({ left: a.x - shift, right: b.x - shift, top: a.y - 170, bottom: b.y + 20 });
+  }
+
   /** @param {number} dt */
   update(dt) {
     this.time += dt;
     this.stepT += dt;
+    this.frameWindows();
     const train = this.ctx.world.train;
     if (this.step === 'play' && this.stepT > PLAY) {
       this.step = 'call';
@@ -246,6 +274,8 @@ export class HeadcountMission extends Mission {
   }
 
   dispose() {
+    this.ctx.world.showSpan(null);
+    this.ctx.world.zoomOn(null);
     leave(this.button);
     leave(this.bar);
   }
