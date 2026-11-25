@@ -140,7 +140,7 @@ body.depot {
   padding: 6px 6px 0;
   background: var(--paper-card);
 }
-@media (min-width: 900px) {
+@media (min-width: 900px), (orientation: landscape) and (min-width: 640px) {
   .workshop-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; }
   .workshop-view { top: 12px; margin: 0; padding: 0; background: none; }
 }
@@ -175,7 +175,7 @@ body.depot {
 .tool[aria-selected="true"] { border-color: var(--gold); background: #fff6d6; box-shadow: 0 3px 0 #d9a91f; }
 .tool:focus-visible, .choice:focus-visible { outline: 4px solid var(--station-blue); outline-offset: 2px; }
 /* not much room (a phone, or the tools beside the locomotive): two rows of three */
-@media (max-width: 620px), (min-width: 900px) {
+@media (max-width: 620px), (min-width: 900px), (orientation: landscape) and (min-width: 640px) {
   .tools { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 520px) {
@@ -288,6 +288,53 @@ body.depot {
 .workshop-other:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 
 .depot-note { text-align: center; font-size: 18px; }
+
+/* ---------- Low screens: a phone held sideways ----------
+   everything smaller, the header on one row, the three locomotives side by
+   side, and in the workshop the locomotive beside the tools, never taller
+   than half the screen */
+@media (orientation: landscape) and (max-height: 520px) {
+  .depot-head { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 8px 16px 14px; }
+  .depot-head .home-back { position: absolute; top: 8px; left: max(12px, env(safe-area-inset-left)); margin: 0; }
+  .depot-head .home-head { padding: 0; }
+  .depot-head .home-sign { margin: 0; padding: 4px 22px 5px; transform: rotate(1deg); }
+  .depot-head .home-sign::before, .depot-head .home-sign::after { display: none; }
+  .depot-head .home-title { font-size: 22px; }
+  .depot-head .home-subtitle { font-size: 12px; }
+  .depot-head .home-bubu { width: 40px; top: -14px; right: -26px; }
+  .depot-main { padding: 4px max(12px, env(safe-area-inset-right)) 16px max(12px, env(safe-area-inset-left)); }
+
+  .bays { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .bay-card { gap: 4px; padding: 18px 8px 10px; border-width: 4px; border-radius: var(--radius-m); }
+  .bay-plate { top: -14px; width: 32px; height: 32px; font-size: 17px; }
+  .bay-door { padding-top: 8px; border-width: 4px; }
+  .bay-loco { height: 92px; }
+  .bay-name { font-size: 17px; }
+  .bay-about { display: none; }
+  .bay-route { margin-top: 0; font-size: 11px; }
+  .bay-go { padding: 3px 14px 5px; font-size: 16px; }
+
+  .workshop { padding: 10px 12px 12px; border-width: 4px; }
+  .workshop-title { margin: 0 0 6px; font-size: 20px; }
+  .workshop-grid { gap: 12px; }
+  .workshop-view { top: 6px; }
+  .workshop-stage { padding-top: 8px; }
+  .workshop-loco { height: min(46vh, 190px); }
+  .workshop-where { margin: 4px 0 0; font-size: 12px; }
+  .tools { gap: 5px; margin-bottom: 8px; }
+  .tool { min-height: 0; padding: 4px 2px 3px; font-size: 12px; box-shadow: 0 2px 0 #e6dcc4; }
+  .tool-emoji { font-size: 20px; }
+  .tool-panel { gap: 6px; padding: 8px 6px; }
+  .choices { gap: 6px; }
+  .choice { min-width: 60px; min-height: 48px; border-width: 3px; }
+  .choice.swatch-choice { width: 40px; height: 40px; }
+  .tool-icon { width: 48px; height: 32px; }
+  .part { padding: 3px 10px 4px; font-size: 13px; }
+  .workshop-saved { margin: 6px 0 4px; font-size: 12px; }
+  .workshop-reset, .workshop-other { padding: 3px 14px 5px; font-size: 14px; }
+  .choice-label { font-size: 13px; }
+  .name-input { font-size: 18px; padding: 4px 10px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .bay-card, .choice { transition: none; }
