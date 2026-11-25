@@ -228,9 +228,9 @@ body {
 .route-item:has(.route-card:hover), .route-item:has(.route-card:focus-visible) {
   z-index: 1;
   filter: drop-shadow(0 6px 4px rgba(60, 40, 10, .3)) drop-shadow(0 22px 26px rgba(20, 40, 20, .38));
-  transform: translateY(-8px) scale(1.035) rotate(0deg);
+  transform: translateY(-6px) scale(1.09) rotate(0deg);
 }
-.route-item:has(.route-card:active) { transform: translateY(-3px) scale(1.01); transition-duration: .08s; }
+.route-item:has(.route-card:active) { transform: translateY(-2px) scale(1.04); transition-duration: .08s; }
 .route-card {
   --stub: 104px;
   /* light yellow-brown cardboard: fine fibres (a noise drawn by the browser), a faint grain, the board */
