@@ -6,6 +6,11 @@
  * The state is a plain observable object: the HUD and the train renderer
  * listen to "change" events instead of being called by the missions. It can
  * be turned into plain JSON and back, to be saved in the browser.
+ *
+ * The locomotive's colour is not saved with the journey: a journey starts
+ * with the colour the child gave the locomotive in the depot; a colour
+ * chosen on the journey lasts while the child stays on it (leaving the
+ * journey, or choosing another, brings back the depot's colour).
  */
 
 import { Emitter } from '../core/emitter.js';
@@ -13,7 +18,7 @@ import { Emitter } from '../core/emitter.js';
 /**
  * @typedef {object} GameStateData
  * @property {string} travelerName
- * @property {string | null} locoColor
+ * @property {string | null} [locoColor]  no longer saved (older saves may still have it)
  * @property {Array<[string, number]>} stars
  * @property {string[]} baubles
  * @property {number} [hat]
@@ -25,7 +30,7 @@ export class GameState extends Emitter {
   constructor() {
     super();
     this.travelerName = '';
-    /** @type {string | null} */
+    /** @type {string | null} the colour chosen on this journey (null: the depot's colour); never saved */
     this.locoColor = null;
     /** @type {Map<string, number>} mission id → stars (1..3) */
     this.stars = new Map();
@@ -54,7 +59,7 @@ export class GameState extends Emitter {
     this.emit('change', 'travelerName');
   }
 
-  /** @param {string} color */
+  /** @param {string | null} color  null: back to the colour of the depot */
   setLocoColor(color) {
     this.locoColor = color;
     this.emit('change', 'locoColor');
@@ -74,7 +79,6 @@ export class GameState extends Emitter {
   toJSON() {
     return {
       travelerName: this.travelerName,
-      locoColor: this.locoColor,
       stars: [...this.stars],
       baubles: [...this.baubles],
       hat: this.hat,
@@ -90,7 +94,7 @@ export class GameState extends Emitter {
    */
   load(data) {
     this.travelerName = data?.travelerName ?? '';
-    this.locoColor = data?.locoColor ?? null;
+    // the colour chosen on the journey stays (it is not part of what is saved)
     this.stars = new Map(data?.stars ?? []);
     this.baubles.length = 0;
     this.baubles.push(...(data?.baubles ?? []));

@@ -23,6 +23,7 @@ import { TRACK_Y } from '../world/track.js';
 import { el } from '../ui/dom.js';
 import { Mission, starsForMistakes } from './mission.js';
 import { leave, showPanel } from '../ui/panel.js';
+import { depotBodyColor } from '../depot/style.js';
 
 /**
  * @typedef {object} TicketData
@@ -105,16 +106,21 @@ export class DepartureMission extends Mission {
     input.addEventListener('input', refresh);
     input.addEventListener('keydown', e => { if (e.key === 'Enter' && !done.disabled) done.click(); });
 
-    const swatches = this.config.locoColors.map(({ color, label }, i) => {
+    // the first colour is the one the child gave the locomotive in the depot
+    const depot = depotBodyColor(this.ctx.world.train.spec.cars[0]);
+    const colors = this.config.locoColors.some(c => c.color === depot)
+      ? this.config.locoColors
+      : [{ color: depot, label: 'din depou' }, ...this.config.locoColors];
+    const swatches = colors.map(({ color, label }) => {
       const b = el('button', {
         class: 'swatch', type: 'button', title: label, 'aria-label': `Locomotivă ${label}`,
-        style: `--swatch:${color}`, 'aria-pressed': String((state.locoColor ?? this.config.locoColors[0].color) === color),
+        style: `--swatch:${color}`, 'aria-pressed': String((state.locoColor ?? depot) === color),
       });
       b.addEventListener('click', () => {
-        state.setLocoColor(color);
+        // the depot's colour is no choice of the journey: back to it
+        state.setLocoColor(color === depot ? null : color);
         for (const s of swatches) s.setAttribute('aria-pressed', String(s === b));
       });
-      if (i === 0 && !state.locoColor) state.setLocoColor(color);
       return b;
     });
 
