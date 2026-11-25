@@ -218,6 +218,7 @@ export class WorldView {
     this.pan = approach(this.pan, this.panTarget, 1.6, dt);
     this.zoom = approach(this.zoom, this.zoomTarget, 2.2, dt);
     if (Math.abs(this.zoom - this.zoomTarget) < 0.002) this.zoom = this.zoomTarget;
+    this.stage.zoom = this.zoomTransform.k;
     const w = j.weather;
     this.cover = approach(this.cover, w.cover, 3, dt);
     this.snow.update(dt, w.snowfall, j.speed, this.time);

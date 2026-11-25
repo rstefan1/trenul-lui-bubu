@@ -10,7 +10,8 @@ import { zoomed } from './ui-style.js';
 
 /**
  * Draws the note with its tip on a point (the label is kept on screen, and
- * bigger on phones).
+ * bigger on phones). It is drawn through the camera's zoom, like the
+ * missions, but keeps its size on screen when the camera moves in.
  * @param {CanvasRenderingContext2D} c
  * @param {import('../core/stage.js').Stage} stage
  * @param {number} x
@@ -20,7 +21,7 @@ import { zoomed } from './ui-style.js';
  *        (when the room above is taken, e.g. by a card at the top of the screen)
  */
 export function drawTouchNote(c, stage, x, y, text, below = false) {
-  zoomed(c, stage.ui, x, y, () => {
+  zoomed(c, stage.zoomedUi, x, y, () => {
     c.font = '800 21px "Baloo 2", system-ui, sans-serif';
     const w = Math.max(150, c.measureText(text).width + 30);
     const h = 44;

@@ -49,6 +49,8 @@ export class Stage extends Emitter {
     this.offsetY = 0;
     this.viewTop = 0;
     this.viewBottom = STAGE_HEIGHT;
+    /** How far the world's camera has moved in (set by the world view; 1: not at all). */
+    this.zoom = 1;
 
     const onResize = () => this.resize();
     window.addEventListener('resize', onResize);
@@ -91,6 +93,14 @@ export class Stage extends Emitter {
    */
   get ui() {
     return clamp(UI_SCALE / this.scale, 1, MAX_UI);
+  }
+
+  /**
+   * {@link ui} for what is drawn through the camera's zoom (hint notes over
+   * the world): the same size on screen whether the camera has moved in or not.
+   */
+  get zoomedUi() {
+    return this.ui / this.zoom;
   }
 
   /** Width of the visible area in stage units (may exceed `width`). */

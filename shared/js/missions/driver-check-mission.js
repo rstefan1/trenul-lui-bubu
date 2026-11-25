@@ -444,7 +444,7 @@ export class DriverCheckMission extends Mission {
         // top of the screen covers the room above (the horn, on the roof)
         const [x, y, w, h] = rects[0] ?? [0, 0, 0, 0];
         if (!rects.length) return;
-        if (this.underCard(y - 14 - NOTE_HEIGHT * this.ctx.stage.ui)) {
+        if (this.underCard(y - 14 - NOTE_HEIGHT * this.ctx.stage.zoomedUi)) {
           drawTouchNote(c, this.ctx.stage, x + w / 2, y + h + 14 + pulse * 6, check.hint, true);
         } else {
           drawTouchNote(c, this.ctx.stage, x + w / 2, y - 14 - pulse * 6, check.hint);
