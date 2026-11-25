@@ -26,7 +26,9 @@ reuses `shared/`, and is added to `home/routes.js` with its season (winter,
 spring, summer or autumn) and the drawing on its ticket.
 
 In the depot (its ticket is under the journeys) the children decorate the
-locomotives: colours, a bow, baubles, a string of lights and stickers. The
+locomotives: colours, a pattern, a bow, a little flag, stickers and a name
+plate (nothing tied to a season, as the locomotives pull journeys of every
+season). The
 decorations are kept in the browser and every journey pulled by that
 locomotive shows them; the colour chosen at the start of a journey lasts
 only while the child stays on it.
