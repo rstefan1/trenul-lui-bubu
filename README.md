@@ -18,11 +18,18 @@ shared/          code and assets shared by every journey of the game
 route-01/        the first journey (winter: Timișoara → Putna)
 route-02/        the second journey (winter, by day: Putna → Vișeu de Jos, freight train)
 route-03/        the third journey (New Year's Eve: Vișeu de Sus → Paltin, on the forest railway)
+depot/           Bubu's depot: the children pick a locomotive and decorate it
 ```
 
 Every new journey gets a folder of its own (`route-02/`, `route-03/`, …),
 reuses `shared/`, and is added to `home/routes.js` with its season (winter,
-spring, summer or autumn), which gives it its picture on the home page.
+spring, summer or autumn) and the drawing on its ticket.
+
+In the depot (its ticket is under the journeys) the children decorate the
+locomotives: colours, a bow, baubles, a string of lights and stickers. The
+decorations are kept in the browser and every journey pulled by that
+locomotive shows them; the colour chosen at the start of a journey lasts
+only while the child stays on it.
 
 ## Playing
 
@@ -86,6 +93,7 @@ shared/js/world/     sky, lighting, landscape (biomes), railway, features, snow
 shared/js/train/     train compositions, car painters, Bubu
 shared/js/journey/   route model, motion planning, journey state machine
 shared/js/game/      player state (name, stars, ornaments)
+shared/js/depot/     the depot's locomotives, their decorations (saved) and pictures
 shared/js/missions/  mission base class, director and mission types
 shared/js/ui/        HUD, mission HUD and overlays
 route-01/js/         winter route, winter missions and entry point
