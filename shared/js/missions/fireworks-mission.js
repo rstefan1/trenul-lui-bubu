@@ -113,6 +113,8 @@ export class FireworksMission extends Mission {
     this.fireworks.onEvent = (what, x) => this.sound(what === 'launch' ? 'whoosh' : 'thud', x);
     /** @type {HTMLButtonElement | null} */
     this.button = null;
+    /** How far the clearing has appeared (0..1): only once the view has moved to it. */
+    this.shown = 0;
   }
 
   start() {
@@ -173,7 +175,7 @@ export class FireworksMission extends Mission {
 
   /** @param {import('../core/input.js').PointerInfo} p */
   pointerDown(p) {
-    if (this.step !== 'place') return;
+    if (this.step !== 'place' || this.shown < 1) return;
     for (const m of this.marks) {
       const q = this.at(m);
       if (m.placed || Math.hypot(p.x - q.x, (p.y - q.y) * 1.4) > 60) continue;
@@ -208,6 +210,10 @@ export class FireworksMission extends Mission {
     this.stepT += dt;
     const j = this.ctx.journey;
     this.fireworks.update(dt);
+    // the clearing appears once the view has moved to it (drawn where it will
+    // be on screen, it would otherwise slide along with the view)
+    const w = this.ctx.world;
+    if (this.shown > 0 || Math.abs(w.panTarget - w.pan) < 10) this.shown = Math.min(1, this.shown + dt * 2.5);
     if (this.step === 'wire' && this.stepT > 1.2) {
       this.ctx.hud.hideCounter();
       this.ctx.hud.announce('Totul e pregătit!', this.config.fact, 'Misiune', 4);
@@ -264,6 +270,9 @@ export class FireworksMission extends Mission {
     const w = this.ctx.world;
     const night = w.light.night;
     const cam = w.cameraY;
+    if (this.shown <= 0) return;
+    c.save();
+    c.globalAlpha = this.shown;
     // what stands on the ground is tinted by the time of day, like the world
     w.drawTinted(c, TRACK_Y - 360, this.ctx.stage.viewBottom + cam, b => this.drawGround(b));
     // what glows: the campfire and the rockets' fuses
@@ -275,6 +284,7 @@ export class FireworksMission extends Mission {
     }
     this.fireworks.draw(c);
     this.drawSky(c);
+    c.restore();
   }
 
   /**
