@@ -100,12 +100,15 @@ export class TeaMission extends Mission {
     }
     const done = !this.queue.length && this.cold === null;
     this.endT = done ? this.endT + dt : 0;
-    if (this.endT > 2 || (this.phase === 'wrapping' && this.cold === null)) this.finishMission();
+    // (at the end of the trip it ends even with a child still waiting for tea:
+    // the train is at the station, where the next mission begins)
+    if (this.endT > 2 || this.phase === 'wrapping') this.finishMission();
   }
 
   /** @private */
   finishMission() {
     if (this.phase === 'finished') return;
+    this.cold = null;
     this.ctx.hud.hideCounter();
     const n = this.total;
     const all = this.served.size >= n;
