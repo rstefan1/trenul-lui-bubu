@@ -129,6 +129,99 @@ body.depot {
 }
 .workshop-loco { display: block; width: 100%; height: clamp(170px, 32vw, 280px); }
 .workshop-note { margin: 16px 0 14px; font-size: 18px; font-weight: 700; color: #5b5240; }
+.workshop-where { margin: 10px 0 14px; font-size: 15px; font-weight: 800; color: var(--station-blue); }
+
+/* the tools: big tabs with a picture and a word */
+.tools {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 72px;
+  padding: 8px 4px 6px;
+  border: 3px solid #e6dcc4;
+  border-radius: var(--radius-s);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #e6dcc4;
+}
+.tool-emoji { font-size: 28px; line-height: 1; }
+.tool[aria-selected="true"] { border-color: var(--gold); background: #fff6d6; box-shadow: 0 3px 0 #d9a91f; }
+.tool:focus-visible, .choice:focus-visible { outline: 4px solid var(--station-blue); outline-offset: 2px; }
+@media (max-width: 520px) {
+  .tools { gap: 5px; }
+  .tool { min-height: 64px; font-size: 12px; }
+  .tool-emoji { font-size: 24px; }
+}
+
+/* the choices of the open tool */
+.tool-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 10px;
+  border-radius: var(--radius-m);
+  background: #f3ead6;
+}
+.choice-row { display: flex; flex-direction: column; gap: 6px; }
+.choice-label { margin: 0; font-size: 16px; font-weight: 800; color: #5b5240; }
+.choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.choice {
+  display: grid;
+  place-items: center;
+  min-width: 76px;
+  min-height: 60px;
+  padding: 4px;
+  border: 4px solid #fff;
+  border-radius: var(--radius-s);
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .15);
+  transition: transform .15s var(--spring);
+}
+.choice:hover { transform: scale(1.06); }
+.choice:active { transform: scale(.96); }
+.choice[aria-pressed="true"] { border-color: var(--green); box-shadow: 0 0 0 3px rgba(46, 157, 87, .35), 0 3px 0 rgba(0, 0, 0, .15); }
+.tool-icon { display: block; width: 60px; height: 40px; }
+.choice-stack { display: flex; flex-direction: column; align-items: center; }
+.choice-name { font-size: 13px; font-weight: 800; color: var(--ink); }
+/* a colour: a big round blob of paint */
+.choice.swatch-choice {
+  min-width: 0;
+  width: 52px;
+  height: 52px;
+  min-height: 0;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .15), 0 3px 0 rgba(0, 0, 0, .15);
+}
+.choice.swatch-choice[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 4px var(--gold), 0 3px 0 rgba(0, 0, 0, .15); }
+.choice.swatch-choice[aria-pressed="true"]::after { content: "✔"; color: #fff; font-size: 20px; font-weight: 800; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
+
+.workshop-saved { margin: 10px 0 6px; font-size: 15px; font-weight: 700; color: var(--green-dark); }
+.workshop-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.workshop-reset {
+  padding: 6px 18px 8px;
+  border: 3px solid #e6dcc4;
+  border-radius: 999px;
+  background: #fff;
+  color: #8a4b1f;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.workshop-reset:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .workshop-other {
   display: inline-block;
   padding: 6px 22px 8px;
@@ -145,5 +238,5 @@ body.depot {
 .depot-note { text-align: center; font-size: 18px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bay-card { transition: none; }
+  .bay-card, .choice { transition: none; }
 }
