@@ -207,7 +207,7 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 380px));
   justify-content: center;
   gap: var(--list-gap) var(--list-gap);
-  --list-gap: clamp(14px, 2.4vw, 24px);
+  --list-gap: clamp(16px, 2.6vw, 28px);
 }
 .route-item[hidden] { display: none; }
 
@@ -270,10 +270,51 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  /* the perforation before the stub: a row of little punched holes */
-  background: radial-gradient(circle, #9c7d48 1.7px, transparent 2.2px) right 0 top 4px / 6px 9px repeat-y;
+  /* the perforation before the stub: a row of little punched holes; under
+     the print, fine wavy lines like on the safety paper of real tickets */
+  background:
+    radial-gradient(circle, #9c7d48 1.7px, transparent 2.2px) right 0 top 4px / 6px 9px repeat-y,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='16'%3E%3Cg fill='none' stroke='%239c7d48' stroke-opacity='.16' stroke-width='.8'%3E%3Cpath d='M0 4 Q15 0 30 4 T60 4M0 12 Q15 8 30 12 T60 12'/%3E%3Cpath d='M0 8 Q15 12 30 8 T60 8' stroke-opacity='.1'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 60px 16px;
   padding-right: 6px;
 }
+/* everything printed on the ticket sits in a thin printed frame */
+.ticket-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 7px 6px 8px 8px;
+  border: 1.5px solid rgba(94, 58, 28, .35);
+  border-radius: 9px;
+}
+/* the fields of the ticket, each with its small printed label */
+.ticket-fields {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr .9fr;
+  margin: 0;
+  border-top: 1.5px solid rgba(94, 58, 28, .35);
+}
+.ticket-field { min-width: 0; padding: 3px 8px 5px; }
+.ticket-field + .ticket-field { border-left: 1.5px solid rgba(94, 58, 28, .35); }
+.ticket-field dt {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #8a7448;
+}
+.ticket-field dd {
+  margin: 0;
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* the missions, the reason of the journey: marked in yellow, as with a highlighter */
+.ticket-field--missions { background: rgba(255, 207, 63, .55); border-radius: 0 0 7px 0; }
+.ticket-field--missions dd { color: #7a3d00; }
 /* the band at the top, printed in dark brown */
 .ticket-head {
   display: flex;
@@ -288,7 +329,7 @@ body {
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-.ticket-row { flex: 1; display: flex; align-items: center; gap: 12px; padding: 12px 14px 14px; }
+.ticket-row { flex: 1; display: flex; align-items: center; gap: 12px; padding: 9px 10px; }
 /* the small picture, framed like a photo */
 .ticket-pic {
   flex: 0 0 64px;
@@ -328,20 +369,6 @@ body {
 }
 .route-line::before { left: 0; }
 .route-line::after { right: 0; }
-.ticket-meta { margin: 0; font-size: 12px; font-weight: 700; color: #8a7448; }
-/* what waits on the journey: printed on a yellow band, so it is seen at once */
-.ticket-missions {
-  align-self: flex-start;
-  margin: 3px 0 0;
-  padding: 1px 9px 2px;
-  border-radius: 6px;
-  background: var(--gold);
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 800;
-  box-shadow: 0 2px 0 #c99a1a;
-}
-.ticket-missions[hidden] { display: none; }
 
 /* the stub: its colour and its stamp tell how far the journey got */
 .ticket-stub {
@@ -376,20 +403,12 @@ body {
   transform: rotate(-12deg);
 }
 .is-finished .ticket-stamp { border-style: solid; background: rgba(255, 255, 255, .6); }
-/* the serial number, printed in red along the edge of the stub */
-.ticket-serial {
-  position: absolute;
-  top: 50%;
-  right: -36px;
-  width: 92px;
-  font-family: ui-monospace, "Courier New", monospace;
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  color: rgba(183, 28, 28, .75);
-  text-align: center;
-  white-space: nowrap;
-  transform: translateY(-50%) rotate(90deg);
+.ticket-control {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #8a7448;
 }
 .route-stars { margin-top: -2px; font-size: 13px; font-weight: 800; color: #b07800; }
 .route-go {
@@ -412,7 +431,6 @@ body {
 .depot-card .ticket-stamp { font-size: 28px; border-style: solid; background: rgba(255, 255, 255, .6); }
 .depot-card .route-go { background: var(--station-blue); box-shadow: 0 3px 0 #143769; }
 .depot-card:hover .route-go, .depot-card:focus-visible .route-go { box-shadow: 0 3px 0 #143769, 0 0 0 4px rgba(255, 255, 255, .7); }
-.depot-item { transform: rotate(.6deg); }
 
 /* hidden on the screen, read by screen readers */
 .sr-only {

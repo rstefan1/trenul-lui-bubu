@@ -9,6 +9,7 @@
 import { el } from '../shared/js/ui/dom.js';
 import { ground, landscape } from './landscape.js';
 import { ROUTES } from './routes.js';
+import { DEPOT_LOCOS } from '../shared/js/depot/locos.js';
 
 /**
  * @typedef {import('./routes.js').Season} Season
@@ -159,13 +160,6 @@ const DEPOT = sky('pic-depot', '#7cc4f2', '#d8f0ff')
   + `<path d="M56 50 c8 -6 20 -2 20 6 c0 6 -6 4 -7 8 c-1 4 -9 4 -13 0 c-3 -4 -4 -10 0 -14Z" fill="#f6e6c2" stroke="#8a7448" stroke-width="1"/>`
   + `<circle cx="61" cy="53" r="2" fill="#e53935"/><circle cx="67" cy="51" r="2" fill="#ffd23f"/><circle cx="72" cy="55" r="2" fill="#2e9d57"/><circle cx="62" cy="59" r="2" fill="#40c4ff"/>`;
 
-/**
- * The serial number printed along the stub, like on real tickets (the
- * depot's ticket is number 0).
- * @param {number} n
- */
-const serial = n => `Seria BB Nr. ${String(241200 + n * 37).padStart(7, '0')}`;
-
 /** What the ticket says about the journey: its stamp and its button. */
 const STATUS = {
   new: { label: 'Neîncepută', stamp: 'Nouă', button: 'Pornește' },
@@ -191,12 +185,6 @@ function progressOf(key) {
 }
 
 /**
- * "1 misiune", "5 misiuni", "20 de misiuni": the way numbers are said in Romanian.
- * @param {number} n
- */
-const missionsLabel = n => n === 1 ? '1 misiune' : n % 100 >= 20 || n % 100 === 0 ? `${n} de misiuni` : `${n} misiuni`;
-
-/**
  * How many missions a journey has: read from its own list of missions (its
  * js/missions-data.js: the missions on the way and those in stations), so
  * the ticket always tells the truth. Null when the list cannot be read.
@@ -214,53 +202,96 @@ async function missionCount(route) {
 }
 
 /**
- * One journey's card: a train ticket. The main part has the journey's name,
- * its two stations, its season and its days; the stub, after the
- * perforation, has a stamp that tells whether the journey was done, and the
- * button.
+ * @typedef {object} TicketParts
+ * @property {string} itemClass     classes of the list item
+ * @property {Record<string, string>} [itemAttrs]
+ * @property {string} cardClass     classes of the ticket itself (a link)
+ * @property {string} href
+ * @property {[string, string]} head   the band at the top: what ticket it is, and its number
+ * @property {string} picture       the SVG of the small picture (fixed values only)
+ * @property {string} title
+ * @property {Node} way             the line under the title
+ * @property {Array<{label: string, value: Node | string, cls?: string}>} fields  printed below, each with its label
+ * @property {Array<Node | false>} stub  what the stub shows under "Control"
+ */
+
+/**
+ * A train ticket, printed like a real one: a band at the top, then inside a
+ * thin printed frame the picture, the name and the way, and a row of fields
+ * with small labels (as on a ticket: date, class…); after the perforation,
+ * the stub that the controller stamps, with the button.
+ * @param {TicketParts} t
+ */
+function ticket(t) {
+  const picture = el('div', { class: 'ticket-pic' });
+  // the SVG is built from fixed values (no text from outside goes into it)
+  picture.innerHTML = t.picture;
+  return el('li', { class: t.itemClass, ...t.itemAttrs }, [
+    el('a', { class: `route-card ${t.cardClass}`, href: t.href }, [
+      el('div', { class: 'ticket-main' }, [
+        el('p', { class: 'ticket-head' }, [el('span', {}, [t.head[0]]), el('span', {}, [t.head[1]])]),
+        el('div', { class: 'ticket-body' }, [
+          el('div', { class: 'ticket-row' }, [
+            picture,
+            el('div', { class: 'ticket-words' }, [el('h2', { class: 'route-title' }, [t.title]), t.way]),
+          ]),
+          el('dl', { class: 'ticket-fields' }, t.fields.map(f =>
+            el('div', { class: `ticket-field ${f.cls || ''}` }, [el('dt', {}, [f.label]), el('dd', {}, [f.value])]))),
+        ]),
+      ]),
+      el('div', { class: 'ticket-stub' }, [el('span', { class: 'ticket-control', 'aria-hidden': 'true' }, ['Control']), ...t.stub]),
+    ]),
+  ]);
+}
+
+/** The months as they are shortened on tickets. */
+const MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie', 'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie'];
+
+/**
+ * The days of a journey with the month shortened, as printed on a ticket
+ * ("24–25 decembrie" → "24–25 dec.").
+ * @param {string} when
+ */
+const shortDate = when => MONTHS.reduce((s, m) => (m.length > 4 ? s.replace(m, `${m.slice(0, 3)}.`) : s), when);
+
+/**
+ * One journey's ticket: its name, its two stations, its days, its season
+ * and how many missions wait on it; on the stub, a stamp that tells whether
+ * the journey was done, and the button.
  * @param {import('./routes.js').RouteInfo} route
  */
 function routeCard(route) {
   const p = progressOf(route.saveKey);
   const season = SEASONS[route.season];
-  const picture = el('div', { class: 'ticket-pic' });
-  // the SVG is built here from fixed values (no text from outside goes into it)
-  picture.innerHTML = thumb(route);
-  // what waits on the journey: its missions (filled in when their list is read)
-  const missions = el('p', { class: 'ticket-missions', hidden: true });
-  missionCount(route).then(n => {
-    if (!n) return;
-    missions.textContent = `🎯 ${missionsLabel(n)} de făcut`;
-    missions.hidden = false;
-  });
-  return el('li', { class: `route-item season--${route.season} is-${p.status}`, 'data-season': route.season }, [
-    el('a', { class: 'route-card', href: route.path }, [
-      el('div', { class: 'ticket-main' }, [
-        el('p', { class: 'ticket-head' }, [el('span', {}, ['🚂 Bilet de tren']), el('span', {}, [`Ruta ${route.number}`])]),
-        el('div', { class: 'ticket-row' }, [
-          picture,
-          el('div', { class: 'ticket-words' }, [
-            el('h2', { class: 'route-title' }, [route.title]),
-            // the two ends of the journey, joined like on a railway map
-            el('p', { class: 'route-way' }, [
-              el('span', {}, [route.from]),
-              el('span', { class: 'route-line', 'aria-hidden': 'true' }),
-              el('span', { class: 'sr-only' }, [' → ']),
-              el('span', {}, [route.to]),
-            ]),
-            el('p', { class: 'ticket-meta' }, [`${season.icon} ${season.name} · ${route.when}`]),
-            missions,
-          ]),
-        ]),
-      ]),
-      el('div', { class: 'ticket-stub' }, [
-        el('span', { class: 'ticket-serial', 'aria-hidden': 'true' }, [serial(route.number)]),
-        el('span', { class: 'ticket-stamp' }, [el('span', { class: 'sr-only' }, ['Călătoria: ']), STATUS[p.status].stamp]),
-        p.stars > 0 && el('span', { class: 'route-stars' }, [`★ ${p.stars}`]),
-        el('span', { class: 'route-go' }, [STATUS[p.status].button]),
-      ]),
+  // the missions are counted when their list is read (the field shows when known)
+  const missions = el('span', {}, ['🎯 …']);
+  missionCount(route).then(n => { missions.textContent = n ? `🎯 ${n}` : '🎯'; });
+  return ticket({
+    itemClass: `route-item season--${route.season} is-${p.status}`,
+    itemAttrs: { 'data-season': route.season },
+    cardClass: '',
+    href: route.path,
+    head: ['🚂 Bilet de tren', `Ruta ${route.number}`],
+    picture: thumb(route),
+    title: route.title,
+    // the two ends of the journey, joined like on a railway map
+    way: el('p', { class: 'route-way' }, [
+      el('span', {}, [route.from]),
+      el('span', { class: 'route-line', 'aria-hidden': 'true' }),
+      el('span', { class: 'sr-only' }, [' → ']),
+      el('span', {}, [route.to]),
     ]),
-  ]);
+    fields: [
+      { label: 'Data', value: shortDate(route.when) },
+      { label: 'Anotimp', value: `${season.icon} ${season.name}` },
+      { label: 'Misiuni', value: missions, cls: 'ticket-field--missions' },
+    ],
+    stub: [
+      el('span', { class: 'ticket-stamp' }, [el('span', { class: 'sr-only' }, ['Călătoria: ']), STATUS[p.status].stamp]),
+      p.stars > 0 && el('span', { class: 'route-stars' }, [`★ ${p.stars}`]),
+      el('span', { class: 'route-go' }, [STATUS[p.status].button]),
+    ],
+  });
 }
 
 /**
@@ -268,30 +299,24 @@ function routeCard(route) {
  * shown): there the child picks a locomotive and decorates it.
  */
 function depotCard() {
-  const picture = el('div', { class: 'ticket-pic' });
-  // the SVG is built here from fixed values (no text from outside goes into it)
-  picture.innerHTML = `<svg viewBox="0 0 80 80" aria-hidden="true" focusable="false">${DEPOT}</svg>`;
-  return el('div', { class: 'route-item depot-item' }, [
-    el('a', { class: 'route-card depot-card', href: 'depot/' }, [
-      el('div', { class: 'ticket-main' }, [
-        el('p', { class: 'ticket-head' }, [el('span', {}, ['🔧 Bilet spre depou']), el('span', {}, ['Atelier'])]),
-        el('div', { class: 'ticket-row' }, [
-          picture,
-          el('div', { class: 'ticket-words' }, [
-            el('h2', { class: 'route-title' }, ['Depoul lui Bubu']),
-            el('p', { class: 'route-way' }, ['Decorează-ți locomotiva!']),
-            el('p', { class: 'ticket-meta' }, ['🎨 Culori, fundițe, globuri, lumini']),
-            el('p', { class: 'ticket-missions' }, ['🚂 Locomotive de decorat']),
-          ]),
-        ]),
-      ]),
-      el('div', { class: 'ticket-stub' }, [
-        el('span', { class: 'ticket-serial', 'aria-hidden': 'true' }, [serial(0)]),
-        el('span', { class: 'ticket-stamp', 'aria-hidden': 'true' }, ['🎨']),
-        el('span', { class: 'route-go' }, ['Intră']),
-      ]),
-    ]),
-  ]);
+  return ticket({
+    itemClass: 'route-item depot-item',
+    cardClass: 'depot-card',
+    href: 'depot/',
+    head: ['🔧 Bilet spre depou', 'Atelier'],
+    picture: `<svg viewBox="0 0 80 80" aria-hidden="true" focusable="false">${DEPOT}</svg>`,
+    title: 'Depoul lui Bubu',
+    way: el('p', { class: 'route-way' }, ['Decorează-ți locomotiva!']),
+    fields: [
+      { label: 'Intrare', value: 'Liberă' },
+      { label: 'Atelier', value: '🎨 Decor' },
+      { label: 'Trenuri', value: `🚂 ${DEPOT_LOCOS.length}`, cls: 'ticket-field--missions' },
+    ],
+    stub: [
+      el('span', { class: 'ticket-stamp', 'aria-hidden': 'true' }, ['🎨']),
+      el('span', { class: 'route-go' }, ['Intră']),
+    ],
+  });
 }
 
 /**
