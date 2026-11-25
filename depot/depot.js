@@ -156,6 +156,15 @@ function decorate(loco) {
   }
 
   const body = () => style.colors.body ?? loco.car.colors.body;
+  /**
+   * The colours for a part: the one the locomotive came with first, when
+   * it is not one of the paints.
+   * @param {'body' | 'band' | 'roof'} p
+   */
+  const swatches = p => {
+    const own = loco.car.colors[p];
+    return PALETTES[p].some(s => s.color === own) ? PALETTES[p] : [{ color: own, name: 'ca la început' }, ...PALETTES[p]];
+  };
 
   /** @type {Record<string, () => Array<Node | null>>} */
   const PANELS = {
@@ -165,7 +174,7 @@ function decorate(loco) {
         class: 'part', type: 'button', 'aria-pressed': String(id === part),
         onclick: () => { part = id; showPanel(); },
       }, [name]))),
-      el('div', { class: 'choices' }, PALETTES[part].map(s => choice({
+      el('div', { class: 'choices' }, swatches(part).map(s => choice({
         label: `${PARTS.find(([id]) => id === part)?.[1]}: ${s.name}`,
         cls: 'swatch-choice',
         style: `--swatch:${s.color}`,

@@ -11,7 +11,8 @@ import { TAU } from '../core/math.js';
 import { fillCircle, fillRoundRect, fillStar } from '../gfx/shapes.js';
 
 /**
- * Where the decorations go on a kind of locomotive.
+ * Where the decorations go on a kind of locomotive (on the flat parts of
+ * its side, clear of windows, doors and the ladybug emblem).
  * @typedef {object} DecorLayout
  * @property {[number, number, number, number]} pattern  the painted panel: x, y, width, height
  * @property {[number, number]} plate             centre of the name plate
@@ -34,6 +35,30 @@ const LAYOUTS = Object.freeze({
     stickerR: 15,
     flag: [74, -198],
     bow: [30, -196],
+  }),
+  // the diesel locomotive: the panel between the two cab doors, under the
+  // band, with the plate; stickers on the grilles around the emblem, at the
+  // back end and above the sandbox; the bow tied on the horn
+  dieselLoco: L => ({
+    pattern: [104, -88, L - 218, 52],
+    plate: [L / 2 - 5, -54],
+    plateWidth: 80,
+    stickers: [[126, -134], [L - 126, -134], [56, -60], [L - 52, -76]],
+    stickerR: 14,
+    flag: [L - 80, -184],
+    bow: [30, -214],
+  }),
+  // the steam locomotive: the panel of the cab, with the plate at its
+  // bottom; stickers on the cab, on the boiler and on the smokebox; the
+  // flag on the cab roof, the bow tied around the chimney
+  steamLoco: L => ({
+    pattern: [10, -111, 72, 62],
+    plate: [46, -60],
+    plateWidth: 70,
+    stickers: [[28, -90], [64, -90], [L - 80, -104], [L - 36, -88]],
+    stickerR: 12,
+    flag: [L - 50, -184],
+    bow: [40, -150],
   }),
 });
 
