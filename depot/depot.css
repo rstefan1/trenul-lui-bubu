@@ -127,14 +127,13 @@ body.depot {
     radial-gradient(ellipse 60% 70% at 50% 100%, rgba(255, 226, 150, .55), transparent 70%),
     linear-gradient(#2c3550, #48506a);
 }
-.workshop-loco { display: block; width: 100%; height: clamp(170px, 32vw, 280px); }
-.workshop-note { margin: 16px 0 14px; font-size: 18px; font-weight: 700; color: #5b5240; }
-.workshop-where { margin: 10px 0 14px; font-size: 15px; font-weight: 800; color: var(--station-blue); }
+.workshop-loco { display: block; width: 100%; height: clamp(150px, 30vw, 260px); }
+
 
 /* the tools: big tabs with a picture and a word */
 .tools {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 8px;
   margin: 0 0 12px;
 }
@@ -158,6 +157,10 @@ body.depot {
 .tool-emoji { font-size: 28px; line-height: 1; }
 .tool[aria-selected="true"] { border-color: var(--gold); background: #fff6d6; box-shadow: 0 3px 0 #d9a91f; }
 .tool:focus-visible, .choice:focus-visible { outline: 4px solid var(--station-blue); outline-offset: 2px; }
+/* not much room (a phone): two rows of three */
+@media (max-width: 620px) {
+  .tools { grid-template-columns: repeat(3, 1fr); }
+}
 @media (max-width: 520px) {
   .tools { gap: 5px; }
   .tool { min-height: 64px; font-size: 12px; }
@@ -174,6 +177,22 @@ body.depot {
   background: #f3ead6;
 }
 .choice-row { display: flex; flex-direction: column; gap: 6px; }
+
+/* the name for the plate */
+.name-input {
+  align-self: center;
+  width: min(100%, 320px);
+  padding: 8px 14px;
+  border: 3px solid #d9a91f;
+  border-radius: var(--radius-s);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+}
+.name-input:focus { outline: 4px solid var(--gold); outline-offset: 2px; }
 .choice-label { margin: 0; font-size: 16px; font-weight: 800; color: #5b5240; }
 .choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .choice {

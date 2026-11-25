@@ -1,7 +1,8 @@
 /**
  * @file Bubu's depot: first the locomotives, each standing in its bay (the
  * child picks one), then the chosen locomotive in the workshop, where it is
- * decorated: its colours, a bow, baubles, a string of lights and stickers.
+ * decorated: its colours, a pattern, a bow, a flag, stickers and the
+ * child's name on a plate (nothing tied to a season).
  * Every choice is kept at once (shared/js/depot/style.js) and the journeys
  * pulled by that locomotive show it so. The address remembers the choice
  * (depot/#electric), so the browser's back button goes back to the bays.
@@ -11,10 +12,9 @@ import { el } from '../shared/js/ui/dom.js';
 import { DEPOT_LOCOS, depotLoco } from '../shared/js/depot/locos.js';
 import { LocoPicture } from '../shared/js/depot/loco-picture.js';
 import {
-  BAUBLE_SETS, BOWS, LIGHT_SETS, PALETTES, STICKERS, STICKER_SLOTS, loadStyle, plainStyle, saveStyle,
+  BOWS, FLAGS, NAME_LENGTH, PALETTES, PATTERNS, STICKERS, STICKER_SLOTS, cleanName, loadStyle, plainStyle, saveStyle,
 } from '../shared/js/depot/style.js';
-import { canDecorate, drawBow, drawDecorLights, drawSticker } from '../shared/js/train/loco-decor.js';
-import { drawBauble } from '../shared/js/gfx/ornaments.js';
+import { canDecorate, drawBow, drawFlag, drawPattern, drawSticker } from '../shared/js/train/loco-decor.js';
 
 const bays = /** @type {HTMLElement} */ (document.getElementById('bays'));
 const workshop = /** @type {HTMLElement} */ (document.getElementById('workshop'));
@@ -27,27 +27,16 @@ const subtitle = /** @type {HTMLElement} */ (document.getElementById('subtitle')
 
 /** @type {Array<{picture: LocoPicture, loco: DepotLoco}>} the pictures on the page */
 let pictures = [];
-/** The frame request that makes the lights of the workshop's locomotive twinkle. */
-let frame = 0;
 
-/** Draws every locomotive picture on the page (again), at its size on the page. */
-function drawPictures() {
+/**
+ * Draws every locomotive picture on the page (again), at its size on the page.
+ * @param {boolean} [repaint=false]  paint the locomotives again too (the font of the name plates came)
+ */
+function drawPictures(repaint = false) {
   for (const { picture, loco } of pictures) {
     if (!picture.canvas.isConnected || !picture.canvas.clientWidth) continue;
-    if (picture.car) { picture.fit(); picture.draw(performance.now() / 1000); } else picture.show(loco.car, loadStyle(loco.id));
+    if (picture.car && !repaint) { picture.fit(); picture.draw(); } else picture.show(loco.car, picture.style ?? loadStyle(loco.id));
   }
-}
-
-/** Keeps the lights of the workshop's locomotive twinkling (only while it has lights). */
-function animate() {
-  cancelAnimationFrame(frame);
-  const tick = () => {
-    const live = pictures.filter(p => p.picture.animated && p.picture.canvas.isConnected);
-    if (!live.length) return;
-    for (const p of live) p.picture.draw(performance.now() / 1000);
-    frame = requestAnimationFrame(tick);
-  };
-  frame = requestAnimationFrame(tick);
 }
 
 /**
@@ -105,11 +94,15 @@ const NONE_ICON = () => icon(c => {
  */
 const TOOLS = [
   { id: 'colors', icon: '🎨', label: 'Culori' },
+  { id: 'pattern', icon: '✨', label: 'Model' },
   { id: 'bow', icon: '🎀', label: 'Fundiță' },
-  { id: 'baubles', icon: '🔴', label: 'Globuri' },
-  { id: 'lights', icon: '💡', label: 'Beculețe' },
+  { id: 'flag', icon: '🚩', label: 'Steguleț' },
   { id: 'stickers', icon: '⭐', label: 'Abțibilduri' },
+  { id: 'name', icon: '✏️', label: 'Nume' },
 ];
+
+/** The parts of the locomotive that can be painted, as the children call them. */
+const PARTS = /** @type {const} */ ([['body', 'Locomotiva'], ['band', 'Dunga'], ['roof', 'Acoperișul']]);
 
 /**
  * A choice button: pressed when it is the one chosen.
@@ -133,14 +126,16 @@ function decorate(loco) {
   const panel = el('div', { class: 'tool-panel', role: 'tabpanel' });
   const saved = el('p', { class: 'workshop-saved', 'aria-live': 'polite' }, ['Tot ce alegi se păstrează singur.']);
 
-  /** @param {LocoStyle} next */
-  const change = next => {
+  /**
+   * @param {LocoStyle} next
+   * @param {boolean} [redraw=true]  show the choices again (not while the child types the name)
+   */
+  const change = (next, redraw = true) => {
     style = next;
     saveStyle(loco.id, style);
     picture.show(loco.car, style);
-    animate();
     saved.textContent = '✔ Păstrat! Așa va merge și pe drum.';
-    showPanel();
+    if (redraw) showPanel();
   };
 
   const tabs = TOOLS.map(t => el('button', {
@@ -155,12 +150,14 @@ function decorate(loco) {
 
   /** The choices of the tool that is open. */
   function showPanel() {
-    panel.replaceChildren(...(PANELS[tool]?.() ?? []));
+    panel.replaceChildren(...(PANELS[tool]?.() ?? []).filter(n => n !== null));
   }
 
-  /** @type {Record<string, () => Node[]>} */
+  const body = () => style.colors.body ?? loco.car.colors.body;
+
+  /** @type {Record<string, () => Array<Node | null>>} */
   const PANELS = {
-    colors: () => /** @type {const} */ ([['body', 'Locomotiva'], ['band', 'Dunga'], ['roof', 'Acoperișul']]).map(([part, name]) =>
+    colors: () => PARTS.map(([part, name]) =>
       el('div', { class: 'choice-row' }, [
         el('p', { class: 'choice-label' }, [name]),
         el('div', { class: 'choices' }, PALETTES[part].map(s => choice({
@@ -172,6 +169,21 @@ function decorate(loco) {
           onPick: () => change({ ...style, colors: { ...style.colors, [part]: s.color === loco.car.colors[part] ? null : s.color } }),
         }))),
       ])),
+    pattern: () => [el('div', { class: 'choices' }, [
+      choice({ label: 'Fără model', pressed: !style.pattern, content: NONE_ICON(), onPick: () => change({ ...style, pattern: null }) }),
+      ...Object.entries(PATTERNS).map(([id, name]) => choice({
+        label: name, pressed: style.pattern === id, cls: 'choice--named',
+        content: el('span', { class: 'choice-stack' }, [
+          icon(c => {
+            c.fillStyle = body();
+            c.fillRect(4, 4, 52, 32);
+            drawPattern(c, id, [4, 4, 52, 32], body());
+          }),
+          el('span', { class: 'choice-name' }, [name]),
+        ]),
+        onPick: () => change({ ...style, pattern: id }),
+      })),
+    ])],
     bow: () => [el('div', { class: 'choices' }, [
       choice({ label: 'Fără fundiță', pressed: !style.bow, content: NONE_ICON(), onPick: () => change({ ...style, bow: null }) }),
       ...BOWS.map(b => choice({
@@ -180,46 +192,44 @@ function decorate(loco) {
         onPick: () => change({ ...style, bow: b.color }),
       })),
     ])],
-    baubles: () => [el('div', { class: 'choices' }, [
-      choice({ label: 'Fără globuri', pressed: !style.baubles, content: NONE_ICON(), onPick: () => change({ ...style, baubles: null }) }),
-      ...Object.entries(BAUBLE_SETS).map(([id, set]) => choice({
-        label: `Globuri ${set.name.toLowerCase()}`, pressed: style.baubles === id, cls: 'choice--named',
-        content: el('span', { class: 'choice-stack' }, [
-          icon(c => [14, 30, 46].forEach((x, i) => drawBauble(c, x, 22, 8, set.colors[i % set.colors.length], false))),
-          el('span', { class: 'choice-name' }, [set.name]),
-        ]),
-        onPick: () => change({ ...style, baubles: id }),
-      })),
-    ])],
-    lights: () => [el('div', { class: 'choices' }, [
-      choice({ label: 'Fără beculețe', pressed: !style.lights, content: NONE_ICON(), onPick: () => change({ ...style, lights: null }) }),
-      ...Object.entries(LIGHT_SETS).map(([id, set]) => choice({
-        label: `Beculețe ${set.name.toLowerCase()}`, pressed: style.lights === id, cls: 'choice--named',
-        content: el('span', { class: 'choice-stack' }, [
-          icon(c => {
-            const fake = { ...plainStyle(), lights: id };
-            const bulbs = [8, 19, 30, 41, 52].map((x, i) => ({ x, y: 18 + (i % 2) * 4 }));
-            drawDecorLights(c, bulbs, fake, 0.3, true);
-            drawDecorLights(c, bulbs, fake, 0.3, false);
-          }),
-          el('span', { class: 'choice-name' }, [set.name]),
-        ]),
-        onPick: () => change({ ...style, lights: id }),
+    flag: () => [el('div', { class: 'choices' }, [
+      choice({ label: 'Fără steguleț', pressed: !style.flag, content: NONE_ICON(), onPick: () => change({ ...style, flag: null }) }),
+      ...Object.entries(FLAGS).map(([id, name]) => choice({
+        label: `Steguleț ${name.toLowerCase()}`, pressed: style.flag === id,
+        content: icon(c => drawFlag(c, id, 46, 48)),
+        onPick: () => change({ ...style, flag: id }),
       })),
     ])],
     stickers: () => [
-      el('p', { class: 'choice-label' }, [`Alege până la ${STICKER_SLOTS} abțibilduri pentru lateral (ai pus ${style.stickers.length}). Atinge-l din nou ca să-l dezlipești.`]),
+      el('p', { class: 'choice-label' }, [`Pune până la ${STICKER_SLOTS} abțibilduri (ai pus ${style.stickers.length}). Atinge-l din nou ca să-l dezlipești.`]),
       el('div', { class: 'choices' }, Object.entries(STICKERS).map(([id, name]) => choice({
         label: name, pressed: style.stickers.includes(id),
         content: icon(c => drawSticker(c, id, 30, 20, 17)),
         onPick: () => {
           const on = style.stickers.includes(id);
-          // a fourth one takes the place of the first
+          // one more than fit takes the place of the first
           const stickers = on ? style.stickers.filter(s => s !== id) : [...style.stickers, id].slice(-STICKER_SLOTS);
           change({ ...style, stickers });
         },
       }))),
     ],
+    name: () => {
+      const input = el('input', {
+        class: 'name-input', type: 'text', maxlength: String(NAME_LENGTH), autocomplete: 'off', spellcheck: 'false',
+        placeholder: 'scrie un nume', 'aria-label': 'Numele de pe locomotivă',
+      });
+      input.value = style.name;
+      input.addEventListener('input', () => {
+        const name = cleanName(input.value);
+        if (name !== input.value) input.value = name;
+        change({ ...style, name: name.trim() }, false);
+      });
+      return [
+        el('p', { class: 'choice-label' }, ['Scrie numele tău sau un nume pentru locomotivă. Apare pe o tăbliță, pe lateral.']),
+        input,
+        style.name ? el('button', { class: 'workshop-reset', type: 'button', onclick: () => change({ ...style, name: '' }) }, ['Șterge numele']) : null,
+      ];
+    },
   };
 
   // "as it came": a second touch within a few seconds confirms
@@ -292,7 +302,6 @@ function route() {
   else showBays();
   window.scrollTo({ top: 0, behavior: 'instant' });
   drawPictures();
-  animate();
 }
 
 /**
@@ -333,3 +342,5 @@ addEventListener('resize', () => {
 });
 
 route();
+// the name plates are written with the game's font: painted again once it has come
+document.fonts?.ready.then(() => drawPictures(true));

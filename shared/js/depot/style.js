@@ -2,9 +2,10 @@
  * @file How the child decorated the locomotives in Bubu's depot, and what
  * can be chosen there.
  *
- * Every locomotive has its own style: its three colours, a bow on its
- * front, baubles on a garland along the roof, a string of lights on the
- * roof and up to three stickers on its side. The styles are kept in the
+ * Every locomotive has its own style: its three colours, a pattern on its
+ * side, a bow on its front, a little flag on its roof, stickers and the
+ * child's name on a plate. Nothing is tied to a season: the same
+ * locomotive pulls journeys of every season. The styles are kept in the
  * browser (localStorage), apart from the journeys, so every journey
  * pulled by that locomotive shows it decorated.
  */
@@ -14,17 +15,21 @@
 /**
  * @typedef {object} LocoStyle
  * @property {{body: string | null, band: string | null, roof: string | null}} colors  null: the colour it came with
+ * @property {string | null} pattern   painted on the lower side (a key of PATTERNS; null: plain)
  * @property {string | null} bow       colour of the bow on the front (null: no bow)
- * @property {string | null} baubles   the set of baubles on the roof (a key of BAUBLE_SETS)
- * @property {string | null} lights    the string of lights on the roof (a key of LIGHT_SETS)
- * @property {string[]} stickers       stickers on the side, left to right (keys of STICKERS), at most STICKER_SLOTS
+ * @property {string | null} flag      the little flag on the roof (a key of FLAGS; null: none)
+ * @property {string[]} stickers       stickers on the side, in the order they were put (keys of STICKERS), at most STICKER_SLOTS
+ * @property {string} name             written on the plate on the side ('' : no plate)
  */
 
 /** Where the styles are kept. */
 const KEY = 'trenul-lui-bubu/depot';
 
 /** How many stickers fit on the side of a locomotive. */
-export const STICKER_SLOTS = 3;
+export const STICKER_SLOTS = 4;
+
+/** The longest name that fits on the plate. */
+export const NAME_LENGTH = 12;
 
 /** The kind of car of every locomotive of the depot, and back. */
 export const LOCO_OF_KIND = /** @type {Readonly<Record<string, LocoId>>} */ (Object.freeze({
@@ -32,7 +37,7 @@ export const LOCO_OF_KIND = /** @type {Readonly<Record<string, LocoId>>} */ (Obj
 }));
 
 /** @returns {LocoStyle} a locomotive as it came from the factory */
-export const plainStyle = () => ({ colors: { body: null, band: null, roof: null }, bow: null, baubles: null, lights: null, stickers: [] });
+export const plainStyle = () => ({ colors: { body: null, band: null, roof: null }, pattern: null, bow: null, flag: null, stickers: [], name: '' });
 
 /*
  * What the child can choose. Every colour has a name, as the children say
@@ -68,7 +73,7 @@ export const PALETTES = Object.freeze({
   roof: [
     { color: '#7d8796', name: 'gri' },
     { color: '#4a5160', name: 'gri închis' },
-    { color: '#f4f8ff', name: 'alb ca zăpada' },
+    { color: '#f4f8ff', name: 'alb' },
     { color: '#b71c1c', name: 'roșu închis' },
     { color: '#1f4f9c', name: 'albastru închis' },
     { color: '#c9a227', name: 'auriu' },
@@ -85,20 +90,24 @@ export const BOWS = Object.freeze([
   { color: '#8e44ad', name: 'mov' },
 ]);
 
-/** The sets of baubles: their colours, repeated along the garland. */
-export const BAUBLE_SETS = /** @type {Readonly<Record<string, {name: string, colors: string[]}>>} */ (Object.freeze({
-  red: { name: 'Roșii', colors: ['#e53935', '#c62828'] },
-  gold: { name: 'Aurii', colors: ['#fbc02d', '#e0a800'] },
-  silver: { name: 'Argintii', colors: ['#cfd8dc', '#90caf9'] },
-  mixed: { name: 'Colorate', colors: ['#e53935', '#fbc02d', '#1e88e5', '#43a047', '#ec407a', '#8e44ad'] },
+/** The patterns painted on the lower side of the locomotive (drawn by train/loco-decor.js). */
+export const PATTERNS = /** @type {Readonly<Record<string, string>>} */ (Object.freeze({
+  dots: 'Buline',
+  stripes: 'Dungi',
+  zigzag: 'Zigzag',
+  stars: 'Steluțe',
+  hearts: 'Inimioare',
 }));
 
-/** The strings of lights: their colours, and whether they twinkle in turn. */
-export const LIGHT_SETS = /** @type {Readonly<Record<string, {name: string, colors: string[], chase?: boolean}>>} */ (Object.freeze({
-  mixed: { name: 'Colorate', colors: ['#ff5252', '#ffd740', '#40c4ff', '#69f0ae'] },
-  warm: { name: 'Calde', colors: ['#ffe08a'] },
-  blue: { name: 'Albastre', colors: ['#7fd4ff', '#ffffff'] },
-  chase: { name: 'Fugărite', colors: ['#ff5252', '#ffd740', '#69f0ae', '#40c4ff', '#e040fb'], chase: true },
+/** The little flags on the roof (drawn by train/loco-decor.js). */
+export const FLAGS = /** @type {Readonly<Record<string, string>>} */ (Object.freeze({
+  tricolor: 'Tricolor',
+  red: 'Roșu',
+  yellow: 'Galben',
+  green: 'Verde',
+  blue: 'Albastru',
+  ladybug: 'Cu buburuză',
+  checkered: 'În carouri',
 }));
 
 /** The stickers (drawn by train/loco-decor.js). */
@@ -107,6 +116,7 @@ export const STICKERS = /** @type {Readonly<Record<string, string>>} */ (Object.
   heart: 'Inimă',
   fir: 'Brăduț',
   snowflake: 'Fulg',
+  rainbow: 'Curcubeu',
   sun: 'Soare',
   moon: 'Lună',
   flower: 'Floare',
@@ -126,12 +136,20 @@ function clean(raw) {
     const c = raw.colors?.[part];
     if (PALETTES[part].some(s => s.color === c)) style.colors[part] = c;
   }
+  if (typeof raw.pattern === 'string' && raw.pattern in PATTERNS) style.pattern = raw.pattern;
   if (BOWS.some(b => b.color === raw.bow)) style.bow = raw.bow;
-  if (typeof raw.baubles === 'string' && raw.baubles in BAUBLE_SETS) style.baubles = raw.baubles;
-  if (typeof raw.lights === 'string' && raw.lights in LIGHT_SETS) style.lights = raw.lights;
+  if (typeof raw.flag === 'string' && raw.flag in FLAGS) style.flag = raw.flag;
   if (Array.isArray(raw.stickers)) style.stickers = raw.stickers.filter(s => typeof s === 'string' && s in STICKERS).slice(0, STICKER_SLOTS);
+  if (typeof raw.name === 'string') style.name = cleanName(raw.name);
   return style;
 }
+
+/**
+ * A name as it is written on the plate: letters, digits, spaces and a few
+ * signs, at most NAME_LENGTH of them.
+ * @param {string} name
+ */
+export const cleanName = name => name.replace(/[^\p{L}\p{N} .'-]/gu, '').replace(/\s+/g, ' ').trimStart().slice(0, NAME_LENGTH);
 
 /** @returns {Record<string, any>} everything saved (nothing if the browser refuses storage) */
 function readAll() {

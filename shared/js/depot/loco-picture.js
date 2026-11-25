@@ -3,27 +3,26 @@
  * shows the locomotives this way). It is painted by the same painters as
  * the train of the journeys, with the decorations the child chose, so it
  * looks exactly like the one the child travels with; it is fitted to the
- * canvas, standing on its rail. Its string of lights twinkles: the picture
- * can be drawn again every frame, cheaply (the locomotive is painted once).
+ * canvas, standing on its rail.
  */
 
 import { TAU } from '../core/math.js';
 import { fillCircle } from '../gfx/shapes.js';
 import { CAR_PAINTERS, WHEEL_R } from '../train/cars.js';
-import { decorBulbs, drawDecorLights, paintDecor } from '../train/loco-decor.js';
+import { paintDecor } from '../train/loco-decor.js';
 import { TRACK_Y, WIRE_Y } from '../world/track.js';
 import { paintedCar } from './style.js';
 
 /** Height of the contact wire above the rail (the pantograph touches it). */
 const WIRE_H = TRACK_Y - WIRE_Y;
-/** Room around the locomotive on the work canvas (buffers, lamps, a bow). */
+/** Room around the locomotive on the work canvas (buffers, lamps, a bow, a flag). */
 const MARGIN = 40;
 /** Height of the work canvas above the rail (the pantograph reaches the wire). */
 const ABOVE = WIRE_H + 30;
 /** Below the rail: the bottom of the wheels and the rail itself. */
 const BELOW = 12;
-/** Room kept above the locomotive for its decorations (so adding a bow does not shrink it). */
-const DECOR_ROOM = 24;
+/** Room kept above the locomotive for its decorations (so adding a flag does not shrink it). */
+const DECOR_ROOM = 50;
 
 /** @type {Map<string, {x: number, w: number, h: number}>} the box around every kind of locomotive, undecorated */
 const BOXES = new Map();
@@ -64,7 +63,7 @@ function paintAlone(car, style) {
   // the size of the locomotive, measured once, before any decoration
   if (!BOXES.has(car.kind)) BOXES.set(car.kind, measure(c, work.width, work.height));
   paintDecor(c, painted, style);
-  return { work, bulbs: decorBulbs(painted, style) };
+  return work;
 }
 
 /**
@@ -97,8 +96,6 @@ export class LocoPicture {
     this.style = null;
     /** @type {HTMLCanvasElement | null} the locomotive, painted at size 1 */
     this.work = null;
-    /** @type {Array<{x: number, y: number}>} */
-    this.bulbs = [];
   }
 
   /**
@@ -109,16 +106,9 @@ export class LocoPicture {
   show(car, style) {
     this.car = car;
     this.style = style;
-    const { work, bulbs } = paintAlone(car, style);
-    this.work = work;
-    this.bulbs = bulbs;
+    this.work = paintAlone(car, style);
     this.fit();
-    this.draw(0);
-  }
-
-  /** Whether the picture changes with time (its lights twinkle). */
-  get animated() {
-    return this.bulbs.length > 0;
+    this.draw();
   }
 
   /** Measures the canvas on the page and makes it sharp for the screen. */
@@ -131,11 +121,8 @@ export class LocoPicture {
     this.ratio = ratio;
   }
 
-  /**
-   * Draws the locomotive on its rail (an electric one under its wire).
-   * @param {number} time  seconds (the lights twinkle)
-   */
-  draw(time) {
+  /** Draws the locomotive on its rail (an electric one under its wire). */
+  draw() {
     const { car, work } = this;
     if (!car || !work) return;
     const box = /** @type {{x: number, w: number, h: number}} */ (BOXES.get(car.kind));
@@ -166,15 +153,5 @@ export class LocoPicture {
     c.imageSmoothingQuality = 'high';
     const top = ABOVE - high - 2;
     c.drawImage(work, box.x, top, box.w, ABOVE + BELOW - top, left, rail - (ABOVE - top) * scale, box.w * scale, (ABOVE + BELOW - top) * scale);
-    // its lights, twinkling, glowing a little in the dim depot
-    if (this.bulbs.length) {
-      c.save();
-      c.translate(left + (MARGIN - box.x) * scale, rail);
-      c.scale(scale, scale);
-      drawDecorLights(c, this.bulbs, this.style, time, false);
-      c.globalAlpha = 0.7;
-      drawDecorLights(c, this.bulbs, this.style, time, true);
-      c.restore();
-    }
   }
 }
