@@ -296,7 +296,8 @@ function routeCard(route) {
 
 /**
  * The ticket to Bubu's depot, after the journeys (whatever season is
- * shown): there the child picks a locomotive and decorates it.
+ * shown), the same size as theirs: there the child picks a locomotive and
+ * decorates it.
  */
 function depotCard() {
   return ticket({
@@ -331,7 +332,9 @@ function seasonFilter(list) {
   /** @param {string} chosen */
   const apply = chosen => {
     for (const item of list.children) {
-      /** @type {HTMLElement} */ (item).hidden = chosen !== 'all' && /** @type {HTMLElement} */ (item).dataset.season !== chosen;
+      const season = /** @type {HTMLElement} */ (item).dataset.season;
+      // the depot's ticket has no season: it always shows
+      /** @type {HTMLElement} */ (item).hidden = Boolean(season) && chosen !== 'all' && season !== chosen;
     }
     for (const b of bar.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.season === chosen));
     try { localStorage.setItem(KEY, chosen); } catch { /* not remembered */ }
@@ -349,10 +352,9 @@ function seasonFilter(list) {
 }
 
 const list = /** @type {HTMLElement} */ (document.getElementById('routes'));
-list.replaceChildren(...[...ROUTES].sort((a, b) => a.number - b.number).map(routeCard));
+list.replaceChildren(...[...ROUTES].sort((a, b) => a.number - b.number).map(routeCard), depotCard());
 const filter = seasonFilter(list);
 if (filter) list.before(filter);
-list.after(depotCard());
 
 
 /*
@@ -363,7 +365,7 @@ list.after(depotCard());
  */
 const hint = /** @type {HTMLButtonElement} */ (document.getElementById('scroll-hint'));
 /** the first card (a journey or the depot) whose bottom, with its button, is below the screen */
-const firstHidden = () => [...document.querySelectorAll('.home-main .route-card')]
+const firstHidden = () => [...list.querySelectorAll('.route-card')]
   .find(card => !(/** @type {HTMLElement} */ (card.closest('.route-item'))).hidden && card.getBoundingClientRect().bottom > window.innerHeight - 8);
 const updateHint = () => { hint.hidden = window.scrollY > 40 || !firstHidden(); };
 hint.addEventListener('click', () => {
