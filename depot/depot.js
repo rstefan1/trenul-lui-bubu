@@ -120,6 +120,8 @@ const choice = o => el('button', {
 function decorate(loco) {
   let style = loadStyle(loco.id);
   let tool = 'colors';
+  /** @type {'body' | 'band' | 'roof'} the part being painted */
+  let part = 'body';
   const canvas = el('canvas', { class: 'workshop-loco', 'aria-hidden': 'true' });
   const picture = new LocoPicture(canvas);
   pictures = [{ picture, loco }];
@@ -157,18 +159,21 @@ function decorate(loco) {
 
   /** @type {Record<string, () => Array<Node | null>>} */
   const PANELS = {
-    colors: () => PARTS.map(([part, name]) =>
-      el('div', { class: 'choice-row' }, [
-        el('p', { class: 'choice-label' }, [name]),
-        el('div', { class: 'choices' }, PALETTES[part].map(s => choice({
-          label: `${name}: ${s.name}`,
-          cls: 'swatch-choice',
-          style: `--swatch:${s.color}`,
-          pressed: (style.colors[part] ?? loco.car.colors[part]) === s.color,
-          content: el('span', { class: 'sr-only' }, [s.name]),
-          onPick: () => change({ ...style, colors: { ...style.colors, [part]: s.color === loco.car.colors[part] ? null : s.color } }),
-        }))),
-      ])),
+    // first the part to paint (three small buttons), then one row of colours: short, so the locomotive stays in sight
+    colors: () => [
+      el('div', { class: 'parts', role: 'group', 'aria-label': 'Ce colorezi' }, PARTS.map(([id, name]) => el('button', {
+        class: 'part', type: 'button', 'aria-pressed': String(id === part),
+        onclick: () => { part = id; showPanel(); },
+      }, [name]))),
+      el('div', { class: 'choices' }, PALETTES[part].map(s => choice({
+        label: `${PARTS.find(([id]) => id === part)?.[1]}: ${s.name}`,
+        cls: 'swatch-choice',
+        style: `--swatch:${s.color}`,
+        pressed: (style.colors[part] ?? loco.car.colors[part]) === s.color,
+        content: el('span', { class: 'sr-only' }, [s.name]),
+        onPick: () => change({ ...style, colors: { ...style.colors, [part]: s.color === loco.car.colors[part] ? null : s.color } }),
+      }))),
+    ],
     pattern: () => [el('div', { class: 'choices' }, [
       choice({ label: 'Fără model', pressed: !style.pattern, content: NONE_ICON(), onPick: () => change({ ...style, pattern: null }) }),
       ...Object.entries(PATTERNS).map(([id, name]) => choice({
@@ -249,12 +254,19 @@ function decorate(loco) {
 
   workshop.replaceChildren(
     el('h2', { class: 'workshop-title', id: 'workshopTitle' }, [loco.name]),
-    el('div', { class: 'workshop-stage' }, [canvas]),
-    el('p', { class: 'workshop-where' }, [`Așa o vei vedea în Ruta ${loco.route} · ${loco.journey}`]),
-    el('div', { class: 'tools', role: 'tablist', 'aria-label': 'Ce decorezi' }, tabs),
-    panel,
-    saved,
-    el('div', { class: 'workshop-actions' }, [reset, el('a', { class: 'workshop-other', href: '#' }, ['🚂 Altă locomotivă'])]),
+    el('div', { class: 'workshop-grid' }, [
+      // the locomotive stays in sight while the child chooses (beside the tools, or stuck at the top)
+      el('div', { class: 'workshop-view' }, [
+        el('div', { class: 'workshop-stage' }, [canvas]),
+        el('p', { class: 'workshop-where' }, [`Așa o vei vedea în Ruta ${loco.route} · ${loco.journey}`]),
+      ]),
+      el('div', { class: 'workshop-tools' }, [
+        el('div', { class: 'tools', role: 'tablist', 'aria-label': 'Ce decorezi' }, tabs),
+        panel,
+        saved,
+        el('div', { class: 'workshop-actions' }, [reset, el('a', { class: 'workshop-other', href: '#' }, ['🚂 Altă locomotivă'])]),
+      ]),
+    ]),
   );
   showPanel();
 }

@@ -108,7 +108,7 @@ body.depot {
 
 /* ---------- The workshop: the chosen locomotive ---------- */
 .workshop {
-  max-width: 760px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 22px clamp(14px, 3vw, 28px) 24px;
   border: var(--paper-line);
@@ -129,6 +129,23 @@ body.depot {
 }
 .workshop-loco { display: block; width: 100%; height: clamp(150px, 30vw, 260px); }
 
+/* the locomotive stays in sight while the child chooses: on a wide screen
+   beside the tools; on a narrow one stuck at the top while the page scrolls */
+.workshop-grid { display: grid; gap: 16px; text-align: center; }
+.workshop-view {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  margin: 0 -6px;
+  padding: 6px 6px 0;
+  background: var(--paper-card);
+}
+@media (min-width: 900px) {
+  .workshop-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; }
+  .workshop-view { top: 12px; margin: 0; padding: 0; background: none; }
+}
+.workshop-note { margin: 16px 0 14px; font-size: 18px; font-weight: 700; color: #5b5240; }
+.workshop-where { margin: 10px 0 14px; font-size: 15px; font-weight: 800; color: var(--station-blue); }
 
 /* the tools: big tabs with a picture and a word */
 .tools {
@@ -157,8 +174,8 @@ body.depot {
 .tool-emoji { font-size: 28px; line-height: 1; }
 .tool[aria-selected="true"] { border-color: var(--gold); background: #fff6d6; box-shadow: 0 3px 0 #d9a91f; }
 .tool:focus-visible, .choice:focus-visible { outline: 4px solid var(--station-blue); outline-offset: 2px; }
-/* not much room (a phone): two rows of three */
-@media (max-width: 620px) {
+/* not much room (a phone, or the tools beside the locomotive): two rows of three */
+@media (max-width: 620px), (min-width: 900px) {
   .tools { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 520px) {
@@ -176,7 +193,23 @@ body.depot {
   border-radius: var(--radius-m);
   background: #f3ead6;
 }
-.choice-row { display: flex; flex-direction: column; gap: 6px; }
+/* what is painted: three buttons side by side, like a switch */
+.parts { display: flex; justify-content: center; gap: 0; }
+.part {
+  padding: 6px 14px 7px;
+  border: 3px solid #d9cba9;
+  background: #fff;
+  color: #5b5240;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.part + .part { border-left: 0; }
+.part:first-child { border-radius: 999px 0 0 999px; }
+.part:last-child { border-radius: 0 999px 999px 0; }
+.part[aria-pressed="true"] { background: var(--station-blue); border-color: var(--station-blue); color: #fff; }
+.part:focus-visible { outline: 4px solid var(--gold); outline-offset: 2px; position: relative; }
 
 /* the name for the plate */
 .name-input {
