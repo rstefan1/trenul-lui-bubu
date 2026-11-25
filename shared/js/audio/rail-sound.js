@@ -6,7 +6,7 @@
  * It swells in gently when the train sets off and fades out gently on the
  * last stretch before it stops — at a station, at a forest halt, by a child
  * waiting for a gift or in front of a snowdrift — while the brakes squeal
- * (a recording) until the train stands still. It also goes quiet while the
+ * (a recording) until the train stands still (or the stop is called off). It also goes quiet while the
  * game waits for the player.
  *
  * Where the train runs changes its sound: in a tunnel it is muffled, louder
@@ -120,7 +120,9 @@ export class RailSound {
       this.squealed = true;
       this.squeal = this.startSqueal();
     }
-    if (this.squeal && !moving) {
+    // it ends when the train stands still, or when the stop is called off
+    // (an animal chased away in time: the train speeds up again)
+    if (this.squeal && (!moving || view.toStop > SQUEAL_AT * 1.2)) {
       this.squeal.stop();
       this.squeal = null;
     }
